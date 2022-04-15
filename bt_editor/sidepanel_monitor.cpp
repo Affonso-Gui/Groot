@@ -127,7 +127,7 @@ bool SidepanelMonitor::getTreeFromServer()
         zmq::socket_t  zmq_client( _zmq_context, ZMQ_REQ );
         zmq_client.connect( _connection_address_req.c_str() );
 
-        int timeout_ms = 1000;
+        int timeout_ms = 10000;
         zmq_client.setsockopt(ZMQ_RCVTIMEO,&timeout_ms, sizeof(int) );
 
         zmq_client.send(request);
