@@ -30,8 +30,6 @@
 #include "models/RootNodeModel.hpp"
 #include "models/SubtreeNodeModel.hpp"
 
-#include "utils.h"
-
 #include "ui_about_dialog.h"
 
 using QtNodes::DataModelRegistry;
