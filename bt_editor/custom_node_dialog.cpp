@@ -159,7 +159,7 @@ void CustomNodeDialog::checkValid()
 
         bool empty_param_name = false;
         bool invalid_param_name = false;
-        bool reselved_param_name = false;
+        bool reserved_param_name = false;
         std::set<QString> param_names;
         for (int row=0; row < ui->tableWidget->rowCount(); row++ )
         {
@@ -174,7 +174,7 @@ void CustomNodeDialog::checkValid()
             }
             else if( param_name == "ID" || param_name == "name" )
             {
-                reselved_param_name = true;
+                reserved_param_name = true;
             }
             else{
                 param_names.insert(param_name);
@@ -188,7 +188,7 @@ void CustomNodeDialog::checkValid()
         {
             ui->labelWarning->setText("Invalid key: use only letters, digits and underscores.");
         }
-        else if( reselved_param_name )
+        else if( reserved_param_name )
         {
             ui->labelWarning->setText("Reserved port key: the words \"name\" and \"ID\" should not be used.");
         }
