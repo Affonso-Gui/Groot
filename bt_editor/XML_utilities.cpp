@@ -22,9 +22,9 @@ NodeModel buildTreeNodeModelFromXML(const QDomElement& node)
         ID = QString(node.attribute("ID"));
     }
 
-    const auto node_type = BT::convertFromString<BT::NodeType>(tag_name.toStdString());
+    const auto node_type = BT::convertFromString<NodeType>(tag_name.toStdString());
 
-    if( node_type == BT::NodeType::UNDEFINED )
+    if( node_type == NodeType::UNDEFINED )
     {
         return {};
     }

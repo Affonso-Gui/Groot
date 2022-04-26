@@ -178,7 +178,7 @@ BehaviorTreeDataModel::~BehaviorTreeDataModel()
 
 }
 
-BT::NodeType BehaviorTreeDataModel::nodeType() const
+NodeType BehaviorTreeDataModel::nodeType() const
 {
     return _model.type;
 }

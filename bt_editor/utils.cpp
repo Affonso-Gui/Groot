@@ -567,24 +567,24 @@ std::set<QString> GetModelsToRemove(QWidget* parent,
     return prev_custom_models;
 }
 
-BT::NodeType convert(Serialization::NodeType type)
+NodeType convert(Serialization::NodeType type)
 {
     switch (type)
     {
     case Serialization::NodeType::ACTION:
-        return BT::NodeType::ACTION;
+        return NodeType::ACTION;
     case Serialization::NodeType::DECORATOR:
-        return BT::NodeType::DECORATOR;
+        return NodeType::DECORATOR;
     case Serialization::NodeType::CONTROL:
-        return BT::NodeType::CONTROL;
+        return NodeType::CONTROL;
     case Serialization::NodeType::CONDITION:
-        return BT::NodeType::CONDITION;
+        return NodeType::CONDITION;
     case Serialization::NodeType::SUBTREE:
-        return BT::NodeType::SUBTREE;
+        return NodeType::SUBTREE;
     case Serialization::NodeType::UNDEFINED:
-        return BT::NodeType::UNDEFINED;
+        return NodeType::UNDEFINED;
     }
-    return BT::NodeType::UNDEFINED;
+    return NodeType::UNDEFINED;
 }
 
 BT::NodeStatus convert(Serialization::NodeStatus type)
