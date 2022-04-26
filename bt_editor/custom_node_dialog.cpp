@@ -69,18 +69,30 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
             {
                 ui->comboBox->setCurrentIndex(1);
             }
+            if( model.type == NodeType::REMOTE_ACTION )
+            {
+                ui->comboBox->setCurrentIndex(2);
+            }
+            else if( model.type == NodeType::REMOTE_CONDITION )
+            {
+                ui->comboBox->setCurrentIndex(3);
+            }
+            else if( model.type == NodeType::SUBSCRIBER )
+            {
+                ui->comboBox->setCurrentIndex(4);
+            }
             else if( model.type == NodeType::CONTROL )
             {
-              ui->comboBox->setCurrentIndex(2);
+                ui->comboBox->setCurrentIndex(5);
             }
             else if( model.type == NodeType::SUBTREE )
             {
-                ui->comboBox->setCurrentIndex(3);
+                ui->comboBox->setCurrentIndex(6);
                 ui->comboBox->setEnabled(false);
             }
             else if( model.type == NodeType::DECORATOR)
             {
-                ui->comboBox->setCurrentIndex(4);
+                ui->comboBox->setCurrentIndex(7);
             }
         }
     }
@@ -110,9 +122,12 @@ NodeModel CustomNodeDialog::getTreeNodeModel() const
     {
     case 0: type = NodeType::ACTION; break;
     case 1: type = NodeType::CONDITION; break;
-    case 2: type = NodeType::CONTROL; break;
-    case 3: type = NodeType::SUBTREE; break;
-    case 4: type = NodeType::DECORATOR; break;
+    case 2: type = NodeType::REMOTE_ACTION; break;
+    case 3: type = NodeType::REMOTE_CONDITION; break;
+    case 4: type = NodeType::SUBSCRIBER; break;
+    case 5: type = NodeType::CONTROL; break;
+    case 6: type = NodeType::SUBTREE; break;
+    case 7: type = NodeType::DECORATOR; break;
     }
     for (int row=0; row < ui->tableWidget->rowCount(); row++ )
     {

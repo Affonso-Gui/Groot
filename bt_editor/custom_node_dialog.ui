@@ -84,6 +84,21 @@
        </item>
        <item>
         <property name="text">
+         <string>RemoteAction</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>RemoteCondition</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Subscriber</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>Control</string>
         </property>
        </item>
