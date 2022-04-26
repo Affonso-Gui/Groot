@@ -9,9 +9,11 @@
 #include <nodes/Node>
 #include <deque>
 #include <behaviortree_cpp_v3/bt_factory.h>
+#include <roseus_bt/eus_node_type.h>
 
+using roseus_bt::NodeType;
 using BT::NodeStatus;
-using BT::NodeType;
+// using BT::NodeType;
 using BT::PortDirection;
 
 typedef std::map<QString, QString> PortsMapping;

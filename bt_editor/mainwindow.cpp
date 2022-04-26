@@ -65,7 +65,7 @@ MainWindow::MainWindow(GraphicMode initial_mode, QWidget *parent) :
 
     auto registerModel = [this](const QString& ID, const NodeModel& model)
     {
-        QString category = QString::fromStdString( BT::toStr(model.type) );
+        QString category = QString::fromStdString( roseus_bt::toStr(model.type) );
         if( ID == "Root")
         {
             category = "Root";

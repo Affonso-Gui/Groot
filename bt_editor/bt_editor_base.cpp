@@ -1,5 +1,6 @@
 #include "bt_editor_base.h"
 #include <behaviortree_cpp_v3/decorators/subtree_node.h>
+#include <roseus_bt/eus_node_type.cpp>
 #include <QDebug>
 
 void AbsBehaviorTree::clear()
@@ -171,7 +172,7 @@ bool NodeModel::operator ==(const NodeModel &other) const
 
 NodeModel &NodeModel::operator =(const BT::TreeNodeManifest &src)
 {
-    this->type = src.type;
+    this->type = roseus_bt::fromBTNodeType(src.type);
     this->registration_ID = QString::fromStdString(src.registration_ID);
     for (const auto& port_it: src.ports)
     {

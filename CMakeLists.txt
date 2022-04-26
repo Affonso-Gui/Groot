@@ -38,7 +38,10 @@ elseif(catkin_FOUND OR CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
   set(catkin_FOUND 1)
   # add_definitions( -DUSING_ROS )
 
-  find_package(catkin REQUIRED COMPONENTS behaviortree_cpp_v3)
+  find_package(catkin REQUIRED COMPONENTS
+    behaviortree_cpp_v3
+    behaviortree_ros
+    roseus_bt)
 
   message(STATUS "----------------------")
   message(STATUS "Compiling with CATKIN.")

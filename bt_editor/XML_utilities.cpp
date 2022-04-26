@@ -22,7 +22,7 @@ NodeModel buildTreeNodeModelFromXML(const QDomElement& node)
         ID = QString(node.attribute("ID"));
     }
 
-    const auto node_type = BT::convertFromString<NodeType>(tag_name.toStdString());
+    const auto node_type = roseus_bt::convertFromString(tag_name.toStdString());
 
     if( node_type == NodeType::UNDEFINED )
     {
