@@ -26,6 +26,11 @@ private slots:
 
     void on_pushButtonRemove_pressed();
 
+    void registerPortNode(const std::string key,
+                          const std::string direction,
+                          const std::string value,
+                          const std::string description);
+
     void checkValid();
 
     virtual void closeEvent(QCloseEvent *) override;

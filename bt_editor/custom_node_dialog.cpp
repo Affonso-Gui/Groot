@@ -22,6 +22,7 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Interactive);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+    registerPortNode("server_name", "Input", "", "name of the Action Server");
 
     QSettings settings;
     restoreGeometry(settings.value("CustomNodeDialog/geometry").toByteArray());
@@ -147,6 +148,30 @@ NodeModel CustomNodeDialog::getTreeNodeModel() const
     return { type, ID, ports };
 }
 
+void CustomNodeDialog::registerPortNode(const std::string key,
+                                        const std::string direction,
+                                        const std::string value,
+                                        const std::string description)
+{
+    int row = ui->tableWidget->rowCount();
+    ui->tableWidget->setRowCount(row+1);
+
+    auto key_item = new QTableWidgetItem (key.c_str());
+    key_item->setFlags(key_item->flags() & ~Qt::ItemIsEditable );
+
+    auto direction_item = new QTableWidgetItem (direction.c_str());
+    direction_item->setFlags(direction_item->flags() & ~Qt::ItemIsEditable );
+
+    auto value_item = new QTableWidgetItem (value.c_str());
+
+    auto description_item = new QTableWidgetItem (description.c_str());
+    description_item->setFlags(description_item->flags() & ~Qt::ItemIsEditable );
+
+    ui->tableWidget->setItem(row, 0, key_item);
+    ui->tableWidget->setItem(row, 1, direction_item);
+    ui->tableWidget->setItem(row, 2, value_item);
+    ui->tableWidget->setItem(row, 3, description_item);
+}
 
 void CustomNodeDialog::checkValid()
 {
@@ -278,37 +303,44 @@ void CustomNodeDialog::on_pushButtonRemove_pressed()
 
 void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
 {
-    auto shared_items = ui->tableWidget->findItems("__shared_blackboard", Qt::MatchExactly);
-    if ( node_type == "SubTree")
-    {
-        if( shared_items.empty() )
-        {
-            int row = ui->tableWidget->rowCount();
-            ui->tableWidget->setRowCount(row+1);
-
-            auto key_item = new QTableWidgetItem ("__shared_blackboard");
-            key_item->setFlags(key_item->flags() & ~Qt::ItemIsEditable );
-
-            auto direction_item = new QTableWidgetItem ("Input");
-            direction_item->setFlags(direction_item->flags() & ~Qt::ItemIsEditable );
-
-            auto value_item = new QTableWidgetItem ("false");
-
-            auto description_item = new QTableWidgetItem ("If false (default), the Subtree has an isolated blackboard and needs port remapping");
-            description_item->setFlags(description_item->flags() & ~Qt::ItemIsEditable );
-
-            ui->tableWidget->setItem(row, 0, key_item);
-            ui->tableWidget->setItem(row, 1, direction_item);
-            ui->tableWidget->setItem(row, 2, value_item);
-            ui->tableWidget->setItem(row, 3, description_item);
-        }
-    }
-    else
-    {
-        for( const auto& item: shared_items)
-        {
+    auto unregister_node = [this](std::string key) {
+        auto shared_items = ui->tableWidget->findItems(key.c_str(), Qt::MatchExactly);
+        for (const auto& item: shared_items) {
             ui->tableWidget->removeRow( item->row() );
         }
+    };
+
+    auto unregister_all = [unregister_node] () {
+        unregister_node("__shared_blackboard");
+        unregister_node("type");
+        unregister_node("topic_name");
+        unregister_node("to");
+        unregister_node("server_name");
+        unregister_node("service_name");
+        unregister_node("host_name");
+        unregister_node("host_port");
+    };
+
+    unregister_all();
+    if (node_type == "SubTree") {
+      registerPortNode("__shared_blackboard", "Input", "false",
+                    "If false (default), the Subtree has an isolated blackboard and needs port remapping");
     }
+    if (node_type == "Subscriber") {
+      registerPortNode("type", "Input", "", "ROS message type (e.g. std_msgs/String)");
+      registerPortNode("topic_name", "Input", "", "name of the subscribed topic");
+      registerPortNode("to", "Output", "", "port to where messages are redirected");
+    }
+    if (node_type == "ActionNode" || node_type == "RemoteAction") {
+      registerPortNode("server_name", "Input", "", "name of the Action Server");
+    }
+    if (node_type == "ConditionNode" || node_type == "RemoteCondition") {
+      registerPortNode("service_name", "Input", "", "name of the ROS service");
+    }
+    if (node_type == "RemoteAction" || node_type == "RemoteCondition") {
+      registerPortNode("host_name", "Input", "", "name of the rosbridge_server host");
+      registerPortNode("host_port", "Input", "", "port of the rosbridge_server host");
+    }
+
     checkValid();
 }
