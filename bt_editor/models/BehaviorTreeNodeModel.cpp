@@ -222,7 +222,11 @@ unsigned int BehaviorTreeDataModel::nPorts(QtNodes::PortType portType) const
 {
     if( portType == QtNodes::PortType::Out)
     {
-        if( nodeType() == NodeType::ACTION || nodeType() == NodeType::CONDITION )
+        if( nodeType() == NodeType::ACTION ||
+            nodeType() == NodeType::REMOTE_ACTION ||
+            nodeType() == NodeType::CONDITION ||
+            nodeType() == NodeType::REMOTE_CONDITION ||
+            nodeType() == NodeType::SUBSCRIBER )
         {
             return 0;
         }

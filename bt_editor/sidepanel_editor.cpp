@@ -56,6 +56,7 @@ void SidepanelEditor::updateTreeView()
     _tree_view_category_items.clear();
 
     for (const QString& category : {"Action", "Condition",
+                                    "RemoteAction", "RemoteCondition", "Subscriber",
                                     "Control", "Decorator", "SubTree" } )
     {
       auto item = new QTreeWidgetItem(ui->paletteTreeWidget, {category});

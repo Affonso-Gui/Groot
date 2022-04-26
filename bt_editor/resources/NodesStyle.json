@@ -8,6 +8,20 @@
         "caption_color":  "#44bb44"
     },
 
+    "RemoteAction": {
+        "icon": ":/icons/svg/letter_A.svg"
+    },
+
+    "RemoteCondition": {
+        "icon": ":/icons/svg/letter_C.svg",
+        "caption_color":  "#44bb44"
+    },
+
+    "Subscriber": {
+        "icon": ":/icons/svg/letter_A.svg",
+        "caption_color":  "#44bb44"
+    },
+
     "Decorator": {
         "caption_color":  "#ffee77"
     },
