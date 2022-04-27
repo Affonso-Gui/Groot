@@ -46,6 +46,7 @@ private slots:
     const NodeModels &_models;
     QValidator *_validator;
     bool _editing;
+    std::vector<std::string> _ros_message_types {"bool", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64", "float32", "float64", "string"};
 };
 
 #endif // CUSTOM_NODE_DIALOG_H

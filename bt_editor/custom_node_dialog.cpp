@@ -242,6 +242,14 @@ void CustomNodeDialog::checkValid()
             setError("Port type cannot be empty");
             return;
         }
+        if( param_type->flags() & Qt::ItemIsEditable &&
+            param_type->text().toStdString().find('/') == std::string::npos &&
+            std::find(_ros_message_types.begin(), _ros_message_types.end(),
+                      param_type->text().toStdString()) == _ros_message_types.end() )
+        {
+            setError("Invalid port type: use a built-in or compound ros message type");
+            return;
+        }
 
         param_names.insert(param_name);
     }
