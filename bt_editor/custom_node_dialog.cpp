@@ -232,8 +232,10 @@ void CustomNodeDialog::checkValid()
     std::set<QString> param_names;
     for (int row=0; row < ui->tableWidget->rowCount(); row++ )
     {
-        auto param_name = ui->tableWidget->item(row,0)->text();
-        auto param_type = ui->tableWidget->item(row,3);
+        auto param_name_item = ui->tableWidget->item(row,0);
+        auto param_value_item = ui->tableWidget->item(row,2);
+        auto param_type_item = ui->tableWidget->item(row,3);
+        auto param_name = param_name_item->text();
 
         if(param_name.isEmpty())
         {
@@ -250,18 +252,24 @@ void CustomNodeDialog::checkValid()
             setError("Reserved port name: the words \"name\" and \"ID\" should not be used.");
             return;
         }
-        if( !param_type || (param_type->text().isEmpty() &&
-                            param_type->flags() & Qt::ItemIsEditable ) )
+        if( !param_type_item || (param_type_item->text().isEmpty() &&
+                                 param_type_item->flags() & Qt::ItemIsEditable ) )
         {
             setError("Port type cannot be empty");
             return;
         }
-        if( param_type->flags() & Qt::ItemIsEditable &&
-            param_type->text().toStdString().find('/') == std::string::npos &&
+        if( param_type_item->flags() & Qt::ItemIsEditable &&
+            param_type_item->text().toStdString().find('/') == std::string::npos &&
             std::find(_ros_message_types.begin(), _ros_message_types.end(),
-                      param_type->text().toStdString()) == _ros_message_types.end() )
+                      param_type_item->text().toStdString()) == _ros_message_types.end() )
         {
             setError("Invalid port type: use a built-in or compound ros message type");
+            return;
+        }
+        if( !(param_name_item->flags() & Qt::ItemIsEditable) &&
+            !param_value_item || param_value_item->text().isEmpty() )
+        {
+            setError(param_name.toStdString() + " default value cannot be empty");
             return;
         }
 

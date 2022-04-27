@@ -86,6 +86,12 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     {
         for(const auto& port_it: model.ports )
         {
+            if( port_it.second.required )
+            {
+                // Don't display required ports in the viewport
+                // Instead, force users to set default values
+                continue;
+            }
             auto preferred_direction = preferred_port_types[pref_index];
             if( port_it.second.direction != preferred_direction )
             {
