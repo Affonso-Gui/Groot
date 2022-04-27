@@ -42,24 +42,12 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
             const auto& model = model_it->second;
             for( const auto& port_it : model.ports )
             {
-                int row = ui->tableWidget->rowCount();
-                ui->tableWidget->setRowCount(row+1);
-
-                ui->tableWidget->setItem(row,0, new QTableWidgetItem(port_it.first) );
-                QComboBox* combo_direction = new QComboBox;
-                combo_direction->addItem("Input");
-                combo_direction->addItem("Output");
-                combo_direction->addItem("In/Out");
-                switch( port_it.second.direction )
-                {
-                case BT::PortDirection::INPUT : combo_direction->setCurrentIndex(0); break;
-                case BT::PortDirection::OUTPUT: combo_direction->setCurrentIndex(1); break;
-                case BT::PortDirection::INOUT : combo_direction->setCurrentIndex(2); break;
-                }
-                ui->tableWidget->setCellWidget(row,1, combo_direction );
-                ui->tableWidget->setItem(row,2, new QTableWidgetItem(port_it.second.default_value) );
-                ui->tableWidget->setItem(row,3, new QTableWidgetItem(port_it.second.type_name) );
-                ui->tableWidget->setItem(row,4, new QTableWidgetItem(port_it.second.description) );
+                registerPortNode(port_it.first.toStdString(),
+                                 port_it.second.direction,
+                                 port_it.second.default_value.toStdString(),
+                                 port_it.second.type_name.toStdString(),
+                                 port_it.second.description.toStdString(),
+                                 false);
             }
 
             if( model.type == NodeType::ACTION )
@@ -100,7 +88,8 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
 
     else {
         // register server_name as we open the dialog with an ActionNode selection
-        registerPortNode("server_name", "Input", "", "name of the Action Server");
+        registerPortNode("server_name", BT::PortDirection::INPUT, "", "",
+                         "name of the Action Server", true);
     }
 
     connect( ui->tableWidget, &QTableWidget::cellChanged,
@@ -155,29 +144,46 @@ NodeModel CustomNodeDialog::getTreeNodeModel() const
 }
 
 void CustomNodeDialog::registerPortNode(const std::string key,
-                                        const std::string direction,
+                                        const BT::PortDirection& direction,
                                         const std::string value,
-                                        const std::string description)
+                                        const std::string type,
+                                        const std::string description,
+                                        bool required)
 {
     int row = ui->tableWidget->rowCount();
     ui->tableWidget->setRowCount(row+1);
 
     auto key_item = new QTableWidgetItem (key.c_str());
-    key_item->setFlags(key_item->flags() & ~Qt::ItemIsEditable );
-
-    auto direction_item = new QTableWidgetItem (direction.c_str());
-    direction_item->setFlags(direction_item->flags() & ~Qt::ItemIsEditable );
-
     auto value_item = new QTableWidgetItem (value.c_str());
-
-    auto type_item = new QTableWidgetItem ("");
-    type_item->setFlags(type_item->flags() & ~Qt::ItemIsEditable );
-
+    auto type_item = new QTableWidgetItem (type.c_str());
     auto description_item = new QTableWidgetItem (description.c_str());
-    description_item->setFlags(description_item->flags() & ~Qt::ItemIsEditable );
+
+    if (required) {
+        auto direction_item = new QTableWidgetItem (toStr(direction).c_str());
+
+        key_item->setFlags(key_item->flags() & ~Qt::ItemIsEditable );
+        type_item->setFlags(type_item->flags() & ~Qt::ItemIsEditable );
+        description_item->setFlags(description_item->flags() & ~Qt::ItemIsEditable );
+        direction_item->setFlags(direction_item->flags() & ~Qt::ItemIsEditable );
+
+        ui->tableWidget->setItem(row, 1, direction_item);
+    }
+    else {
+        QComboBox* combo_direction = new QComboBox;
+        combo_direction->addItem(toStr(BT::PortDirection::INPUT).c_str());
+        combo_direction->addItem(toStr(BT::PortDirection::OUTPUT).c_str());
+        combo_direction->addItem(toStr(BT::PortDirection::INOUT).c_str());
+
+        switch( direction )
+        {
+            case BT::PortDirection::INPUT : combo_direction->setCurrentIndex(0); break;
+            case BT::PortDirection::OUTPUT: combo_direction->setCurrentIndex(1); break;
+            case BT::PortDirection::INOUT : combo_direction->setCurrentIndex(2); break;
+        }
+        ui->tableWidget->setCellWidget(row, 1, combo_direction);
+    }
 
     ui->tableWidget->setItem(row, 0, key_item);
-    ui->tableWidget->setItem(row, 1, direction_item);
     ui->tableWidget->setItem(row, 2, value_item);
     ui->tableWidget->setItem(row, 3, type_item);
     ui->tableWidget->setItem(row, 4, description_item);
@@ -293,21 +299,7 @@ void CustomNodeDialog::on_tableWidget_itemSelectionChanged()
 
 void CustomNodeDialog::on_pushButtonAdd_pressed()
 {
-    int row = ui->tableWidget->rowCount();
-    ui->tableWidget->setRowCount(row+1);
-
-    ui->tableWidget->setItem(row,0, new QTableWidgetItem( "key_name" ));
-    QComboBox* combo_direction = new QComboBox;
-
-    combo_direction->addItem("Input");
-    combo_direction->addItem("Output");
-    combo_direction->addItem("In/Out");
-
-    ui->tableWidget->setCellWidget(row, 1, combo_direction);
-    ui->tableWidget->setItem(row,2, new QTableWidgetItem());
-    ui->tableWidget->setItem(row,3, new QTableWidgetItem("string"));
-    ui->tableWidget->setItem(row,4, new QTableWidgetItem());
-
+    registerPortNode("key_name", BT::PortDirection::INPUT, "", "string", "", false);
     checkValid();
 }
 
@@ -343,23 +335,38 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
 
     unregister_all();
     if (node_type == "SubTree") {
-      registerPortNode("__shared_blackboard", "Input", "false",
-                    "If false (default), the Subtree has an isolated blackboard and needs port remapping");
+        registerPortNode("__shared_blackboard", BT::PortDirection::INPUT, "false", "",
+                         "If false (default), the Subtree has an isolated blackboard and needs port remapping",
+                         true);
     }
     if (node_type == "Subscriber") {
-      registerPortNode("type", "Input", "", "ROS message type (e.g. std_msgs/String)");
-      registerPortNode("topic_name", "Input", "", "name of the subscribed topic");
-      registerPortNode("to", "Output", "", "port to where messages are redirected");
+        registerPortNode("type", BT::PortDirection::INPUT, "", "",
+                         "ROS message type (e.g. std_msgs/String)",
+                         true);
+        registerPortNode("topic_name", BT::PortDirection::INPUT, "", "",
+                         "name of the subscribed topic",
+                         true);
+        registerPortNode("to", BT::PortDirection::OUTPUT, "", "",
+                         "port to where messages are redirected",
+                         true);
     }
     if (node_type == "ActionNode" || node_type == "RemoteAction") {
-      registerPortNode("server_name", "Input", "", "name of the Action Server");
+        registerPortNode("server_name", BT::PortDirection::INPUT, "", "",
+                         "name of the Action Server",
+                         true);
     }
     if (node_type == "ConditionNode" || node_type == "RemoteCondition") {
-      registerPortNode("service_name", "Input", "", "name of the ROS service");
+        registerPortNode("service_name", BT::PortDirection::INPUT, "", "",
+                         "name of the ROS service",
+                         true);
     }
     if (node_type == "RemoteAction" || node_type == "RemoteCondition") {
-      registerPortNode("host_name", "Input", "", "name of the rosbridge_server host");
-      registerPortNode("host_port", "Input", "", "port of the rosbridge_server host");
+        registerPortNode("host_name", BT::PortDirection::INPUT, "", "",
+                         "name of the rosbridge_server host",
+                         true);
+        registerPortNode("host_port", BT::PortDirection::INPUT, "", "",
+                         "port of the rosbridge_server host",
+                         true);
     }
 
     checkValid();

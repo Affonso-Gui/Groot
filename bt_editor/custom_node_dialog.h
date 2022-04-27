@@ -27,9 +27,11 @@ private slots:
     void on_pushButtonRemove_pressed();
 
     void registerPortNode(const std::string key,
-                          const std::string direction,
+                          const BT::PortDirection& direction,
                           const std::string value,
-                          const std::string description);
+                          const std::string type,
+                          const std::string description,
+                          bool required);
 
     void checkValid();
 
