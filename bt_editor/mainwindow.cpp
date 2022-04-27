@@ -526,8 +526,13 @@ QString MainWindow::saveToXML() const
                 const auto& port_name = port_it.first;
                 const auto& port = port_it.second;
 
-                QDomElement port_element = writePortModel(port_name, port, doc);
-                node.appendChild( port_element );
+                if (port.required) {
+                    node.setAttribute(port_name, port.default_value);
+                }
+                else {
+                    QDomElement port_element = writePortModel(port_name, port, doc);
+                    node.appendChild( port_element );
+                }
             }
         }
         root_models.appendChild(node);

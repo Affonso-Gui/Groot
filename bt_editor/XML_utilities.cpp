@@ -30,6 +30,7 @@ NodeModel buildTreeNodeModelFromXML(const QDomElement& node)
     }
 
     // this make sense for ports inside the <BehaviorTree> tag
+    // and for required port declaration inside the <TreeNodesModel> tag
     QDomNamedNodeMap attributes = node.attributes ();
     for (int i=0; i< attributes.size(); i++ )
     {
@@ -39,11 +40,13 @@ NodeModel buildTreeNodeModelFromXML(const QDomElement& node)
         if(attr_name != "ID" && attr_name != "name")
         {
             PortModel port_model;
-            port_model.direction = PortDirection::INOUT;
+            port_model.direction = PortDirection::INPUT;
+            port_model.default_value = attr.value();
+            port_model.required = true;
             ports_list.insert( { attr_name, std::move(port_model)} );
         }
     }
-    // this is used for ports inside the <TreeNodesModel> tag
+    // this is used for other ports inside the <TreeNodesModel> tag
     const std::vector<std::pair<QString, PortDirection>> portsTypes = {
         {"input_port", PortDirection::INPUT},
         {"output_port", PortDirection::OUTPUT},
@@ -58,6 +61,7 @@ NodeModel buildTreeNodeModelFromXML(const QDomElement& node)
             PortModel port_model;
             port_model.direction = it.second;
             port_model.description = port_element.text();
+            port_model.required = false;
 
             if( port_element.hasAttribute("type") )
             {
