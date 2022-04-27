@@ -47,7 +47,7 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
                                  port_it.second.default_value.toStdString(),
                                  port_it.second.type_name.toStdString(),
                                  port_it.second.description.toStdString(),
-                                 false);
+                                 port_it.second.required);
             }
 
             if( model.type == NodeType::ACTION )
@@ -138,6 +138,9 @@ NodeModel CustomNodeDialog::getTreeNodeModel() const
         port_model.default_value =  ui->tableWidget->item(row,2)->text();
         port_model.type_name     =  ui->tableWidget->item(row,3)->text();
         port_model.description   =  ui->tableWidget->item(row,4)->text();
+        // hack: judge if port is required by checking if it is editable
+        port_model.required = !(ui->tableWidget->item(row,0)->flags() & Qt::ItemIsEditable);
+
         ports.insert( {key, port_model} );
     }
     return { type, ID, ports };
