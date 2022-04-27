@@ -382,51 +382,85 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
         }
     };
 
-    auto unregister_all = [unregister_node] () {
-        unregister_node("__shared_blackboard");
-        unregister_node("type");
-        unregister_node("topic_name");
-        unregister_node("to");
-        unregister_node("server_name");
-        unregister_node("service_name");
-        unregister_node("host_name");
-        unregister_node("host_port");
+    auto unregister_all_but = [unregister_node] (std::vector<std::string> black_list) {
+        std::vector<std::string> all_nodes { "server_name",
+                                             "service_name",
+                                             "host_name",
+                                             "host_port",
+                                             "type",
+                                             "topic_name",
+                                             "to",
+                                             "__shared_blackboard" };
+        for (const auto& it : black_list) {
+            all_nodes.erase(std::remove(all_nodes.begin(), all_nodes.end(), it),
+                            all_nodes.end());
+        }
+        for (const auto& node : all_nodes) {
+            unregister_node(node);
+        }
     };
 
-    unregister_all();
+    auto maybeRegisterPortNode = [this] (const std::string key,
+                                         const BT::PortDirection& direction,
+                                         const std::string value,
+                                         const std::string type,
+                                         const std::string description,
+                                         bool required) {
+        if (ui->tableWidget->findItems(key.c_str(), Qt::MatchExactly).empty()) {
+            registerPortNode(key, direction, value, type, description, required);
+        }
+    };
+
+    if (node_type == "DecoratorNode" || node_type == "ControlNode") {
+        unregister_all_but(std::vector<std::string>{});
+    }
     if (node_type == "SubTree") {
-        registerPortNode("__shared_blackboard", BT::PortDirection::INPUT, "false", "",
-                         "If false (default), the Subtree has an isolated blackboard and needs port remapping",
-                         true);
+        unregister_all_but(std::vector<std::string>{"__shared_blackboard"});
+        maybeRegisterPortNode("__shared_blackboard", BT::PortDirection::INPUT, "false", "",
+            "If false (default), the Subtree has an isolated blackboard and needs port remapping",
+            true);
     }
     if (node_type == "Subscriber") {
-        registerPortNode("type", BT::PortDirection::INPUT, "", "",
-                         "ROS message type (e.g. std_msgs/String)",
-                         true);
-        registerPortNode("topic_name", BT::PortDirection::INPUT, "", "",
-                         "name of the subscribed topic",
-                         true);
-        registerPortNode("to", BT::PortDirection::OUTPUT, "", "",
-                         "port to where messages are redirected",
-                         true);
+        unregister_all_but(std::vector<std::string>{"type", "topic_name", "to"});
+        maybeRegisterPortNode("type", BT::PortDirection::INPUT, "", "",
+                              "ROS message type (e.g. std_msgs/String)",
+                              true);
+        maybeRegisterPortNode("topic_name", BT::PortDirection::INPUT, "", "",
+                              "name of the subscribed topic",
+                              true);
+        maybeRegisterPortNode("to", BT::PortDirection::OUTPUT, "", "",
+                              "port to where messages are redirected",
+                              true);
     }
     if (node_type == "ActionNode" || node_type == "RemoteAction") {
-        registerPortNode("server_name", BT::PortDirection::INPUT, "", "",
-                         "name of the Action Server",
-                         true);
+        if (node_type == "ActionNode") {
+            unregister_all_but(std::vector<std::string>{"server_name"});
+        }
+        if (node_type == "RemoteAction") {
+            unregister_all_but(std::vector<std::string>{"server_name", "host_name", "host_port"});
+        }
+        maybeRegisterPortNode("server_name", BT::PortDirection::INPUT, "", "",
+                              "name of the Action Server",
+                              true);
     }
     if (node_type == "ConditionNode" || node_type == "RemoteCondition") {
-        registerPortNode("service_name", BT::PortDirection::INPUT, "", "",
-                         "name of the ROS service",
-                         true);
+        if (node_type == "ConditionNode") {
+            unregister_all_but(std::vector<std::string>{"service_name"});
+        }
+        if (node_type == "RemoteCondition") {
+            unregister_all_but(std::vector<std::string>{"service_name", "host_name", "host_port"});
+        }
+        maybeRegisterPortNode("service_name", BT::PortDirection::INPUT, "", "",
+                              "name of the ROS service",
+                              true);
     }
     if (node_type == "RemoteAction" || node_type == "RemoteCondition") {
-        registerPortNode("host_name", BT::PortDirection::INPUT, "", "",
-                         "name of the rosbridge_server host",
-                         true);
-        registerPortNode("host_port", BT::PortDirection::INPUT, "", "",
-                         "port of the rosbridge_server host",
-                         true);
+        maybeRegisterPortNode("host_name", BT::PortDirection::INPUT, "", "",
+                              "name of the rosbridge_server host",
+                              true);
+        maybeRegisterPortNode("host_port", BT::PortDirection::INPUT, "", "",
+                              "port of the rosbridge_server host",
+                              true);
     }
 
     checkValid();
