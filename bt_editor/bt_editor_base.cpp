@@ -172,7 +172,7 @@ bool NodeModel::operator ==(const NodeModel &other) const
 
 NodeModel &NodeModel::operator =(const BT::TreeNodeManifest &src)
 {
-    this->type = roseus_bt::fromBTNodeType(src.type);
+    this->type = convert(src.type);
     this->registration_ID = QString::fromStdString(src.registration_ID);
     for (const auto& port_it: src.ports)
     {
