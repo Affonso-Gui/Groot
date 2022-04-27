@@ -304,7 +304,7 @@ void CustomNodeDialog::checkValid()
             return;
         }
         if( !(param_name_item->flags() & Qt::ItemIsEditable) &&
-            !param_value_item || param_value_item->text().isEmpty() )
+            (!param_value_item || param_value_item->text().isEmpty()) )
         {
             setError(param_name.toStdString() + " default value cannot be empty");
             return;
