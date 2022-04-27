@@ -10,7 +10,7 @@
 #include <deque>
 
 #include <behaviortree_cpp_v3/bt_factory.h>
-#include <roseus_bt/eus_node_type.h>
+#include <roseus_bt/basic_types.h>
 #include "convert.h"
 
 

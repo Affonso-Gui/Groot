@@ -1,6 +1,6 @@
 #include "bt_editor_base.h"
 #include <behaviortree_cpp_v3/decorators/subtree_node.h>
-#include <roseus_bt/eus_node_type.cpp>
+#include <roseus_bt/basic_types.cpp>
 #include <QDebug>
 
 void AbsBehaviorTree::clear()
