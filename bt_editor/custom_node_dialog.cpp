@@ -205,6 +205,42 @@ void CustomNodeDialog::checkValid()
         ui->buttonBox->button( QDialogButtonBox::Ok )->setEnabled( true );
     };
 
+    auto checkDuplicateValue = [this, setError] (const std::string name, const QString& value,
+                                                 std::vector<int> index_types,
+                                                 std::vector<NodeType> node_types) {
+
+        if ( std::find(index_types.begin(), index_types.end(),
+                       ui->comboBox->currentIndex()) != index_types.end() )
+        {
+            for( auto it = _models.begin(); it != _models.end(); ++it )
+                {
+                    if( std::find(node_types.begin(), node_types.end(),
+                                  it->second.type) != node_types.end() )
+                    {
+                        auto port_value = it->second.ports.find(name.c_str());
+                        if( port_value != it->second.ports.end() &&
+                            port_value->second.default_value == value )
+                        {
+                            return true;
+                        }
+                    }
+                }
+            return false;
+        }
+    };
+
+    auto checkServerName = [checkDuplicateValue] (const QString& value) {
+        std::vector<int> index_types{0, 2};
+        std::vector<NodeType> node_types{NodeType::ACTION, NodeType::REMOTE_ACTION};
+        return checkDuplicateValue("server_name", value, index_types, node_types);
+    };
+
+    auto checkServiceName = [checkDuplicateValue] (const QString& value) {
+        std::vector<int> index_types{1, 3};
+        std::vector<NodeType> node_types{NodeType::CONDITION, NodeType::REMOTE_CONDITION};
+        return checkDuplicateValue("service_name", value, index_types, node_types);
+    };
+
     auto name = ui->lineEdit->text();
     int pos;
 
@@ -271,6 +307,18 @@ void CustomNodeDialog::checkValid()
             !param_value_item || param_value_item->text().isEmpty() )
         {
             setError(param_name.toStdString() + " default value cannot be empty");
+            return;
+        }
+        if ( param_name.toStdString() == "server_name" && param_value_item && !_editing &&
+             checkServerName(param_value_item->text()) )
+        {
+            setError("Duplicated server name: " + param_value_item->text().toStdString());
+            return;
+        }
+        if ( param_name.toStdString() == "service_name" && param_value_item && !_editing &&
+             checkServiceName(param_value_item->text()) )
+        {
+            setError("Duplicated service name: " + param_value_item->text().toStdString());
             return;
         }
 
