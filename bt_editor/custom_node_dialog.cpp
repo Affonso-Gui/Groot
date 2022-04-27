@@ -180,94 +180,82 @@ void CustomNodeDialog::registerPortNode(const std::string key,
 
 void CustomNodeDialog::checkValid()
 {
-    bool valid = false;
+    auto setError = [this] (const std::string text) {
+        ui->labelWarning->setText(text.c_str());
+        ui->labelWarning->setStyleSheet("color: rgb(204, 0, 0)");
+        ui->buttonBox->button( QDialogButtonBox::Ok )->setEnabled( false );
+    };
+    auto setValid = [this] () {
+        ui->labelWarning->setText("OK");
+        ui->labelWarning->setStyleSheet("color: rgb(78, 154, 6)");
+        ui->buttonBox->button( QDialogButtonBox::Ok )->setEnabled( true );
+    };
+
     auto name = ui->lineEdit->text();
     int pos;
 
     if( name.toLower() == "root" )
     {
-        ui->labelWarning->setText("The name 'root' is forbidden");
+        setError("The name 'root' is forbidden");
+        return;
     }
-    else if( name.isEmpty() )
+    if( name.isEmpty() )
     {
-        ui->labelWarning->setText("The name cannot be empty");
+        setError("The name cannot be empty");
+        return;
     }
-    else if( _validator->validate(name, pos) != QValidator::Acceptable)
+    if( _validator->validate(name, pos) != QValidator::Acceptable)
     {
-        ui->labelWarning->setText("Invalid name: use only letters, digits and underscores");
+        setError("Invalid name: use only letters, digits and underscores");
+        return;
     }
-    else if( _models.count( name ) > 0 && !_editing )
+    if( _models.count( name ) > 0 && !_editing )
     {
-        ui->labelWarning->setText("Another Node has the same name");
+        setError("Another Node has the same name");
+        return;
     }
-    else {
 
-        bool empty_param_name = false;
-        bool invalid_param_name = false;
-        bool reserved_param_name = false;
-        bool empty_param_type = false;
-        std::set<QString> param_names;
-        for (int row=0; row < ui->tableWidget->rowCount(); row++ )
-        {
-            auto param_name = ui->tableWidget->item(row,0)->text();
-            auto param_type = ui->tableWidget->item(row,3);
-
-            if(param_name.isEmpty())
-            {
-                empty_param_name = true;
-            }
-            else if( _validator->validate(param_name, pos) != QValidator::Acceptable)
-            {
-                invalid_param_name = true;
-            }
-            else if( param_name == "ID" || param_name == "name" )
-            {
-                reserved_param_name = true;
-            }
-            else if( !param_type ||
-                     (param_type->text().isEmpty() &&
-                      param_type->flags() & Qt::ItemIsEditable ) )
-            {
-                empty_param_type = true;
-            }
-            else{
-                param_names.insert(param_name);
-            }
-        }
-        if( empty_param_name )
-        {
-           ui->labelWarning->setText("Empty NodeParameter key");
-        }
-        else if( invalid_param_name )
-        {
-            ui->labelWarning->setText("Invalid key: use only letters, digits and underscores.");
-        }
-        else if( reserved_param_name )
-        {
-            ui->labelWarning->setText("Reserved port key: the words \"name\" and \"ID\" should not be used.");
-        }
-        else if( empty_param_type )
-        {
-            ui->labelWarning->setText("The port type cannot be empty");
-        }
-        else if( param_names.size() < ui->tableWidget->rowCount() )
-        {
-           ui->labelWarning->setText("Duplicated NodeParameter key");
-        }
-        else if( param_names.size() == ui->tableWidget->rowCount() )
-        {
-            valid = true;
-        }
-    }
-    if(valid)
+    std::set<QString> param_names;
+    for (int row=0; row < ui->tableWidget->rowCount(); row++ )
     {
-        ui->labelWarning->setText("OK");
-        ui->labelWarning->setStyleSheet("color: rgb(78, 154, 6)");
+        auto param_name = ui->tableWidget->item(row,0)->text();
+        auto param_type = ui->tableWidget->item(row,3);
+
+        if(param_name.isEmpty())
+        {
+            setError("Port name cannot be empty");
+            return;
+        }
+        if( _validator->validate(param_name, pos) != QValidator::Acceptable)
+        {
+            setError("Invalid port name: use only letters, digits and underscores.");
+            return;
+        }
+        if( param_name == "ID" || param_name == "name" )
+        {
+            setError("Reserved port name: the words \"name\" and \"ID\" should not be used.");
+            return;
+        }
+        if( !param_type || (param_type->text().isEmpty() &&
+                            param_type->flags() & Qt::ItemIsEditable ) )
+        {
+            setError("Port type cannot be empty");
+            return;
+        }
+
+        param_names.insert(param_name);
     }
-    else{
-        ui->labelWarning->setStyleSheet("color: rgb(204, 0, 0)");
+    if( param_names.size() < ui->tableWidget->rowCount() )
+    {
+       setError("Duplicated port name");
+       return;
     }
-    ui->buttonBox->button( QDialogButtonBox::Ok )->setEnabled( valid );
+    if( param_names.size() != ui->tableWidget->rowCount() )
+    {
+        setError("Port size mismatch");
+        return;
+    }
+    setValid();
 }
 
 void CustomNodeDialog::closeEvent(QCloseEvent *)
