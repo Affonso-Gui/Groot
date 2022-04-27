@@ -21,7 +21,8 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Interactive);
-    ui->tableWidget->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Interactive);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
     registerPortNode("server_name", "Input", "", "name of the Action Server");
 
     QSettings settings;
@@ -56,10 +57,10 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
                 case BT::PortDirection::OUTPUT: combo_direction->setCurrentIndex(1); break;
                 case BT::PortDirection::INOUT : combo_direction->setCurrentIndex(2); break;
                 }
-
                 ui->tableWidget->setCellWidget(row,1, combo_direction );
                 ui->tableWidget->setItem(row,2, new QTableWidgetItem(port_it.second.default_value) );
-                ui->tableWidget->setItem(row,3, new QTableWidgetItem(port_it.second.description) );
+                ui->tableWidget->setItem(row,3, new QTableWidgetItem("") );
+                ui->tableWidget->setItem(row,4, new QTableWidgetItem(port_it.second.description) );
             }
 
             if( model.type == NodeType::ACTION )
@@ -164,13 +165,17 @@ void CustomNodeDialog::registerPortNode(const std::string key,
 
     auto value_item = new QTableWidgetItem (value.c_str());
 
+    auto type_item = new QTableWidgetItem ("");
+    type_item->setFlags(type_item->flags() & ~Qt::ItemIsEditable );
+
     auto description_item = new QTableWidgetItem (description.c_str());
     description_item->setFlags(description_item->flags() & ~Qt::ItemIsEditable );
 
     ui->tableWidget->setItem(row, 0, key_item);
     ui->tableWidget->setItem(row, 1, direction_item);
     ui->tableWidget->setItem(row, 2, value_item);
-    ui->tableWidget->setItem(row, 3, description_item);
+    ui->tableWidget->setItem(row, 3, type_item);
+    ui->tableWidget->setItem(row, 4, description_item);
 }
 
 void CustomNodeDialog::checkValid()
@@ -287,6 +292,7 @@ void CustomNodeDialog::on_pushButtonAdd_pressed()
     ui->tableWidget->setCellWidget(row, 1, combo_direction);
     ui->tableWidget->setItem(row,2, new QTableWidgetItem());
     ui->tableWidget->setItem(row,3, new QTableWidgetItem());
+    ui->tableWidget->setItem(row,4, new QTableWidgetItem());
 
     checkValid();
 }
