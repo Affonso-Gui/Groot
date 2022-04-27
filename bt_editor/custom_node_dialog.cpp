@@ -235,13 +235,14 @@ void CustomNodeDialog::checkValid()
         auto param_name_item = ui->tableWidget->item(row,0);
         auto param_value_item = ui->tableWidget->item(row,2);
         auto param_type_item = ui->tableWidget->item(row,3);
-        auto param_name = param_name_item->text();
 
-        if(param_name.isEmpty())
-        {
+        if (!param_name_item || param_name_item->text().isEmpty()) {
             setError("Port name cannot be empty");
             return;
         }
+
+        auto param_name = param_name_item->text();
+
         if( _validator->validate(param_name, pos) != QValidator::Acceptable)
         {
             setError("Invalid port name: use only letters, digits and underscores.");
