@@ -31,7 +31,7 @@ SidepanelEditor::SidepanelEditor(QtNodes::DataModelRegistry *registry,
 
     auto table_header = ui->portsTableWidget->horizontalHeader();
 
-    table_header->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    table_header->setSectionResizeMode(0, QHeaderView::Interactive);
     table_header->setSectionResizeMode(1, QHeaderView::Interactive);
     table_header->setSectionResizeMode(2, QHeaderView::Stretch);
 
@@ -139,12 +139,11 @@ void SidepanelEditor::on_paletteTreeWidget_itemSelectionChanged()
     int row = 0;
     for (const auto& port_it: model.ports)
     {
-        ui->portsTableWidget->setItem(row,0, new QTableWidgetItem( QString::fromStdString(toStr(port_it.second.direction))));
-        ui->portsTableWidget->setItem(row,1, new QTableWidgetItem( port_it.first ));
+        ui->portsTableWidget->setItem(row,0, new QTableWidgetItem( port_it.first ));
+        ui->portsTableWidget->setItem(row,1, new QTableWidgetItem( port_it.second.type_name) );
         ui->portsTableWidget->setItem(row,2, new QTableWidgetItem( port_it.second.description) );
         row++;
     }
-    ui->portsTableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
   }
 
 }

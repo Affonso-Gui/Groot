@@ -434,7 +434,7 @@
         </attribute>
         <column>
          <property name="text">
-          <string>Direction</string>
+          <string>Port ID</string>
          </property>
          <property name="font">
           <font>
@@ -445,7 +445,7 @@
         </column>
         <column>
          <property name="text">
-          <string>Port ID</string>
+          <string>Port Type</string>
          </property>
          <property name="font">
           <font>

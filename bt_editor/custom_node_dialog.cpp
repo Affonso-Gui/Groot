@@ -143,7 +143,8 @@ NodeModel CustomNodeDialog::getTreeNodeModel() const
 
         port_model.direction = BT::convertFromString<PortDirection>(direction.toStdString());
         port_model.default_value =  ui->tableWidget->item(row,2)->text();
-        port_model.description   =  ui->tableWidget->item(row,3)->text();
+        port_model.type_name     =  ui->tableWidget->item(row,3)->text();
+        port_model.description   =  ui->tableWidget->item(row,4)->text();
         ports.insert( {key, port_model} );
     }
     return { type, ID, ports };
