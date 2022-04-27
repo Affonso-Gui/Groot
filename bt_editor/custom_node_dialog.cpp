@@ -205,10 +205,13 @@ void CustomNodeDialog::checkValid()
         bool empty_param_name = false;
         bool invalid_param_name = false;
         bool reserved_param_name = false;
+        bool empty_param_type = false;
         std::set<QString> param_names;
         for (int row=0; row < ui->tableWidget->rowCount(); row++ )
         {
             auto param_name = ui->tableWidget->item(row,0)->text();
+            auto param_type = ui->tableWidget->item(row,3);
+
             if(param_name.isEmpty())
             {
                 empty_param_name = true;
@@ -220,6 +223,12 @@ void CustomNodeDialog::checkValid()
             else if( param_name == "ID" || param_name == "name" )
             {
                 reserved_param_name = true;
+            }
+            else if( !param_type ||
+                     (param_type->text().isEmpty() &&
+                      param_type->flags() & Qt::ItemIsEditable ) )
+            {
+                empty_param_type = true;
             }
             else{
                 param_names.insert(param_name);
@@ -236,6 +245,10 @@ void CustomNodeDialog::checkValid()
         else if( reserved_param_name )
         {
             ui->labelWarning->setText("Reserved port key: the words \"name\" and \"ID\" should not be used.");
+        }
+        else if( empty_param_type )
+        {
+            ui->labelWarning->setText("The port type cannot be empty");
         }
         else if( param_names.size() < ui->tableWidget->rowCount() )
         {
@@ -291,7 +304,7 @@ void CustomNodeDialog::on_pushButtonAdd_pressed()
 
     ui->tableWidget->setCellWidget(row, 1, combo_direction);
     ui->tableWidget->setItem(row,2, new QTableWidgetItem());
-    ui->tableWidget->setItem(row,3, new QTableWidgetItem());
+    ui->tableWidget->setItem(row,3, new QTableWidgetItem("string"));
     ui->tableWidget->setItem(row,4, new QTableWidgetItem());
 
     checkValid();
