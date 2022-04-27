@@ -23,7 +23,6 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Interactive);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Interactive);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
-    registerPortNode("server_name", "Input", "", "name of the Action Server");
 
     QSettings settings;
     restoreGeometry(settings.value("CustomNodeDialog/geometry").toByteArray());
@@ -59,7 +58,7 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
                 }
                 ui->tableWidget->setCellWidget(row,1, combo_direction );
                 ui->tableWidget->setItem(row,2, new QTableWidgetItem(port_it.second.default_value) );
-                ui->tableWidget->setItem(row,3, new QTableWidgetItem("") );
+                ui->tableWidget->setItem(row,3, new QTableWidgetItem(port_it.second.type_name) );
                 ui->tableWidget->setItem(row,4, new QTableWidgetItem(port_it.second.description) );
             }
 
@@ -97,6 +96,11 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
                 ui->comboBox->setCurrentIndex(7);
             }
         }
+    }
+
+    else {
+        // register server_name as we open the dialog with an ActionNode selection
+        registerPortNode("server_name", "Input", "", "name of the Action Server");
     }
 
     connect( ui->tableWidget, &QTableWidget::cellChanged,
