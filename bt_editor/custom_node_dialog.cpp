@@ -354,7 +354,15 @@ void CustomNodeDialog::on_buttonBox_clicked(QAbstractButton *)
 void CustomNodeDialog::on_tableWidget_itemSelectionChanged()
 {
     QModelIndexList selected_rows = ui->tableWidget->selectionModel()->selectedRows();
-    ui->pushButtonRemove->setEnabled( selected_rows.count() != 0);
+    bool enabled = false;
+    for( const auto& it: selected_rows)
+    {
+        if( it.flags() & Qt::ItemIsEditable )
+        {
+            enabled = true;
+        }
+    }
+    ui->pushButtonRemove->setEnabled(enabled);
 }
 
 void CustomNodeDialog::on_pushButtonAdd_pressed()
