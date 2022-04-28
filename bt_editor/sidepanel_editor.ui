@@ -445,7 +445,7 @@
         </column>
         <column>
          <property name="text">
-          <string>Port Type</string>
+          <string>Val/Type</string>
          </property>
          <property name="font">
           <font>

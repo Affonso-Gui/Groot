@@ -141,7 +141,14 @@ void SidepanelEditor::on_paletteTreeWidget_itemSelectionChanged()
     for (const auto& port_it: model.ports)
     {
         ui->portsTableWidget->setItem(row,0, new QTableWidgetItem( port_it.first ));
-        ui->portsTableWidget->setItem(row,1, new QTableWidgetItem( port_it.second.type_name) );
+        if( port_it.second.required )
+        {
+            ui->portsTableWidget->setItem(row,1, new QTableWidgetItem( port_it.second.default_value) );
+        }
+        else
+        {
+            ui->portsTableWidget->setItem(row,1, new QTableWidgetItem( port_it.second.type_name) );
+        }
         ui->portsTableWidget->setItem(row,2, new QTableWidgetItem( port_it.second.description) );
         row++;
     }
