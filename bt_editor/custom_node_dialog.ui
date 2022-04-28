@@ -74,17 +74,17 @@
       <widget class="QComboBox" name="comboBox">
        <item>
         <property name="text">
-         <string>ActionNode</string>
+         <string>Action</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>ConditionNode</string>
+         <string>Condition</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>ControlNode</string>
+         <string>Control</string>
         </property>
        </item>
        <item>
@@ -94,7 +94,7 @@
        </item>
        <item>
         <property name="text">
-         <string>DecoratorNode</string>
+         <string>Decorator</string>
         </property>
        </item>
       </widget>
