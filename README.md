@@ -62,6 +62,20 @@ You may probably want to compile BehaviorTree.CPP in the same workspace.
 git clone --branch v3.8 https://github.com/BehaviorTree/BehaviorTree.CPP.git
 ```
 
+# Shortcuts
+| Key | Action |
+| :-: | :-: |
+| CTRL-S | Save Tree |
+| CTRL-L | Load Tree |
+| CTRL-Z | Undo |
+| CTRL-SHIFT-Z | Redo |
+| C | Center View |
+| L | Toggle Layout |
+| R | Reorder Nodes |
+| N | New Node |
+| + | Zoom In |
+| - | Zoom Out |
+
 # Licence       
 
 Copyright (c) 2018-2019 FUNDACIO EURECAT 
