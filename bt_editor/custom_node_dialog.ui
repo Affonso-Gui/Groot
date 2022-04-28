@@ -99,6 +99,11 @@
        </item>
        <item>
         <property name="text">
+         <string>RemoteSubscriber</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>Control</string>
         </property>
        </item>

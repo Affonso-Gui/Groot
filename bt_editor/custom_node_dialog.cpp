@@ -71,18 +71,23 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
                 ui->comboBox->setCurrentIndex(4);
                 ui->pushButtonAdd->setEnabled(false);
             }
-            else if( model.type == NodeType::CONTROL )
+            else if( model.type == NodeType::REMOTE_SUBSCRIBER )
             {
                 ui->comboBox->setCurrentIndex(5);
+                ui->pushButtonAdd->setEnabled(false);
+            }
+            else if( model.type == NodeType::CONTROL )
+            {
+                ui->comboBox->setCurrentIndex(6);
             }
             else if( model.type == NodeType::SUBTREE )
             {
-                ui->comboBox->setCurrentIndex(6);
+                ui->comboBox->setCurrentIndex(7);
                 ui->comboBox->setEnabled(false);
             }
             else if( model.type == NodeType::DECORATOR)
             {
-                ui->comboBox->setCurrentIndex(7);
+                ui->comboBox->setCurrentIndex(8);
             }
         }
     }
@@ -121,9 +126,10 @@ NodeModel CustomNodeDialog::getTreeNodeModel() const
     case 2: type = NodeType::REMOTE_ACTION; break;
     case 3: type = NodeType::REMOTE_CONDITION; break;
     case 4: type = NodeType::SUBSCRIBER; break;
-    case 5: type = NodeType::CONTROL; break;
-    case 6: type = NodeType::SUBTREE; break;
-    case 7: type = NodeType::DECORATOR; break;
+    case 5: type = NodeType::REMOTE_SUBSCRIBER; break;
+    case 6: type = NodeType::CONTROL; break;
+    case 7: type = NodeType::SUBTREE; break;
+    case 8: type = NodeType::DECORATOR; break;
     }
     for (int row=0; row < ui->tableWidget->rowCount(); row++ )
     {
@@ -297,7 +303,8 @@ void CustomNodeDialog::checkValid()
             setError("Reserved port name: the words \"name\" and \"ID\" should not be used.");
             return;
         }
-        if( ui->comboBox->currentIndex() == 4 &&  // SUBSCRIBER
+        // SUBSCRIBER or REMOTE_SUBSCRIBER
+        if( ( ui->comboBox->currentIndex() == 4 || ui->comboBox->currentIndex() == 5 ) && 
             ( param_name == "message_type" ||
               param_name == "topic_name" ||
               param_name == "output_port" ))
@@ -323,7 +330,9 @@ void CustomNodeDialog::checkValid()
                 return;
             }
         }
+        // SUBSCRIBER or REMOTE_SUBSCRIBER
         if( !(ui->comboBox->currentIndex() == 4 && param_name == "message_field") &&
+            !(ui->comboBox->currentIndex() == 5 && param_name == "message_field") &&
             !(param_name_item->flags() & Qt::ItemIsEditable) &&
             (!param_value_item || param_value_item->text().isEmpty()) )
         {
@@ -452,9 +461,48 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
         }
     };
 
+    auto addActionNodes = [maybeRegisterPortNode] () {
+      maybeRegisterPortNode("server_name", BT::PortDirection::INPUT, "", "",
+                            "name of the Action Server",
+                            true);
+    };
+
+    auto addConditionNodes = [maybeRegisterPortNode] () {
+        maybeRegisterPortNode("service_name", BT::PortDirection::INPUT, "", "",
+                              "name of the ROS service",
+                              true);
+    };
+
+    auto addSubscriberNodes = [maybeRegisterPortNode] (bool register_message_field) {
+        maybeRegisterPortNode("message_type", BT::PortDirection::INPUT, "std_msgs/String", "",
+                              "ROS message type",
+                              true);
+        if (register_message_field) {
+            maybeRegisterPortNode("message_field", BT::PortDirection::INPUT, "", "",
+                                  "(optional) field to extract from the message",
+                                  true);
+        }
+        maybeRegisterPortNode("topic_name", BT::PortDirection::INPUT, "", "",
+                              "name of the subscribed topic",
+                              false);
+        maybeRegisterPortNode("output_port", BT::PortDirection::OUTPUT, "", "",
+                              "port to where messages are redirected",
+                              false);
+    };
+
+    auto addRemoteNodes = [maybeRegisterPortNode] () {
+        maybeRegisterPortNode("host_name", BT::PortDirection::INPUT, "localhost", "",
+                              "name of the rosbridge_server host",
+                              true);
+        maybeRegisterPortNode("host_port", BT::PortDirection::INPUT, "9090", "",
+                              "port of the rosbridge_server host",
+                              true);
+    };
+
     // Enable 'Add port' button
     ui->pushButtonAdd->setEnabled(true);
 
+    // Update port list
     if (node_type == "DecoratorNode" || node_type == "ControlNode") {
         unregister_all_but(std::vector<std::string>{});
     }
@@ -464,51 +512,34 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
             "If false (default), the Subtree has an isolated blackboard and needs port remapping",
             true);
     }
+    if (node_type == "ActionNode") {
+        unregister_all_but(std::vector<std::string>{"server_name"});
+        addActionNodes();
+    }
+    if (node_type == "RemoteAction") {
+        unregister_all_but(std::vector<std::string>{"server_name", "host_name", "host_port"});
+        addActionNodes();
+        addRemoteNodes();
+    }
+    if (node_type == "ConditionNode") {
+        unregister_all_but(std::vector<std::string>{"service_name"});
+        addConditionNodes();
+    }
+    if (node_type == "RemoteCondition") {
+        unregister_all_but(std::vector<std::string>{"service_name", "host_name", "host_port"});
+        addConditionNodes();
+        addRemoteNodes();
+    }
     if (node_type == "Subscriber") {
         ui->pushButtonAdd->setEnabled(false);
         unregister_every_other(std::vector<std::string>{"message_type", "message_field", "topic_name", "output_port"});
-        maybeRegisterPortNode("message_type", BT::PortDirection::INPUT, "std_msgs/String", "",
-                              "ROS message type",
-                              true);
-        maybeRegisterPortNode("message_field", BT::PortDirection::INPUT, "", "",
-                              "(optional) field to extract from the message",
-                              true);
-        maybeRegisterPortNode("topic_name", BT::PortDirection::INPUT, "", "",
-                              "name of the subscribed topic",
-                              false);
-        maybeRegisterPortNode("output_port", BT::PortDirection::OUTPUT, "", "",
-                              "port to where messages are redirected",
-                              false);
+        addSubscriberNodes(true);
     }
-    if (node_type == "ActionNode" || node_type == "RemoteAction") {
-        if (node_type == "ActionNode") {
-            unregister_all_but(std::vector<std::string>{"server_name"});
-        }
-        if (node_type == "RemoteAction") {
-            unregister_all_but(std::vector<std::string>{"server_name", "host_name", "host_port"});
-        }
-        maybeRegisterPortNode("server_name", BT::PortDirection::INPUT, "", "",
-                              "name of the Action Server",
-                              true);
-    }
-    if (node_type == "ConditionNode" || node_type == "RemoteCondition") {
-        if (node_type == "ConditionNode") {
-            unregister_all_but(std::vector<std::string>{"service_name"});
-        }
-        if (node_type == "RemoteCondition") {
-            unregister_all_but(std::vector<std::string>{"service_name", "host_name", "host_port"});
-        }
-        maybeRegisterPortNode("service_name", BT::PortDirection::INPUT, "", "",
-                              "name of the ROS service",
-                              true);
-    }
-    if (node_type == "RemoteAction" || node_type == "RemoteCondition") {
-        maybeRegisterPortNode("host_name", BT::PortDirection::INPUT, "localhost", "",
-                              "name of the rosbridge_server host",
-                              true);
-        maybeRegisterPortNode("host_port", BT::PortDirection::INPUT, "9090", "",
-                              "port of the rosbridge_server host",
-                              true);
+    if (node_type == "RemoteSubscriber") {
+        ui->pushButtonAdd->setEnabled(false);
+        unregister_every_other(std::vector<std::string>{"message_type", "topic_name", "output_port"});
+        addSubscriberNodes(false);
+        addRemoteNodes();
     }
 
     checkValid();

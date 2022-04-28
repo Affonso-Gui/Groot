@@ -22,6 +22,11 @@
         "caption_color":  "#44bb44"
     },
 
+    "RemoteSubscriber": {
+        "icon": ":/icons/svg/letter_A.svg",
+        "caption_color":  "#44bb44"
+    },
+
     "Decorator": {
         "caption_color":  "#ffee77"
     },

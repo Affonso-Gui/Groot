@@ -78,6 +78,8 @@ BT::NodeType convert(roseus_bt::NodeType type) {
         return BT::NodeType::CONDITION;
     case roseus_bt::NodeType::SUBSCRIBER:
         return BT::NodeType::ACTION;
+    case roseus_bt::NodeType::REMOTE_SUBSCRIBER:
+        return BT::NodeType::ACTION;
     case roseus_bt::NodeType::CONTROL:
         return BT::NodeType::CONTROL;
     case roseus_bt::NodeType::DECORATOR:
