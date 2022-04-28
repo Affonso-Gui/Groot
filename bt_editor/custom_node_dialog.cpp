@@ -93,7 +93,7 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
     }
 
     else {
-        // register server_name as we open the dialog with an ActionNode selection
+        // register server_name as we open the dialog with an Action node selection
         registerPortNode("server_name", BT::PortDirection::INPUT, "", "",
                          "name of the Action Server", true);
     }
@@ -503,7 +503,7 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
     ui->pushButtonAdd->setEnabled(true);
 
     // Update port list
-    if (node_type == "DecoratorNode" || node_type == "ControlNode") {
+    if (node_type == "Decorator" || node_type == "Control") {
         unregister_all_but(std::vector<std::string>{});
     }
     if (node_type == "SubTree") {
@@ -512,7 +512,7 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
             "If false (default), the Subtree has an isolated blackboard and needs port remapping",
             true);
     }
-    if (node_type == "ActionNode") {
+    if (node_type == "Action") {
         unregister_all_but(std::vector<std::string>{"server_name"});
         addActionNodes();
     }
@@ -521,7 +521,7 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
         addActionNodes();
         addRemoteNodes();
     }
-    if (node_type == "ConditionNode") {
+    if (node_type == "Condition") {
         unregister_all_but(std::vector<std::string>{"service_name"});
         addConditionNodes();
     }
