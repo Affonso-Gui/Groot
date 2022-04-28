@@ -232,16 +232,14 @@ QDomElement writePortModel(const QString& port_name, const PortModel& port, QDom
   }
 
   port_element.setAttribute("name", port_name);
-  if (port.type_name.isEmpty() == false)
-  {
-    port_element.setAttribute("type", port.type_name);
-  }
+  port_element.setAttribute("type", port.type_name);
+
   if (port.default_value.isEmpty() == false)
   {
     port_element.setAttribute("default", port.default_value);
   }
 
-  if (!port.description.isEmpty())
+  if (!port.description.isEmpty() && !port.type_name.isEmpty())
   {
     QDomText description = doc.createTextNode(port.description);
     port_element.appendChild(description);
