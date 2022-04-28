@@ -200,7 +200,9 @@ private:
 #ifdef ZMQ_FOUND
     SidepanelMonitor* _monitor_widget;
 #endif
-    
+
+    QShortcut* _load_shortcut;
+
     MainWindow::SavedState saveCurrentState();
     void clearUndoStacks();
 };
