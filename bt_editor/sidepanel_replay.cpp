@@ -81,7 +81,7 @@ void SidepanelReplay::updateTableModel(const AbsBehaviorTree& locaded_tree)
         } break;
         case NodeStatus::RUNNING:{
             item = new QStandardItem("RUNNING");
-            item->setBackground(QColor::fromRgb(250, 160, 20));
+            item->setBackground(QColor::fromRgb(160, 160, 250));
         } break;
         case NodeStatus::IDLE:{
             item = new QStandardItem("IDLE");
