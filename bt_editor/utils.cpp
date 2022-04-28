@@ -482,7 +482,7 @@ getStyleFromStatus(NodeStatus status, NodeStatus prev_status)
             else if( prev_status == NodeStatus::RUNNING )
             {
                 node_style.NormalBoundaryColor =
-                        node_style.ShadowColor =  QColor(150, 130, 40);
+                        node_style.ShadowColor =  QColor(80, 80, 150);
                 conn_style.NormalColor = node_style.NormalBoundaryColor;
             }
             else if( prev_status == NodeStatus::FAILURE )
@@ -509,7 +509,7 @@ getStyleFromStatus(NodeStatus status, NodeStatus prev_status)
     else if( status == NodeStatus::RUNNING )
     {
         node_style.NormalBoundaryColor =
-                node_style.ShadowColor =  QColor(220, 140, 20);
+                node_style.ShadowColor =  QColor(160, 160, 250);
         conn_style.NormalColor = node_style.NormalBoundaryColor;
     }
     else if( status == NodeStatus::FAILURE )
