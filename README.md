@@ -67,7 +67,9 @@ git clone --branch v3.8 https://github.com/BehaviorTree/BehaviorTree.CPP.git
 | :-: | :-: |
 | CTRL-S | Save Tree |
 | CTRL-L | Load Tree |
+| CTRL-O | Load Tree |
 | CTRL-Z | Undo |
+| CTRL-Y | Redo |
 | CTRL-SHIFT-Z | Redo |
 | C | Center View |
 | L | Toggle Layout |
