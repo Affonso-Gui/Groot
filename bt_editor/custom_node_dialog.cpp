@@ -69,6 +69,7 @@ CustomNodeDialog::CustomNodeDialog(const NodeModels &models,
             else if( model.type == NodeType::SUBSCRIBER )
             {
                 ui->comboBox->setCurrentIndex(4);
+                ui->pushButtonAdd->setEnabled(false);
             }
             else if( model.type == NodeType::CONTROL )
             {
@@ -241,6 +242,13 @@ void CustomNodeDialog::checkValid()
         return checkDuplicateValue("service_name", value, index_types, node_types);
     };
 
+    auto checkRosMessage = [this] (std::string text, bool compound) {
+        if( text.find('/') != std::string::npos )  return false;
+        return (bool)( compound ||
+                       std::find(_ros_message_types.begin(), _ros_message_types.end(),
+                                 text) == _ros_message_types.end() );
+    };
+
     auto name = ui->lineEdit->text();
     int pos;
 
@@ -289,21 +297,34 @@ void CustomNodeDialog::checkValid()
             setError("Reserved port name: the words \"name\" and \"ID\" should not be used.");
             return;
         }
-        if( !param_type_item || (param_type_item->text().isEmpty() &&
-                                 param_type_item->flags() & Qt::ItemIsEditable ) )
+        if( ui->comboBox->currentIndex() == 4 &&  // SUBSCRIBER
+            ( param_name == "message_type" ||
+              param_name == "topic_name" ||
+              param_name == "output_port" ))
         {
-            setError("Port type cannot be empty");
-            return;
+            if( param_name == "message_type" && param_value_item &&
+                checkRosMessage(param_value_item->text().toStdString(), true) )
+            {
+                setError("Invalid message_type: only ROS messages are accepted");
+                return;
+            }
         }
-        if( param_type_item->flags() & Qt::ItemIsEditable &&
-            param_type_item->text().toStdString().find('/') == std::string::npos &&
-            std::find(_ros_message_types.begin(), _ros_message_types.end(),
-                      param_type_item->text().toStdString()) == _ros_message_types.end() )
-        {
-            setError("Invalid port type: use a built-in or compound ros message type");
-            return;
+        else {  // NOT SUBSCRIBER
+            if( !param_type_item || (param_type_item->text().isEmpty() &&
+                                     param_type_item->flags() & Qt::ItemIsEditable ) )
+            {
+                setError("Port type cannot be empty");
+                return;
+            }
+            if( param_type_item->flags() & Qt::ItemIsEditable &&
+                checkRosMessage(param_type_item->text().toStdString(), false) )
+            {
+                setError("Invalid port type: use a built-in or compound ROS message type");
+                return;
+            }
         }
-        if( !(param_name_item->flags() & Qt::ItemIsEditable) &&
+        if( !(ui->comboBox->currentIndex() == 4 && param_name == "message_field") &&
+            !(param_name_item->flags() & Qt::ItemIsEditable) &&
             (!param_value_item || param_value_item->text().isEmpty()) )
         {
             setError(param_name.toStdString() + " default value cannot be empty");
@@ -395,9 +416,10 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
                                              "service_name",
                                              "host_name",
                                              "host_port",
-                                             "type",
+                                             "message_type",
+                                             "message_field",
                                              "topic_name",
-                                             "to",
+                                             "output_port",
                                              "__shared_blackboard" };
         for (const auto& it : black_list) {
             all_nodes.erase(std::remove(all_nodes.begin(), all_nodes.end(), it),
@@ -405,6 +427,17 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
         }
         for (const auto& node : all_nodes) {
             unregister_node(node);
+        }
+    };
+
+    auto unregister_every_other = [this] (std::vector<std::string> black_list) {
+        for (int row=ui->tableWidget->rowCount(); row >= 0; row--) {
+            auto item_name = ui->tableWidget->item(row,0);;
+            if (!item_name ||
+                std::find(black_list.begin(), black_list.end(),
+                          item_name->text().toStdString()) == black_list.end()) {
+                ui->tableWidget->removeRow(row);
+            }
         }
     };
 
@@ -419,6 +452,9 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
         }
     };
 
+    // Enable 'Add port' button
+    ui->pushButtonAdd->setEnabled(true);
+
     if (node_type == "DecoratorNode" || node_type == "ControlNode") {
         unregister_all_but(std::vector<std::string>{});
     }
@@ -429,16 +465,20 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
             true);
     }
     if (node_type == "Subscriber") {
-        unregister_all_but(std::vector<std::string>{"type", "topic_name", "to"});
-        maybeRegisterPortNode("type", BT::PortDirection::INPUT, "", "",
-                              "ROS message type (e.g. std_msgs/String)",
+        ui->pushButtonAdd->setEnabled(false);
+        unregister_every_other(std::vector<std::string>{"message_type", "message_field", "topic_name", "output_port"});
+        maybeRegisterPortNode("message_type", BT::PortDirection::INPUT, "std_msgs/String", "",
+                              "ROS message type",
+                              true);
+        maybeRegisterPortNode("message_field", BT::PortDirection::INPUT, "", "",
+                              "(optional) field to extract from the message",
                               true);
         maybeRegisterPortNode("topic_name", BT::PortDirection::INPUT, "", "",
                               "name of the subscribed topic",
-                              true);
-        maybeRegisterPortNode("to", BT::PortDirection::OUTPUT, "", "",
+                              false);
+        maybeRegisterPortNode("output_port", BT::PortDirection::OUTPUT, "", "",
                               "port to where messages are redirected",
-                              true);
+                              false);
     }
     if (node_type == "ActionNode" || node_type == "RemoteAction") {
         if (node_type == "ActionNode") {
@@ -463,10 +503,10 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
                               true);
     }
     if (node_type == "RemoteAction" || node_type == "RemoteCondition") {
-        maybeRegisterPortNode("host_name", BT::PortDirection::INPUT, "", "",
+        maybeRegisterPortNode("host_name", BT::PortDirection::INPUT, "localhost", "",
                               "name of the rosbridge_server host",
                               true);
-        maybeRegisterPortNode("host_port", BT::PortDirection::INPUT, "", "",
+        maybeRegisterPortNode("host_port", BT::PortDirection::INPUT, "9090", "",
                               "port of the rosbridge_server host",
                               true);
     }
