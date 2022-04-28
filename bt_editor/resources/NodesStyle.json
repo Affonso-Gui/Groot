@@ -9,22 +9,22 @@
     },
 
     "RemoteAction": {
-        "icon": ":/icons/svg/letter_A.svg"
+        "icon": ":/icons/svg/remote_action.svg"
     },
 
     "RemoteCondition": {
-        "icon": ":/icons/svg/letter_C.svg",
+        "icon": ":/icons/svg/remote_condition.svg",
         "caption_color":  "#44bb44"
     },
 
     "Subscriber": {
-        "icon": ":/icons/svg/letter_A.svg",
-        "caption_color":  "#44bb44"
+        "icon": ":/icons/svg/letter_S.svg",
+        "caption_color":  "#b59ca5"
     },
 
     "RemoteSubscriber": {
-        "icon": ":/icons/svg/letter_A.svg",
-        "caption_color":  "#44bb44"
+        "icon": ":/icons/svg/remote_subscriber.svg",
+        "caption_color":  "#b59ca5"
     },
 
     "Decorator": {
