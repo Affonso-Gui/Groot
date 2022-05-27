@@ -307,7 +307,8 @@ void CustomNodeDialog::checkValid()
         if( ( ui->comboBox->currentIndex() == 4 || ui->comboBox->currentIndex() == 5 ) && 
             ( param_name == "message_type" ||
               param_name == "topic_name" ||
-              param_name == "output_port" ))
+              param_name == "output_port" ||
+              param_name == "received_port" ))
         {
             if( param_name == "message_type" && param_value_item &&
                 checkRosMessage(param_value_item->text().toStdString(), true) )
@@ -429,6 +430,7 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
                                              "message_field",
                                              "topic_name",
                                              "output_port",
+                                             "received_port",
                                              "__shared_blackboard" };
         for (const auto& it : black_list) {
             all_nodes.erase(std::remove(all_nodes.begin(), all_nodes.end(), it),
@@ -488,6 +490,9 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
         maybeRegisterPortNode("output_port", BT::PortDirection::OUTPUT, "", "",
                               "port to where messages are redirected",
                               false);
+        maybeRegisterPortNode("received_port", BT::PortDirection::OUTPUT, "", "bool",
+                              "port set to true every time a message is received",
+                              false);
     };
 
     auto addRemoteNodes = [maybeRegisterPortNode] () {
@@ -532,12 +537,12 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
     }
     if (node_type == "Subscriber") {
         ui->pushButtonAdd->setEnabled(false);
-        unregister_every_other(std::vector<std::string>{"message_type", "message_field", "topic_name", "output_port"});
+        unregister_every_other(std::vector<std::string>{"message_type", "message_field", "topic_name", "output_port", "received_port"});
         addSubscriberNodes(true);
     }
     if (node_type == "RemoteSubscriber") {
         ui->pushButtonAdd->setEnabled(false);
-        unregister_every_other(std::vector<std::string>{"message_type", "topic_name", "output_port"});
+        unregister_every_other(std::vector<std::string>{"message_type", "topic_name", "output_port", "received_port"});
         addSubscriberNodes(false);
         addRemoteNodes();
     }
