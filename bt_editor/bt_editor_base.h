@@ -49,7 +49,7 @@ struct  NodeModel
 typedef std::map<QString, NodeModel> NodeModels;
 
 
-enum class GraphicMode { EDITOR, MONITOR, REPLAY };
+enum class GraphicMode { EDITOR, INTERPRETER, MONITOR, REPLAY };
 
 GraphicMode getGraphicModeFromString(const QString& str);
 

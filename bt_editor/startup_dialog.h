@@ -22,6 +22,8 @@ public:
 private slots:
     void on_toolButtonEditor_clicked();
 
+    void on_toolButtonInterpreter_clicked();
+
     void on_toolButtonMonitor_clicked();
 
     void on_toolButtonReplay_clicked();

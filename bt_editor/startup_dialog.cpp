@@ -62,6 +62,23 @@ void StartupDialog::on_toolButtonEditor_clicked()
     }
 }
 
+void StartupDialog::on_toolButtonInterpreter_clicked()
+{
+    _mode = GraphicMode::INTERPRETER;
+    updateCurrentMode();
+
+    QTime now = QTime::currentTime();
+    static QTime prev_click_time = now;
+    int ms_delay = prev_click_time.msecsTo( now );
+    if( ms_delay > 0 && ms_delay <=  QApplication::doubleClickInterval())
+    {
+        on_toolButtonStart_clicked();
+    }
+    else{
+        prev_click_time = now;
+    }
+}
+
 void StartupDialog::on_toolButtonMonitor_clicked()
 {
     _mode = GraphicMode::MONITOR;
@@ -113,6 +130,10 @@ void StartupDialog::updateCurrentMode()
     {
             ui->labelDescription->setText("Create/Load/Edit/Save your own BehaviorTree.");
     }
+    else if( _mode == GraphicMode::INTERPRETER)
+    {
+       ui->labelDescription->setText("Test your BehaviorTree interactively.");
+    }
     else if( _mode == GraphicMode::MONITOR)
     {
         ui->labelDescription->setText("Connect to a remote server to visualize the status"
@@ -125,6 +146,7 @@ void StartupDialog::updateCurrentMode()
     }
 
     ui->toolButtonEditor->setStyleSheet(  _mode == GraphicMode::EDITOR ? selected_style : default_style);
+    ui->toolButtonInterpreter->setStyleSheet(  _mode == GraphicMode::INTERPRETER ? selected_style : default_style);
 #ifdef ZMQ_FOUND
     ui->toolButtonMonitor->setStyleSheet( _mode == GraphicMode::MONITOR ? selected_style : default_style);
 #endif

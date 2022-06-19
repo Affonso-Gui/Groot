@@ -118,6 +118,8 @@ GraphicMode getGraphicModeFromString(const QString &str)
 {
     if( str == "EDITOR")
         return GraphicMode::EDITOR;
+    else if( str == "INTERPRETER")
+        return GraphicMode::INTERPRETER;
     else if( str == "MONITOR")
         return GraphicMode::MONITOR;
     return GraphicMode::REPLAY;
@@ -126,6 +128,7 @@ GraphicMode getGraphicModeFromString(const QString &str)
 const char *toStr(GraphicMode type)
 {
     if( type == GraphicMode::EDITOR)   return "EDITOR";
+    if( type == GraphicMode::INTERPRETER ) return "INTERPRETER";
     if( type == GraphicMode::MONITOR ) return "MONITOR";
     if( type == GraphicMode::REPLAY)   return "REPLAY";
     return nullptr;
