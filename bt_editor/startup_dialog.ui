@@ -183,6 +183,61 @@ border-radius: 10px;
       </widget>
      </item>
      <item>
+      <widget class="QToolButton" name="toolButtonInterpreter">
+       <property name="minimumSize">
+        <size>
+         <width>100</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color:white;
+border: 2px solid #9cff71;
+border-radius: 10px;
+
+
+</string>
+       </property>
+       <property name="text">
+        <string>Interpreter</string>
+       </property>
+       <property name="icon">
+        <iconset resource="resources/icons.qrc">
+         <normaloff>:/icons/BT-monitor.png</normaloff>:/icons/BT-monitor.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>70</width>
+         <height>70</height>
+        </size>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextUnderIcon</enum>
+       </property>
+       <property name="autoRaise">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QToolButton" name="toolButtonMonitor">
        <property name="minimumSize">
         <size>
