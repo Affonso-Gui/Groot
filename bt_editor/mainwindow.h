@@ -15,6 +15,7 @@
 #include "graphic_container.h"
 #include "XML_utilities.hpp"
 #include "sidepanel_editor.h"
+#include "sidepanel_interpreter.h"
 #include "sidepanel_replay.h"
 #include "models/SubtreeNodeModel.hpp"
 
@@ -195,6 +196,7 @@ private:
     QString _main_tree;
 
     SidepanelEditor* _editor_widget;
+    SidepanelInterpreter* _interpreter_widget;
     SidepanelReplay* _replay_widget;
 #ifdef ZMQ_FOUND
     SidepanelMonitor* _monitor_widget;
