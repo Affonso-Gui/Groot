@@ -107,6 +107,8 @@ public slots:
 
     void on_actionEditor_mode_triggered();
 
+    void on_actionInterpreter_mode_triggered();
+
     void on_actionMonitor_mode_triggered();
 
     void on_actionReplay_mode_triggered();

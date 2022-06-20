@@ -1481,6 +1481,19 @@ void MainWindow::on_actionEditor_mode_triggered()
     _replay_widget->clear();
 }
 
+void MainWindow::on_actionInterpreter_mode_triggered()
+{
+    _current_mode = GraphicMode::INTERPRETER;
+    updateCurrentMode();
+
+#ifdef ZMQ_FOUND
+    _monitor_widget->clear();
+#endif
+
+    _monitor_widget->clear();
+    _replay_widget->clear();
+}
+
 void MainWindow::on_actionMonitor_mode_triggered()
 {
 #ifdef ZMQ_FOUND

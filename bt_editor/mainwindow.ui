@@ -762,6 +762,7 @@ QToolButton:disabled{
       <string>Switch Mode...</string>
      </property>
      <addaction name="actionEditor_mode"/>
+     <addaction name="actionInterpreter_mode"/>
      <addaction name="actionMonitor_mode"/>
      <addaction name="actionReplay_mode"/>
     </widget>
@@ -815,6 +816,11 @@ QToolButton:disabled{
   <action name="actionEditor_mode">
    <property name="text">
     <string>Editor Mode</string>
+   </property>
+  </action>
+  <action name="actionInterpreter_mode">
+   <property name="text">
+    <string>Interpreter</string>
    </property>
   </action>
   <action name="actionMonitor_mode">
