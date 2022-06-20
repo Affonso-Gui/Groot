@@ -88,9 +88,11 @@ MainWindow::MainWindow(GraphicMode initial_mode, QWidget *parent) :
     //------------------------------------------------------
 
     _editor_widget = new SidepanelEditor(_model_registry.get(), _treenode_models, this);
+    _interpreter_widget = new SidepanelInterpreter(this);
     _replay_widget = new SidepanelReplay(this);
 
     ui->leftFrame->layout()->addWidget( _editor_widget );
+    ui->leftFrame->layout()->addWidget( _interpreter_widget );
     ui->leftFrame->layout()->addWidget( _replay_widget );
 
 #ifdef ZMQ_FOUND
@@ -1287,6 +1289,7 @@ void MainWindow::onActionClearTriggered(bool create_new)
     }
 
     _editor_widget->clear();
+    _interpreter_widget->clear();
     _replay_widget->clear();
 #ifdef ZMQ_FOUND
     _monitor_widget->clear();
@@ -1300,6 +1303,7 @@ void MainWindow::updateCurrentMode()
     const bool NOT_EDITOR = _current_mode != GraphicMode::EDITOR;
 
     _editor_widget->setHidden( NOT_EDITOR );
+    _interpreter_widget->setHidden( _current_mode != GraphicMode::INTERPRETER );
     _replay_widget->setHidden( _current_mode != GraphicMode::REPLAY );
 #ifdef ZMQ_FOUND
     _monitor_widget->setHidden( _current_mode != GraphicMode::MONITOR );
@@ -1478,6 +1482,7 @@ void MainWindow::on_actionEditor_mode_triggered()
     _monitor_widget->clear();
 #endif
 
+    _interpreter_widget->clear();
     _replay_widget->clear();
 }
 
