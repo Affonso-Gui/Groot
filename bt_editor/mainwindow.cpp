@@ -1308,7 +1308,8 @@ void MainWindow::updateCurrentMode()
     ui->toolButtonLoadFile->setHidden( _current_mode == GraphicMode::MONITOR );
     ui->toolButtonConnect->setHidden( _current_mode != GraphicMode::MONITOR );
 
-    if( _current_mode == GraphicMode::EDITOR )
+    if( _current_mode == GraphicMode::EDITOR ||
+        _current_mode == GraphicMode::INTERPRETER )
     {
         ui->toolButtonLoadFile->setText("Load Tree");
     }
@@ -1322,7 +1323,8 @@ void MainWindow::updateCurrentMode()
     ui->toolButtonSaveFile->setHidden( NOT_EDITOR );
     ui->toolButtonReorder->setHidden( NOT_EDITOR );
 
-    if( _current_mode == GraphicMode::EDITOR )
+    if( _current_mode == GraphicMode::EDITOR ||
+        _current_mode == GraphicMode::INTERPRETER )
     {
         // Load Button
         connect( ui->toolButtonLoadFile, &QToolButton::clicked,
