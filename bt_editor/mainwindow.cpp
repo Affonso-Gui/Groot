@@ -209,6 +209,9 @@ MainWindow::MainWindow(GraphicMode initial_mode, QWidget *parent) :
     connect( ui->toolButtonSaveFile, &QToolButton::clicked,
             this, &MainWindow::on_actionSave_triggered );
 
+    connect( _interpreter_widget, &SidepanelInterpreter::changeNodeStyle,
+            this, &MainWindow::onChangeNodesStatus);
+
     connect( _replay_widget, &SidepanelReplay::changeNodeStyle,
             this, &MainWindow::onChangeNodesStatus);
 
@@ -716,7 +719,8 @@ void MainWindow::onSceneChanged()
     ui->labelSemaphore->setPixmap(pix);
     ui->labelSemaphore->setScaledContents(true);
 
-    lockEditing( _current_mode != GraphicMode::EDITOR );
+    lockEditing( _current_mode != GraphicMode::EDITOR &&
+                 _current_mode != GraphicMode::INTERPRETER );
 }
 
 
@@ -1620,7 +1624,6 @@ void MainWindow::onChangeNodesStatus(const QString& bt_name,
         auto& abs_node = tree.nodes().at(index);
 
         // printf("%3d: %d, %s\n", index, (int)it.second, abs_node.instance_name.toStdString().c_str());
-
         if(index == 1 && it.second == NodeStatus::RUNNING)
             resetTreeStyle(tree);
 

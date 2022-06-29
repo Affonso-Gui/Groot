@@ -21,6 +21,10 @@ public:
 
 private slots:
 
+    std::vector<int> get_selectedNodes(const QString& bt_name);
+
+    void changeSelectedStyle(const QString& bt_name, const NodeStatus& status);
+
     void on_buttonSetSuccess_clicked();
 
     void on_buttonSetFailure_clicked();
