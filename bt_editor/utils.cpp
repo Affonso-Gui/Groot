@@ -477,18 +477,21 @@ getStyleFromStatus(NodeStatus status, NodeStatus prev_status)
             {
                 node_style.NormalBoundaryColor =
                         node_style.ShadowColor = QColor(100, 150, 100);
+                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
                 conn_style.NormalColor = node_style.NormalBoundaryColor;
             }
             else if( prev_status == NodeStatus::RUNNING )
             {
                 node_style.NormalBoundaryColor =
                         node_style.ShadowColor =  QColor(150, 130, 40);
+                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
                 conn_style.NormalColor = node_style.NormalBoundaryColor;
             }
             else if( prev_status == NodeStatus::FAILURE )
             {
                 node_style.NormalBoundaryColor =
                         node_style.ShadowColor = QColor(150, 80, 80);
+                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
                 conn_style.NormalColor = node_style.NormalBoundaryColor;
             }
         }
@@ -503,19 +506,21 @@ getStyleFromStatus(NodeStatus status, NodeStatus prev_status)
     {
         node_style.NormalBoundaryColor =
                 node_style.ShadowColor = QColor(51, 200, 51);
-                node_style.ShadowColor = QColor(51, 250, 51);
+        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
         conn_style.NormalColor = node_style.NormalBoundaryColor;
     }
     else if( status == NodeStatus::RUNNING )
     {
         node_style.NormalBoundaryColor =
                 node_style.ShadowColor =  QColor(220, 140, 20);
+        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
         conn_style.NormalColor = node_style.NormalBoundaryColor;
     }
     else if( status == NodeStatus::FAILURE )
     {
         node_style.NormalBoundaryColor =
                 node_style.ShadowColor = QColor(250, 50, 50);
+        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
         conn_style.NormalColor = node_style.NormalBoundaryColor;
     }
 
