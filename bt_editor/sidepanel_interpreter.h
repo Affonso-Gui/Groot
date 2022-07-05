@@ -19,11 +19,11 @@ public:
 
     void clear();
 
+    void setTree(QString name, AbsBehaviorTree tree);
+
 private slots:
 
-    std::vector<int> get_selectedNodes(const QString& bt_name);
-
-    void changeSelectedStyle(const QString& bt_name, const NodeStatus& status);
+    void changeSelectedStyle(const NodeStatus& status);
 
     void on_buttonSetSuccess_clicked();
 
@@ -39,6 +39,9 @@ signals:
 
 private:
     Ui::SidepanelInterpreter *ui;
+
+    AbsBehaviorTree _tree;
+    QString _tree_name;
 
     QWidget *_parent;
 

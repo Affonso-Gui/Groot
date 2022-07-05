@@ -439,6 +439,11 @@ void MainWindow::on_actionLoad_triggered()
     }
 
     loadFromXML(xml_text);
+
+    if ( _current_mode == GraphicMode::INTERPRETER ) {
+        auto tree = BuildTreeFromScene( getTabByName(_main_tree)->scene() );
+        _interpreter_widget->setTree(_main_tree, tree);
+    }
 }
 
 QString MainWindow::saveToXML() const
