@@ -469,7 +469,7 @@ void MainWindow::on_actionLoad_triggered()
 
     if ( _current_mode == GraphicMode::INTERPRETER ) {
         auto tree = BuildTreeFromScene( getTabByName(_main_tree)->scene() );
-        _interpreter_widget->setTree(_main_tree, tree);
+        _interpreter_widget->setTree(_main_tree, fileName, tree);
     }
 }
 

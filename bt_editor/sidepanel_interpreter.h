@@ -19,7 +19,8 @@ public:
 
     void clear();
 
-    void setTree(const QString& name, const AbsBehaviorTree& abstract_tree);
+    void setTree(const QString& name, const QString& xml_filename,
+                 const AbsBehaviorTree& abstract_tree);
 
 private slots:
 
@@ -40,6 +41,7 @@ signals:
 private:
     Ui::SidepanelInterpreter *ui;
 
+    BT::Tree _tree;
     AbsBehaviorTree _abstract_tree;
     QString _tree_name;
 
