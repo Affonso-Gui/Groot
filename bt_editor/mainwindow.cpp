@@ -692,8 +692,8 @@ void MainWindow::onSceneChanged()
     ui->labelSemaphore->setPixmap(pix);
     ui->labelSemaphore->setScaledContents(true);
 
-    lockEditing( _current_mode != GraphicMode::EDITOR &&
-                 _current_mode != GraphicMode::INTERPRETER );
+    lockEditing( _current_mode != GraphicMode::EDITOR,
+                 _current_mode == GraphicMode::INTERPRETER );
 }
 
 
@@ -711,12 +711,17 @@ GraphicContainer *MainWindow::getTabByName(const QString &tab_name)
 }
 
 
-void MainWindow::lockEditing(bool locked)
+void MainWindow::lockEditing(bool locked, bool selectable)
 {
     for(auto& tab_it: _tab_info)
     {
-        tab_it.second->lockEditing(locked);
+        tab_it.second->lockEditing(locked, selectable);
     }
+}
+
+void MainWindow::lockEditing(bool locked)
+{
+    lockEditing(locked, false);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
