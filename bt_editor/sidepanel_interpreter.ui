@@ -51,6 +51,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="buttonSetRunningSuccess">
+       <property name="text">
+        <string>Running to Success</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonSetRunningFailure">
+       <property name="text">
+        <string>Running to Failure</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="buttonRunNode">
        <property name="text">
         <string>Run Node</string>
