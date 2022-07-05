@@ -19,7 +19,7 @@ public:
 
     void clear();
 
-    void setTree(QString name, AbsBehaviorTree tree);
+    void setTree(const QString& name, const AbsBehaviorTree& abstract_tree);
 
 private slots:
 
@@ -40,7 +40,7 @@ signals:
 private:
     Ui::SidepanelInterpreter *ui;
 
-    AbsBehaviorTree _tree;
+    AbsBehaviorTree _abstract_tree;
     QString _tree_name;
 
     QWidget *_parent;
