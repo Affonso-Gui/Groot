@@ -1309,7 +1309,8 @@ void MainWindow::updateCurrentMode()
         connect( ui->toolButtonLoadFile, &QToolButton::clicked,
                 _replay_widget, &SidepanelReplay::on_LoadLog );
     }
-    lockEditing( NOT_EDITOR );
+    lockEditing( _current_mode != GraphicMode::EDITOR,
+                 _current_mode == GraphicMode::INTERPRETER);
 
     if( _current_mode == GraphicMode::EDITOR)
     {
