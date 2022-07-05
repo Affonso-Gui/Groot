@@ -19,8 +19,9 @@ public:
 
     void clear();
 
-    void setTree(const QString& name, const QString& xml_filename,
-                 const AbsBehaviorTree& abstract_tree);
+    void setTree(const QString& bt_name, const QString& xml_filename);
+
+    void setTree(const QString& bt_name);
 
 private slots:
 
