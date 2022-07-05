@@ -85,6 +85,21 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
     emit changeNodeStyle(_tree_name, node_status);
 }
 
+void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
+{
+    std::vector<std::pair<int, NodeStatus>> node_status;
+    int i = 1;  // skip root
+    for (auto& tree_node: _tree.nodes) {
+        if (tree_node->status() == NodeStatus::RUNNING) {
+            auto tree_node_ref = std::static_pointer_cast<InterpreterNode>(tree_node);
+            tree_node_ref->set_status(status);
+            node_status.push_back( {i, status} );
+        }
+        i++;
+    }
+    emit changeNodeStyle(_tree_name, node_status);
+}
+
 
 void SidepanelInterpreter::on_buttonSetSuccess_clicked()
 {
@@ -102,6 +117,18 @@ void SidepanelInterpreter::on_buttonSetIdle_clicked()
 {
     qDebug() << "buttonSetIdle";
     changeSelectedStyle(NodeStatus::IDLE);
+}
+
+void SidepanelInterpreter::on_buttonSetRunningSuccess_clicked()
+{
+    qDebug() << "buttonSetRunningSuccess";
+    changeRunningStyle(NodeStatus::SUCCESS);
+}
+
+void SidepanelInterpreter::on_buttonSetRunningFailure_clicked()
+{
+    qDebug() << "buttonSetRunningFailure";
+    changeRunningStyle(NodeStatus::FAILURE);
 }
 
 void SidepanelInterpreter::on_buttonRunNode_clicked()

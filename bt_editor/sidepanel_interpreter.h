@@ -26,11 +26,17 @@ private slots:
 
     void changeSelectedStyle(const NodeStatus& status);
 
+    void changeRunningStyle(const NodeStatus& status);
+
     void on_buttonSetSuccess_clicked();
 
     void on_buttonSetFailure_clicked();
 
     void on_buttonSetIdle_clicked();
+
+    void on_buttonSetRunningSuccess_clicked();
+
+    void on_buttonSetRunningFailure_clicked();
 
     void on_buttonRunNode_clicked();
 
