@@ -24,10 +24,10 @@ void SidepanelInterpreter::clear()
 {
 }
 
-void SidepanelInterpreter::setTree(QString name, AbsBehaviorTree tree) {
+void SidepanelInterpreter::setTree(const QString& name, const AbsBehaviorTree& abstract_tree) {
     qDebug() << "Updating interpreter_widget tree model";
     _tree_name = name;
-    _tree = tree;
+    _abstract_tree = abstract_tree;
 }
 
 void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
@@ -35,7 +35,7 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
     std::vector<int> selected_nodes;
     std::vector<std::pair<int, NodeStatus>> node_status;
     int i = 0;
-    for (auto& node: _tree.nodes()) {
+    for (auto& node: _abstract_tree.nodes()) {
         if (node.graphic_node->nodeGraphicsObject().isSelected()) {
             node_status.push_back( {i, status} );
             node.status = status;
