@@ -69,7 +69,7 @@ GraphicContainer::GraphicContainer(std::shared_ptr<DataModelRegistry> model_regi
 
 }
 
-void GraphicContainer::lockEditing(bool locked)
+void GraphicContainer::lockEditing(bool locked, bool selectable)
 {
     std::vector<QtNodes::Node*> subtrees_expanded;
     for (auto& nodes_it: _scene->nodes() )
@@ -88,7 +88,9 @@ void GraphicContainer::lockEditing(bool locked)
         }
 
         bt_model->lock(locked);
-        node->nodeGraphicsObject().lock(locked);
+        if (!selectable) {
+            node->nodeGraphicsObject().lock(locked);
+        }
 
         if( auto subtree = dynamic_cast<SubtreeNodeModel*>( node->nodeDataModel() ) )
         {

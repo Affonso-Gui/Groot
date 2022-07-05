@@ -138,6 +138,8 @@ private slots:
 
 public:
 
+    void lockEditing(const bool locked, const bool selectable);
+
     void lockEditing(const bool locked);
 
 private:

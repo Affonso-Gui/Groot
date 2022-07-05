@@ -27,7 +27,7 @@ public:
     const EditorFlowScene* scene()  const{ return _scene; }
     const QtNodes::FlowView* view() const { return _view; }
 
-    void lockEditing(bool locked);
+    void lockEditing(bool locked, bool selectable);
 
     void lockSubtreeEditing(QtNodes::Node& node, bool locked, bool change_style);
 
