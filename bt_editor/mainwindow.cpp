@@ -468,8 +468,7 @@ void MainWindow::on_actionLoad_triggered()
     loadFromXML(xml_text);
 
     if ( _current_mode == GraphicMode::INTERPRETER ) {
-        auto tree = BuildTreeFromScene( getTabByName(_main_tree)->scene() );
-        _interpreter_widget->setTree(_main_tree, fileName, tree);
+        _interpreter_widget->setTree(_main_tree, fileName);
     }
 }
 
@@ -1504,6 +1503,7 @@ void MainWindow::on_actionInterpreter_mode_triggered()
 {
     _current_mode = GraphicMode::INTERPRETER;
     updateCurrentMode();
+    _interpreter_widget->setTree(_main_tree);
 
 #ifdef ZMQ_FOUND
     _monitor_widget->clear();

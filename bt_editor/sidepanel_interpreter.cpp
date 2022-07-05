@@ -49,15 +49,15 @@ void SidepanelInterpreter::clear()
 {
 }
 
-void SidepanelInterpreter::setTree(const QString& name, const QString& xml_filename,
-                                   const AbsBehaviorTree& abstract_tree) {
+void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename) {
     qDebug() << "Updating interpreter_widget tree model";
-    _tree_name = name;
-    _abstract_tree = abstract_tree;
+    _tree_name = bt_name;
 
+    auto main_win = dynamic_cast<MainWindow*>( _parent );
+    _abstract_tree = BuildTreeFromScene( main_win->getTabByName(bt_name)->scene() );
 
     BT::BehaviorTreeFactory factory;
-    for (auto& node: abstract_tree.nodes()) {
+    for (auto& node: _abstract_tree.nodes()) {
         if (node.model.type == NodeType::ACTION ||
             node.model.type == NodeType::CONDITION) {
             std::string registration_ID = node.model.registration_ID.toStdString();
@@ -65,7 +65,18 @@ void SidepanelInterpreter::setTree(const QString& name, const QString& xml_filen
         }
     }
 
-    _tree = factory.createTreeFromFile(xml_filename.toStdString());
+    if (xml_filename.isNull()) {
+        QString xml_text = main_win->saveToXML();
+        _tree = factory.createTreeFromText(xml_text.toStdString());
+    }
+    else {
+        _tree = factory.createTreeFromFile(xml_filename.toStdString());
+    }
+}
+
+void SidepanelInterpreter::setTree(const QString& bt_name)
+{
+    setTree(bt_name, QString::null);
 }
 
 void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
