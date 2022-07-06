@@ -121,6 +121,11 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
 {
     BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> node_status;
+
+    if (_tree.nodes.size() == 1 && _tree.rootNode()->name() == "Root") {
+        return;
+    }
+
     int i = 1;  // skip root
     for (auto& tree_node: _tree.nodes) {
         if (tree_node->status() == NodeStatus::RUNNING) {
@@ -141,6 +146,10 @@ void SidepanelInterpreter::tickRoot()
     if (_root_status != NodeStatus::RUNNING) {
         // stop evaluations until the next change
         _updated = false;
+    }
+
+    if (_tree.nodes.size() == 1 && _tree.rootNode()->name() == "Root") {
+        return;
     }
 
     std::vector<std::pair<int, NodeStatus>> node_status;
