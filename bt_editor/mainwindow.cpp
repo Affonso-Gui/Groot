@@ -1298,7 +1298,8 @@ void MainWindow::updateCurrentMode()
     if( EDITOR_LIKE )
     {
         connect( ui->toolButtonLoadFile, &QToolButton::clicked,
-                this, &MainWindow::on_actionLoad_triggered );
+                 this, &MainWindow::on_actionLoad_triggered,
+                 Qt::UniqueConnection);
         disconnect( ui->toolButtonLoadFile, &QToolButton::clicked,
                    _replay_widget, &SidepanelReplay::on_LoadLog );
     }
