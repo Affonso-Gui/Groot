@@ -57,12 +57,17 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     _abstract_tree = BuildTreeFromScene( main_win->getTabByName(bt_name)->scene() );
 
     BT::BehaviorTreeFactory factory;
+    std::unordered_set<std::string> nodes_set;
+    nodes_set.insert("Root");
     for (auto& node: _abstract_tree.nodes()) {
         if (node.model.type == NodeType::ACTION ||
             node.model.type == NodeType::CONDITION) {
             std::string registration_ID = node.model.registration_ID.toStdString();
-            factory.registerNodeType<InterpreterNode>(registration_ID);
+            nodes_set.insert(registration_ID);
         }
+    }
+    for (auto& node_id: nodes_set) {
+        factory.registerNodeType<InterpreterNode>(node_id);
     }
 
     if (xml_filename.isNull()) {
