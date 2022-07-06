@@ -117,6 +117,13 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
 }
 
 
+void SidepanelInterpreter::on_buttonResetTree_clicked()
+{
+    auto main_win = dynamic_cast<MainWindow*>( _parent );
+    setTree(_tree_name);
+    main_win->resetTreeStyle(_abstract_tree);
+}
+
 void SidepanelInterpreter::on_buttonSetSuccess_clicked()
 {
     qDebug() << "buttonSetSuccess";

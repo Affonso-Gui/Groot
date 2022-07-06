@@ -30,6 +30,13 @@
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
+      <widget class="QPushButton" name="buttonResetTree">
+       <property name="text">
+        <string>Reset Tree</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="buttonSetSuccess">
        <property name="text">
         <string>Set SUCCESS</string>

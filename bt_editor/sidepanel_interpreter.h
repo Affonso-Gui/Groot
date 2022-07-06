@@ -29,6 +29,8 @@ private slots:
 
     void changeRunningStyle(const NodeStatus& status);
 
+    void on_buttonResetTree_clicked();
+
     void on_buttonSetSuccess_clicked();
 
     void on_buttonSetFailure_clicked();
