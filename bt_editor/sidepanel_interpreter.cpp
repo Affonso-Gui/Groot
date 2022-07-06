@@ -14,11 +14,6 @@ public:
         BT::AsyncActionNode(name,config)
     {}
 
-    static BT::PortsList providedPorts()
-    {
-        return{};
-    }
-
     virtual void halt() override {}
 
     BT::NodeStatus tick() override {
@@ -64,11 +59,16 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     _abstract_tree = BuildTreeFromScene( main_win->getTabByName(bt_name)->scene() );
 
     BT::BehaviorTreeFactory factory;
-    factory.registerNodeType<InterpreterNode>("Root");
+    factory.registerNodeType<InterpreterNode>("Root", {});
+
     for (auto& node: _abstract_tree.nodes()) {
         std::string registration_ID = node.model.registration_ID.toStdString();
+        BT::PortsList ports;
+        for (auto& it: node.model.ports) {
+            ports.insert( {it.first.toStdString(), BT::PortInfo(it.second.direction)} );
+        }
         try {
-            factory.registerNodeType<InterpreterNode>(registration_ID);
+            factory.registerNodeType<InterpreterNode>(registration_ID, ports);
         }
         catch(BT::BehaviorTreeException err) {
             // Duplicated node
