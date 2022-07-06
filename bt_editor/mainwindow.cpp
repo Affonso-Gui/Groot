@@ -1267,9 +1267,11 @@ void MainWindow::onActionClearTriggered(bool create_new)
 
 void MainWindow::updateCurrentMode()
 {
-    const bool NOT_EDITOR = _current_mode != GraphicMode::EDITOR;
+    const bool EDITOR_LIKE =
+        _current_mode == GraphicMode::EDITOR ||
+        _current_mode == GraphicMode::INTERPRETER;
 
-    _editor_widget->setHidden( NOT_EDITOR );
+    _editor_widget->setHidden( _current_mode != GraphicMode::EDITOR );
     _interpreter_widget->setHidden( _current_mode != GraphicMode::INTERPRETER );
     _replay_widget->setHidden( _current_mode != GraphicMode::REPLAY );
 #ifdef ZMQ_FOUND
@@ -1279,8 +1281,7 @@ void MainWindow::updateCurrentMode()
     ui->toolButtonLoadFile->setHidden( _current_mode == GraphicMode::MONITOR );
     ui->toolButtonConnect->setHidden( _current_mode != GraphicMode::MONITOR );
 
-    if( _current_mode == GraphicMode::EDITOR ||
-        _current_mode == GraphicMode::INTERPRETER )
+    if( EDITOR_LIKE )
     {
         ui->toolButtonLoadFile->setText("Load Tree");
     }
@@ -1291,11 +1292,10 @@ void MainWindow::updateCurrentMode()
 
     ui->toolButtonLoadRemote->setHidden( true );
 
-    ui->toolButtonSaveFile->setHidden( NOT_EDITOR );
-    ui->toolButtonReorder->setHidden( NOT_EDITOR );
+    ui->toolButtonSaveFile->setHidden( !EDITOR_LIKE );
+    ui->toolButtonReorder->setHidden( !EDITOR_LIKE );
 
-    if( _current_mode == GraphicMode::EDITOR ||
-        _current_mode == GraphicMode::INTERPRETER )
+    if( EDITOR_LIKE )
     {
         connect( ui->toolButtonLoadFile, &QToolButton::clicked,
                 this, &MainWindow::on_actionLoad_triggered );
