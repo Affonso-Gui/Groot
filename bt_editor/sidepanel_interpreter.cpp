@@ -2,6 +2,7 @@
 #include "ui_sidepanel_interpreter.h"
 #include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
 #include <QPushButton>
+#include <QMessageBox>
 #include <QDebug>
 
 #include "mainwindow.h"
@@ -166,7 +167,13 @@ void SidepanelInterpreter::tickRoot()
 void SidepanelInterpreter::runStep()
 {
     if (_updated && _autorun) {
-        tickRoot();
+        try {
+            tickRoot();
+        }
+        catch (std::exception& err) {
+            on_buttonDisableAutoExecution_clicked();
+            qWarning() << "Error during auto callback: " << err.what();
+        }
     }
 }
 
@@ -229,5 +236,12 @@ void SidepanelInterpreter::on_buttonDisableAutoExecution_clicked()
 
 void SidepanelInterpreter::on_buttonRunNode_clicked() {
     qDebug() << "buttonRunNode";
-    tickRoot();
+    try {
+        tickRoot();
+    }
+    catch (std::exception& err) {
+        QMessageBox messageBox;
+        messageBox.critical(this,"Error Running Tree", err.what() );
+        messageBox.show();
+    }
 }
