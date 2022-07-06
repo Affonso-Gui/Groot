@@ -84,6 +84,7 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
         _tree = factory.createTreeFromFile(xml_filename.toStdString());
     }
 
+    _updated = true;
     _timer = new QTimer(this);
     connect( _timer, &QTimer::timeout, this, &SidepanelInterpreter::runStep);
 
@@ -137,7 +138,10 @@ void SidepanelInterpreter::tickRoot()
 {
     BT::StdCoutLogger logger_cout(_tree);
     _root_status = _tree.tickRoot();
-    _updated = false;
+    if (_root_status != NodeStatus::RUNNING) {
+        // stop evaluations until the next change
+        _updated = false;
+    }
 
     std::vector<std::pair<int, NodeStatus>> node_status;
     node_status.push_back( {0, _root_status} );
@@ -153,7 +157,6 @@ void SidepanelInterpreter::tickRoot()
 void SidepanelInterpreter::runStep()
 {
     if (_updated && _autorun) {
-        _updated = false;
         tickRoot();
     }
 }
