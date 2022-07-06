@@ -1,5 +1,6 @@
 #include "sidepanel_interpreter.h"
 #include "ui_sidepanel_interpreter.h"
+#include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
 #include <QPushButton>
 #include <QDebug>
 
@@ -34,10 +35,16 @@ public:
 SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     QFrame(parent),
     ui(new Ui::SidepanelInterpreter),
+    _root_status(NodeStatus::IDLE),
     _tree_name("BehaviorTree"),
+    _autorun(true),
+    _updated(true),
     _parent(parent)
 {
     ui->setupUi(this);
+    ui->buttonDisableAutoExecution->setEnabled(true);
+    ui->buttonEnableAutoExecution->setEnabled(false);
+    ui->buttonRunNode->setEnabled(false);
 }
 
 SidepanelInterpreter::~SidepanelInterpreter()
@@ -76,6 +83,13 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     else {
         _tree = factory.createTreeFromFile(xml_filename.toStdString());
     }
+
+    _timer = new QTimer(this);
+    connect( _timer, &QTimer::timeout, this, &SidepanelInterpreter::runStep);
+
+    if (_autorun) {
+        _timer->start(20);
+    }
 }
 
 void SidepanelInterpreter::setTree(const QString& bt_name)
@@ -85,6 +99,7 @@ void SidepanelInterpreter::setTree(const QString& bt_name)
 
 void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
 {
+    BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> node_status;
     int i = 0;
     for (auto& node: _abstract_tree.nodes()) {
@@ -98,10 +113,12 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
         i++;
     }
     emit changeNodeStyle(_tree_name, node_status);
+    _updated = true;
 }
 
 void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
 {
+    BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> node_status;
     int i = 1;  // skip root
     for (auto& tree_node: _tree.nodes) {
@@ -113,14 +130,40 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
         i++;
     }
     emit changeNodeStyle(_tree_name, node_status);
+    _updated = true;
 }
 
+void SidepanelInterpreter::tickRoot()
+{
+    BT::StdCoutLogger logger_cout(_tree);
+    _root_status = _tree.tickRoot();
+    _updated = false;
+
+    std::vector<std::pair<int, NodeStatus>> node_status;
+    node_status.push_back( {0, _root_status} );
+
+    int i = 1;
+    for (auto& node: _tree.nodes) {
+        node_status.push_back( {i, node->status()} );
+        i++;
+    }
+    emit changeNodeStyle(_tree_name, node_status);
+}
+
+void SidepanelInterpreter::runStep()
+{
+    if (_updated && _autorun) {
+        _updated = false;
+        tickRoot();
+    }
+}
 
 void SidepanelInterpreter::on_buttonResetTree_clicked()
 {
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     setTree(_tree_name);
     main_win->resetTreeStyle(_abstract_tree);
+    _updated = true;
 }
 
 void SidepanelInterpreter::on_buttonSetSuccess_clicked()
@@ -153,19 +196,26 @@ void SidepanelInterpreter::on_buttonSetRunningFailure_clicked()
     changeRunningStyle(NodeStatus::FAILURE);
 }
 
-void SidepanelInterpreter::on_buttonRunNode_clicked()
+void SidepanelInterpreter::on_buttonEnableAutoExecution_clicked()
 {
+    _autorun = true;
+    _updated = true;
+    ui->buttonDisableAutoExecution->setEnabled(true);
+    ui->buttonEnableAutoExecution->setEnabled(false);
+    ui->buttonRunNode->setEnabled(false);
+    _timer->start(20);
+}
+
+void SidepanelInterpreter::on_buttonDisableAutoExecution_clicked()
+{
+    _autorun = false;
+    ui->buttonDisableAutoExecution->setEnabled(false);
+    ui->buttonEnableAutoExecution->setEnabled(true);
+    ui->buttonRunNode->setEnabled(true);
+    _timer->stop();
+}
+
+void SidepanelInterpreter::on_buttonRunNode_clicked() {
     qDebug() << "buttonRunNode";
-    NodeStatus root_status;
-    root_status = _tree.tickRoot();
-
-    std::vector<std::pair<int, NodeStatus>> node_status;
-    node_status.push_back( {0, root_status} );
-
-    int i = 1;
-    for (auto& node: _tree.nodes) {
-        node_status.push_back( {i, node->status()} );
-        i++;
-    }
-    emit changeNodeStyle(_tree_name, node_status);
+    tickRoot();
 }

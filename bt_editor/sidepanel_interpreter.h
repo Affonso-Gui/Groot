@@ -29,6 +29,10 @@ private slots:
 
     void changeRunningStyle(const NodeStatus& status);
 
+    void tickRoot();
+
+    void runStep();
+
     void on_buttonResetTree_clicked();
 
     void on_buttonSetSuccess_clicked();
@@ -40,6 +44,10 @@ private slots:
     void on_buttonSetRunningSuccess_clicked();
 
     void on_buttonSetRunningFailure_clicked();
+
+    void on_buttonEnableAutoExecution_clicked();
+
+    void on_buttonDisableAutoExecution_clicked();
 
     void on_buttonRunNode_clicked();
 
@@ -53,6 +61,11 @@ private:
     BT::Tree _tree;
     AbsBehaviorTree _abstract_tree;
     QString _tree_name;
+
+    QTimer* _timer;
+    NodeStatus _root_status;
+    bool _autorun;
+    bool _updated;
 
     QWidget *_parent;
 
