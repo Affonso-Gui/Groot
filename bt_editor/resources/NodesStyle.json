@@ -1,10 +1,8 @@
 {
     "Action": {
-        "icon": ":/icons/svg/letter_A.svg"
     },
 
     "Condition": {
-        "icon": ":/icons/svg/letter_C.svg",
         "border_radius": 10.0
     },
 
@@ -12,33 +10,28 @@
     },
 
     "SubTree": {
-        "icon": ":/icons/svg/subtree.svg"
+        "icon": ":/icons/svg/subtree.svg",
+        "icon_size": 20
     },
 
     "AlwaysFailure": {
-        "icon": ":/icons/svg/letter_A.svg",
         "caption_alias": "Failure"
     },
 
     "ForceFailure": {
-        "icon": ":/icons/svg/letter_A.svg"
     },
 
     "AlwaysSuccess": {
-        "icon": ":/icons/svg/letter_A.svg",
         "caption_alias": "Success"
     },
 
     "ForceSuccess": {
-        "icon": ":/icons/svg/letter_A.svg"
     },
 
     "SetBlackboard": {
-        "icon": ":/icons/svg/edit_list.svg"
     },
 
     "RetryUntilSuccesful": {
-        "icon": ":/icons/svg/retry.svg"
     },
 
     "Inverter": {
@@ -46,11 +39,9 @@
     },
 
     "Repeat": {
-        "icon": ":/icons/svg/repeat.svg"
     },
 
     "Timeout": {
-        "icon": ":/icons/svg/timeout.svg"
     },
 
     "Sequence": {
