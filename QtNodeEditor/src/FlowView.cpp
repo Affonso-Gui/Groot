@@ -47,7 +47,7 @@ FlowView(QWidget *parent)
 
   setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
-  setCacheMode(QGraphicsView::CacheBackground);
+  // setCacheMode(QGraphicsView::CacheBackground);
 
   //setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
 }

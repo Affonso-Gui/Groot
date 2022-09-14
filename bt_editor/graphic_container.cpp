@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QInputDialog>
+#include <QSvgGenerator>
 
 using namespace QtNodes;
 
@@ -733,3 +734,14 @@ void GraphicContainer::loadFromJson(const QByteArray &data)
 }
 
 
+void GraphicContainer::saveSvgFile(const QString path)
+{
+    QSvgGenerator generator;
+    QRectF rect = _scene->itemsBoundingRect();
+    generator.setFileName(path);
+    generator.setSize(QSize(rect.width(), rect.height()));
+    generator.setViewBox(rect);
+    QPainter painter;
+    painter.begin(&generator);
+    _scene->render(&painter, rect, rect);
+}

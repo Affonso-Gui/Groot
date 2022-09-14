@@ -39,7 +39,7 @@ NodeGraphicsObject(FlowScene &scene,
   setFlag(QGraphicsItem::ItemIsSelectable, true);
   setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
 
-  setCacheMode( QGraphicsItem::DeviceCoordinateCache );
+  // setCacheMode( QGraphicsItem::DeviceCoordinateCache );
 
   auto const &nodeStyle = node.nodeDataModel()->nodeStyle();
 
