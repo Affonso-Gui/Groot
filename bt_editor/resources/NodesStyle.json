@@ -4,12 +4,10 @@
     },
 
     "Condition": {
-        "icon": ":/icons/svg/letter_C.svg",
-        "caption_color":  "#44bb44"
+        "icon": ":/icons/svg/letter_C.svg"
     },
 
     "Decorator": {
-        "caption_color":  "#ffee77"
     },
 
     "SubTree": {
@@ -18,24 +16,20 @@
 
     "AlwaysFailure": {
         "icon": ":/icons/svg/letter_A.svg",
-        "caption_color":  "#ff2222",
         "caption_alias": "Failure"
     },
 
     "ForceFailure": {
-        "icon": ":/icons/svg/letter_A.svg",
-        "caption_color":  "#ff2222"
+        "icon": ":/icons/svg/letter_A.svg"
     },
 
     "AlwaysSuccess": {
         "icon": ":/icons/svg/letter_A.svg",
-        "caption_color":  "#00FF00",
         "caption_alias": "Success"
     },
 
     "ForceSuccess": {
-        "icon": ":/icons/svg/letter_A.svg",
-        "caption_color":  "#00FF00"
+        "icon": ":/icons/svg/letter_A.svg"
     },
 
     "SetBlackboard": {
@@ -59,27 +53,22 @@
     },
 
     "Sequence": {
-        "icon": ":/icons/svg/sequence.svg",
-        "caption_color":  "#ff99bb"
+        "icon": ":/icons/svg/sequence.svg"
     },
 
     "SequenceStar": {
-        "icon": ":/icons/svg/sequence_star.svg",
-        "caption_color":  "#ffaacc"
+        "icon": ":/icons/svg/sequence_star.svg"
     },
 
     "ReactiveSequence": {
-        "icon": ":/icons/svg/sequence_reactive.svg",
-        "caption_color":  "#ff77aa"
+        "icon": ":/icons/svg/sequence_reactive.svg"
     },
 
     "Fallback": {
-        "icon": ":/icons/svg/fallback.svg",
-        "caption_color":  "#77ccff"
+        "icon": ":/icons/svg/fallback.svg"
     },
 
     "ReactiveFallback": {
-        "icon": ":/icons/svg/fallback_reactive.svg",
-        "caption_color":  "#44aadd"
+        "icon": ":/icons/svg/fallback_reactive.svg"
     }
 }

@@ -63,7 +63,7 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
 
     _main_widget->setAttribute(Qt::WA_NoSystemBackground);
 
-    _line_edit_name->setStyleSheet("color: white; "
+    _line_edit_name->setStyleSheet("color: black; "
                                    "background-color: transparent;"
                                    "border: 0px;");
 
@@ -72,7 +72,7 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     _form_layout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
     _main_layout->addWidget(_params_widget);
-    _params_widget->setStyleSheet("color: white;");
+    _params_widget->setStyleSheet("color: black;");
 
     _form_layout->setHorizontalSpacing(4);
     _form_layout->setVerticalSpacing(2);
