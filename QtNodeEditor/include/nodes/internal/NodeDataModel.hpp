@@ -74,6 +74,12 @@ public:
   void
   setNodeStyle(NodeStyle const& style);
 
+  double
+  borderRadius() const;
+
+  void
+  setBorderRadius(double const& radius);
+
 public:
 
   /// Triggers the algorithm
@@ -122,6 +128,8 @@ signals:
   void embeddedWidgetSizeUpdated();
 
 private:
+
+  double _borderRadius = 0.0;
 
   NodeStyle _nodeStyle;
 };

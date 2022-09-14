@@ -4,7 +4,8 @@
     },
 
     "Condition": {
-        "icon": ":/icons/svg/letter_C.svg"
+        "icon": ":/icons/svg/letter_C.svg",
+        "border_radius": 10.0
     },
 
     "Decorator": {

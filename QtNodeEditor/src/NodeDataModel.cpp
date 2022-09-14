@@ -38,3 +38,17 @@ setNodeStyle(NodeStyle const& style)
 {
   _nodeStyle = style;
 }
+
+double
+NodeDataModel::
+borderRadius() const
+{
+    return _borderRadius;
+}
+
+void
+NodeDataModel::
+setBorderRadius(double const& radius)
+{
+    _borderRadius = radius;
+}

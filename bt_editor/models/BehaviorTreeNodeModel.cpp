@@ -24,6 +24,7 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     _style_caption_alias( model.registration_ID )
 {
     readStyle();
+
     _main_widget = new QFrame();
     _line_edit_name = new QLineEdit(_main_widget);
     _params_widget = new QFrame();
@@ -357,6 +358,10 @@ void BehaviorTreeDataModel::readStyle()
             if( category_style.contains("caption_alias"))
             {
                 _style_caption_alias = category_style["caption_alias"].toString();
+            }
+            if( category_style.contains("border_radius"))
+            {
+                setBorderRadius(category_style["border_radius"].toDouble());
             }
         }
     }
