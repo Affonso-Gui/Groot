@@ -61,6 +61,7 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     _line_edit_name->setAlignment( Qt::AlignCenter );
     _line_edit_name->setText( _instance_name );
     _line_edit_name->setFixedWidth( DEFAULT_LINE_WIDTH );
+    _line_edit_name->setHidden(true);
 
     _main_widget->setAttribute(Qt::WA_NoSystemBackground);
 
@@ -205,6 +206,10 @@ void BehaviorTreeDataModel::initWidget()
         }
     }
 
+    if (_style_caption_alias == "")
+    {
+        _caption_label->setFixedWidth(0);
+    }
     _caption_label->setText( _style_caption_alias );
 
     QPalette capt_palette = _caption_label->palette();

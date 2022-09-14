@@ -54,7 +54,8 @@
     },
 
     "Sequence": {
-        "icon": ":/icons/svg/sequence.svg"
+        "icon": ":/icons/svg/sequence.svg",
+        "caption_alias": ""
     },
 
     "SequenceStar": {
@@ -62,14 +63,19 @@
     },
 
     "ReactiveSequence": {
-        "icon": ":/icons/svg/sequence_reactive.svg"
+        "icon": ":/icons/svg/sequence_reactive.svg",
+        "caption_alias": "",
+        "caption_color": "#ff0000"
     },
 
     "Fallback": {
-        "icon": ":/icons/svg/fallback.svg"
+        "icon": ":/icons/svg/fallback.svg",
+        "caption_alias": ""
     },
 
     "ReactiveFallback": {
-        "icon": ":/icons/svg/fallback_reactive.svg"
+        "icon": ":/icons/svg/fallback_reactive.svg",
+        "caption_alias": "",
+        "caption_color": "#ff0000"
     }
 }
