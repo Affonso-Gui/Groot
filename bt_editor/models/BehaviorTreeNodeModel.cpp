@@ -21,7 +21,8 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     _model(model),
     _icon_renderer(nullptr),
     _style_caption_color( QtNodes::NodeStyle().FontColor ),
-    _style_caption_alias( model.registration_ID )
+    _style_caption_alias( model.registration_ID ),
+    _style_icon_size(15)
 {
     readStyle();
 
@@ -189,7 +190,8 @@ void BehaviorTreeDataModel::initWidget()
 {
     if( _style_icon.isEmpty() == false )
     {
-        _caption_logo_left->setFixedWidth( 20 );
+        _caption_logo_left->setFixedWidth( _style_icon_size );
+        _caption_logo_left->setFixedHeight( _style_icon_size );
         _caption_logo_right->setFixedWidth( 1 );
 
         QFile file(_style_icon);
@@ -355,6 +357,10 @@ void BehaviorTreeDataModel::readStyle()
             if( category_style.contains("icon"))
             {
                 _style_icon = category_style["icon"].toString();
+            }
+            if( category_style.contains("icon_size"))
+            {
+                _style_icon_size = category_style["icon_size"].toInt();
             }
             if( category_style.contains("caption_color"))
             {

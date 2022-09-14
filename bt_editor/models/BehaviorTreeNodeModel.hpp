@@ -109,6 +109,7 @@ private:
     QString _style_icon;
     QColor  _style_caption_color;
     QString  _style_caption_alias;
+    int _style_icon_size;
 
 signals:
 
