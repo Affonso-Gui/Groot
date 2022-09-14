@@ -147,10 +147,10 @@ void CustomNodeDialog::checkValid()
     {
         ui->labelWarning->setText("The name cannot be empty");
     }
-    else if( _validator->validate(name, pos) != QValidator::Acceptable)
-    {
-        ui->labelWarning->setText("Invalid name: use only letters, digits and underscores");
-    }
+    // else if( _validator->validate(name, pos) != QValidator::Acceptable)
+    // {
+    //     ui->labelWarning->setText("Invalid name: use only letters, digits and underscores");
+    // }
     else if( _models.count( name ) > 0 && !_editing )
     {
         ui->labelWarning->setText("Another Node has the same name");
