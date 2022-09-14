@@ -38,9 +38,7 @@ SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     _parent(parent)
 {
     ui->setupUi(this);
-    ui->buttonDisableAutoExecution->setEnabled(true);
-    ui->buttonEnableAutoExecution->setEnabled(false);
-    ui->buttonRunNode->setEnabled(false);
+    toggleButtonAutoExecution();
 }
 
 SidepanelInterpreter::~SidepanelInterpreter()
@@ -177,6 +175,13 @@ void SidepanelInterpreter::runStep()
     }
 }
 
+void SidepanelInterpreter::toggleButtonAutoExecution()
+{
+    ui->buttonDisableAutoExecution->setEnabled(_autorun);
+    ui->buttonEnableAutoExecution->setEnabled(!_autorun);
+    ui->buttonRunNode->setEnabled(!_autorun);
+}
+
 void SidepanelInterpreter::on_buttonResetTree_clicked()
 {
     auto main_win = dynamic_cast<MainWindow*>( _parent );
@@ -219,18 +224,14 @@ void SidepanelInterpreter::on_buttonEnableAutoExecution_clicked()
 {
     _autorun = true;
     _updated = true;
-    ui->buttonDisableAutoExecution->setEnabled(true);
-    ui->buttonEnableAutoExecution->setEnabled(false);
-    ui->buttonRunNode->setEnabled(false);
+    toggleButtonAutoExecution();
     _timer->start(20);
 }
 
 void SidepanelInterpreter::on_buttonDisableAutoExecution_clicked()
 {
     _autorun = false;
-    ui->buttonDisableAutoExecution->setEnabled(false);
-    ui->buttonEnableAutoExecution->setEnabled(true);
-    ui->buttonRunNode->setEnabled(true);
+    toggleButtonAutoExecution();
     _timer->stop();
 }
 
