@@ -668,7 +668,7 @@ void MainWindow::on_actionSave_triggered()
 
     auto fileName = QFileDialog::getSaveFileName(this, "Save BehaviorTree to file",
                                                  directory_path, "BehaviorTree files (*.xml)");
-    QString svgFileName = fileName + ".svg";
+    QString svgFileName = fileName;
 
     if (fileName.isEmpty()){
         return;
@@ -686,7 +686,10 @@ void MainWindow::on_actionSave_triggered()
         stream << xml_text << endl;
     }
 
-    currentTabInfo()->saveSvgFile(svgFileName);
+    for (auto& it: _tab_info)
+    {
+        it.second->saveSvgFile(svgFileName + "_" + it.first + ".svg");
+    }
 
     directory_path = QFileInfo(fileName).absolutePath();
     settings.setValue("MainWindow.lastSaveDirectory", directory_path);
