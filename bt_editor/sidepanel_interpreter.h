@@ -33,6 +33,8 @@ private slots:
 
     void runStep();
 
+    void toggleButtonAutoExecution();
+
     void on_buttonResetTree_clicked();
 
     void on_buttonSetSuccess_clicked();
