@@ -447,6 +447,11 @@ void MainWindow::on_actionLoad_triggered()
 
 QString MainWindow::saveToXML() const
 {
+    return saveToXML(_main_tree);
+}
+
+QString MainWindow::saveToXML(const QString bt_name) const
+{
     QDomDocument doc;
 
     const char* COMMENT_SEPARATOR = " ////////// ";
@@ -456,7 +461,7 @@ QString MainWindow::saveToXML() const
 
     if( _main_tree.isEmpty() == false)
     {
-        root.setAttribute("main_tree_to_execute", _main_tree.toStdString().c_str());
+        root.setAttribute("main_tree_to_execute", bt_name.toStdString().c_str());
     }
 
     for (auto& it: _tab_info)
@@ -695,6 +700,13 @@ void MainWindow::onSceneChanged()
                  _current_mode == GraphicMode::INTERPRETER );
 }
 
+
+QString MainWindow::currentTabName()
+{
+    int index = ui->tabWidget->currentIndex();
+    QString tab_name = ui->tabWidget->tabText(index);
+    return tab_name;
+}
 
 GraphicContainer* MainWindow::currentTabInfo()
 {
@@ -1443,7 +1455,7 @@ void MainWindow::on_actionInterpreter_mode_triggered()
 {
     _current_mode = GraphicMode::INTERPRETER;
     updateCurrentMode();
-    _interpreter_widget->setTree(_main_tree);
+    _interpreter_widget->setTree(currentTabName());
 #ifdef ZMQ_FOUND
     _monitor_widget->clear();
 #endif
@@ -1509,6 +1521,9 @@ void MainWindow::on_tabWidget_currentChanged(int index)
         _current_state.current_tab_name = ui->tabWidget->tabText( index );
         refreshExpandedSubtrees();
         tab->zoomHomeView();
+        if ( _current_mode == GraphicMode::INTERPRETER ) {
+            _interpreter_widget->setTree(tab_name);
+        }
     }
 }
 
