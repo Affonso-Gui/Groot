@@ -354,6 +354,8 @@ void GraphicContainer::onNodeCreated(Node &node)
             {
                 emit requestSubTreeExpand( *this, node );
             });
+            // hide expand button for clean svg output
+            subtree_node->expandButton()->setHidden(true);
         }
 
         bt_node->initWidget();
