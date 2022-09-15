@@ -41,9 +41,9 @@ paint(QPainter* painter,
 
   drawNodeRect(painter, geom, model, graphicsObject);
 
-  drawConnectionPoints(painter, geom, state, model, scene);
+  // drawConnectionPoints(painter, geom, state, model, scene);
 
-  drawFilledConnectionPoints(painter, geom, state, model);
+  // drawFilledConnectionPoints(painter, geom, state, model);
 
   drawEntryLabels(painter, geom, state, model);
 

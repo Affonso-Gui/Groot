@@ -11,9 +11,9 @@
 #include <QJsonDocument>
 
 const int MARGIN = 10;
-const int DEFAULT_LINE_WIDTH  = 100;
-const int DEFAULT_FIELD_WIDTH = 50;
-const int DEFAULT_LABEL_WIDTH = 50;
+const int DEFAULT_LINE_WIDTH  = 0;
+const int DEFAULT_FIELD_WIDTH = 0;
+const int DEFAULT_LABEL_WIDTH = 0;
 
 BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     _params_widget(nullptr),
@@ -45,8 +45,10 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     _caption_logo_left->installEventFilter(this);
 
     QFont capt_font = _caption_label->font();
-    capt_font.setPointSize(12);
+    capt_font.setPointSize(14);
+    capt_font.setStretch(75);
     _caption_label->setFont(capt_font);
+    _line_edit_name->setFont(capt_font);
 
     if (_style_caption_alias == "Root")
     {
@@ -54,6 +56,8 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
         capt_layout->addWidget(_line_edit_name, 0, Qt::AlignHCenter );
         capt_layout->addWidget(_caption_logo_right, 0, Qt::AlignLeft);
         _main_layout->addLayout( capt_layout );
+        _caption_label->setFixedWidth(0);
+        _caption_label->setHidden(true);
     }
     else
     {
@@ -145,6 +149,10 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
             form_label->setStyleSheet("QToolTip {color: black;}");
             form_label->setToolTip( description );
 
+            QFont form_font = form_label->font();
+            form_font.setStretch(75);
+            form_label->setFont(form_font);
+
             form_field->setMinimumWidth(DEFAULT_FIELD_WIDTH);
 
             _ports_widgets.insert( std::make_pair( port_it.first, form_field) );
@@ -219,6 +227,7 @@ void BehaviorTreeDataModel::initWidget()
 
     if (_style_caption_alias == "")
     {
+        _caption_label->setFixedWidth(0);
         _caption_label->setHidden(true);
     }
     _caption_label->setText( _style_caption_alias );
