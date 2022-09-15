@@ -710,6 +710,11 @@ GraphicContainer *MainWindow::getTabByName(const QString &tab_name)
 }
 
 
+const std::map<QString, GraphicContainer*> MainWindow::getTabInfo()
+{
+    return _tab_info;
+}
+
 void MainWindow::lockEditing(bool locked, bool selectable)
 {
     for(auto& tab_it: _tab_info)
@@ -1439,7 +1444,6 @@ void MainWindow::on_actionInterpreter_mode_triggered()
     _current_mode = GraphicMode::INTERPRETER;
     updateCurrentMode();
     _interpreter_widget->setTree(_main_tree);
-
 #ifdef ZMQ_FOUND
     _monitor_widget->clear();
 #endif
