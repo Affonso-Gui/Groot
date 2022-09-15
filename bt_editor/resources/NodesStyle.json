@@ -15,14 +15,16 @@
     },
 
     "AlwaysFailure": {
-        "caption_alias": "Failure"
+        "caption_alias": "Failure",
+        "border_radius": 10.0
     },
 
     "ForceFailure": {
     },
 
     "AlwaysSuccess": {
-        "caption_alias": "Success"
+        "caption_alias": "Success",
+        "border_radius": 10.0
     },
 
     "ForceSuccess": {

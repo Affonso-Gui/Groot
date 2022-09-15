@@ -385,6 +385,12 @@ void BehaviorTreeDataModel::readStyle()
             }
         }
     }
+
+    // set rounded edges on all nodes with lower case names
+    if (registrationName() == registrationName().toLower())
+    {
+        setBorderRadius(10.0);
+    }
 }
 
 const QString& BehaviorTreeDataModel::registrationName() const
