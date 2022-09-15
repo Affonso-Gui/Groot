@@ -688,7 +688,8 @@ void MainWindow::on_actionSave_triggered()
 
     for (auto& it: _tab_info)
     {
-        it.second->saveSvgFile(svgFileName + "_" + it.first + ".svg");
+        QString tab_name = QString(it.first).replace(" ", "_");
+        it.second->saveSvgFile(svgFileName + "_" + tab_name + ".svg");
     }
 
     directory_path = QFileInfo(fileName).absolutePath();
