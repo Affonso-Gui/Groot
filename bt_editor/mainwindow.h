@@ -55,6 +55,8 @@ public:
 
     GraphicContainer *getTabByName(const QString& name);
 
+    const std::map<QString, GraphicContainer*> getTabInfo();
+
     void clearTreeModels();
 
     const NodeModels &registeredModels() const;

@@ -60,18 +60,21 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     BT::BehaviorTreeFactory factory;
     factory.registerNodeType<InterpreterNode>("Root", {});
 
-    for (auto& node: _abstract_tree.nodes()) {
-        std::string registration_ID = node.model.registration_ID.toStdString();
-        BT::PortsList ports;
-        for (auto& it: node.model.ports) {
-            ports.insert( {it.first.toStdString(), BT::PortInfo(it.second.direction)} );
-        }
-        try {
-            factory.registerNodeType<InterpreterNode>(registration_ID, ports);
-        }
-        catch(BT::BehaviorTreeException err) {
-            // Duplicated node
-            // qDebug() << err.what();
+    for (auto& tab: main_win->getTabInfo()) {
+        AbsBehaviorTree abs_tree = BuildTreeFromScene( tab.second->scene() );
+        for (auto& node: abs_tree.nodes()) {
+            std::string registration_ID = node.model.registration_ID.toStdString();
+            BT::PortsList ports;
+            for (auto& it: node.model.ports) {
+                ports.insert( {it.first.toStdString(), BT::PortInfo(it.second.direction)} );
+            }
+            try {
+                factory.registerNodeType<InterpreterNode>(registration_ID, ports);
+            }
+            catch(BT::BehaviorTreeException err) {
+                // Duplicated node
+                // qDebug() << err.what();
+            }
         }
     }
 
