@@ -55,11 +55,13 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     _tree_name = bt_name;
 
     auto main_win = dynamic_cast<MainWindow*>( _parent );
-    _abstract_tree = BuildTreeFromScene( main_win->getTabByName(bt_name)->scene() );
+    auto container = main_win->getTabByName(bt_name);
+    _abstract_tree = BuildTreeFromScene( container->scene() );
 
     BT::BehaviorTreeFactory factory;
     factory.registerNodeType<InterpreterNode>("Root", {});
 
+    // register nodes
     for (auto& tab: main_win->getTabInfo()) {
         AbsBehaviorTree abs_tree = BuildTreeFromScene( tab.second->scene() );
         for (auto& node: abs_tree.nodes()) {
@@ -75,6 +77,15 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
                 // Duplicated node
                 // qDebug() << err.what();
             }
+        }
+    }
+
+    // expand subtrees
+    for (auto& node: _abstract_tree.nodes()) {
+        auto subtree = dynamic_cast< SubtreeNodeModel*>( node.graphic_node->nodeDataModel() );
+        if (subtree && !subtree->expanded())
+        {
+            main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
         }
     }
 
