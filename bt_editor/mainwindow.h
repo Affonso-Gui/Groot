@@ -51,6 +51,10 @@ public:
 
     QString saveToXML() const ;
 
+    QString saveToXML(const QString bt_name) const ;
+
+    QString  currentTabName();
+
     GraphicContainer* currentTabInfo();
 
     GraphicContainer *getTabByName(const QString& name);

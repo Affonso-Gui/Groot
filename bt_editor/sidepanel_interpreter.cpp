@@ -57,6 +57,10 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     auto container = main_win->getTabByName(bt_name);
     _abstract_tree = BuildTreeFromScene( container->scene() );
+    if (!_abstract_tree.rootNode()) {
+        // too early; initialization has not finished yet
+        return;
+    }
 
     BT::BehaviorTreeFactory factory;
     factory.registerNodeType<InterpreterNode>("Root", {});
@@ -90,7 +94,7 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     }
 
     if (xml_filename.isNull()) {
-        QString xml_text = main_win->saveToXML();
+        QString xml_text = main_win->saveToXML(bt_name);
         _tree = factory.createTreeFromText(xml_text.toStdString());
     }
     else {
