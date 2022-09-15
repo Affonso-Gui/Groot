@@ -48,12 +48,22 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     capt_font.setPointSize(12);
     _caption_label->setFont(capt_font);
 
-    capt_layout->addWidget(_caption_logo_left, 0, Qt::AlignRight);
-    capt_layout->addWidget(_caption_label, 0, Qt::AlignHCenter );
-    capt_layout->addWidget(_caption_logo_right, 0, Qt::AlignLeft);
-
-    _main_layout->addLayout( capt_layout );
-    _main_layout->addWidget( _line_edit_name );
+    if (_style_caption_alias == "Root")
+    {
+        capt_layout->addWidget(_caption_logo_left, 0, Qt::AlignRight);
+        capt_layout->addWidget(_line_edit_name, 0, Qt::AlignHCenter );
+        capt_layout->addWidget(_caption_logo_right, 0, Qt::AlignLeft);
+        _main_layout->addLayout( capt_layout );
+    }
+    else
+    {
+        capt_layout->addWidget(_caption_logo_left, 0, Qt::AlignRight);
+        capt_layout->addWidget(_caption_label, 0, Qt::AlignHCenter );
+        capt_layout->addWidget(_caption_logo_right, 0, Qt::AlignLeft);
+        _main_layout->addLayout( capt_layout );
+        _main_layout->addWidget( _line_edit_name );
+        _line_edit_name->setHidden(true);
+    }
 
     _main_layout->setMargin(0);
     _main_layout->setSpacing(2);
@@ -62,7 +72,6 @@ BehaviorTreeDataModel::BehaviorTreeDataModel(const NodeModel &model):
     _line_edit_name->setAlignment( Qt::AlignCenter );
     _line_edit_name->setText( _instance_name );
     _line_edit_name->setFixedWidth( DEFAULT_LINE_WIDTH );
-    _line_edit_name->setHidden(true);
 
     _main_widget->setAttribute(Qt::WA_NoSystemBackground);
 
@@ -210,7 +219,7 @@ void BehaviorTreeDataModel::initWidget()
 
     if (_style_caption_alias == "")
     {
-        _caption_label->setFixedWidth(0);
+        _caption_label->setHidden(true);
     }
     _caption_label->setText( _style_caption_alias );
 
