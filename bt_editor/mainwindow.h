@@ -108,7 +108,9 @@ public slots:
                                  const QString &bt_name,
                                  bool secondary_tabs = true);
 
-    void onChangeNodesStatus(const QString& bt_name, const std::vector<std::pair<int, NodeStatus>>& node_status);
+    void onChangeNodesStatus(const QString& bt_name,
+                             const std::vector<std::pair<int, NodeStatus>>& node_status,
+                             bool reset_before_update);
 
     void on_toolButtonLayout_clicked();
 

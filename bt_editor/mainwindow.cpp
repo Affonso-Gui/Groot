@@ -960,6 +960,9 @@ void MainWindow::onRequestSubTreeExpand(GraphicContainer& container,
     {
         subTreeExpand( container, node, SUBTREE_EXPAND );
     }
+    if ( _current_mode == GraphicMode::INTERPRETER ) {
+        _interpreter_widget->updateTree();
+    }
 }
 
 
@@ -1640,7 +1643,8 @@ void MainWindow::resetTreeStyle(AbsBehaviorTree &tree){
 }
 
 void MainWindow::onChangeNodesStatus(const QString& bt_name,
-                                     const std::vector<std::pair<int, NodeStatus> > &node_status)
+                                     const std::vector<std::pair<int, NodeStatus> > &node_status,
+                                     bool reset_before_update)
 {
     auto tree = BuildTreeFromScene( getTabByName(bt_name)->scene() );
 
@@ -1655,7 +1659,7 @@ void MainWindow::onChangeNodesStatus(const QString& bt_name,
         auto& abs_node = tree.nodes().at(index);
 
         // printf("%3d: %d, %s\n", index, (int)it.second, abs_node.instance_name.toStdString().c_str());
-        if(index == 1 && it.second == NodeStatus::RUNNING)
+        if(reset_before_update && index == 1 && it.second == NodeStatus::RUNNING)
             resetTreeStyle(tree);
 
         auto gui_node = abs_node.graphic_node;
