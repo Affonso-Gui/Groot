@@ -359,7 +359,7 @@ void SidepanelReplay::onRowChanged(int current_row)
         node_status.push_back( { trans.index, trans.status} );
     }
 
-    emit changeNodeStyle( bt_name, node_status );
+    emit changeNodeStyle( bt_name, node_status, true );
 
     _prev_row = current_row;
 }

@@ -105,7 +105,7 @@ void SidepanelMonitor::on_timer()
             }
 
             // update the graphic part
-            emit changeNodeStyle( "BehaviorTree", node_status );
+            emit changeNodeStyle( "BehaviorTree", node_status, true );
 
             // lock editing of nodes
             auto main_win = dynamic_cast<MainWindow*>( _parent );
@@ -175,7 +175,7 @@ bool SidepanelMonitor::getTreeFromServer()
         {
             node_status.push_back( { t, _loaded_tree.nodes()[t].status } );
         }
-        emit changeNodeStyle( "BehaviorTree", node_status );
+        emit changeNodeStyle( "BehaviorTree", node_status, true );
     }
     catch( zmq::error_t& err)
     {

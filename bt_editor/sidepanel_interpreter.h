@@ -23,6 +23,8 @@ public:
 
     void setTree(const QString& bt_name);
 
+    void updateTree();
+
 private slots:
 
     void changeSelectedStyle(const NodeStatus& status);
@@ -55,7 +57,8 @@ private slots:
 
 signals:
     void changeNodeStyle(const QString& bt_name,
-                         const std::vector<std::pair<int, NodeStatus>>& node_status);
+                         const std::vector<std::pair<int, NodeStatus>>& node_status,
+                         bool reset_before_update);
 
 private:
     Ui::SidepanelInterpreter *ui;

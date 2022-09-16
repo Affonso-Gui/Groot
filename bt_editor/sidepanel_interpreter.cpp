@@ -55,8 +55,7 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     _tree_name = bt_name;
 
     auto main_win = dynamic_cast<MainWindow*>( _parent );
-    auto container = main_win->getTabByName(bt_name);
-    _abstract_tree = BuildTreeFromScene( container->scene() );
+    updateTree();
     if (!_abstract_tree.rootNode()) {
         // too early; initialization has not finished yet
         return;
@@ -84,15 +83,6 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
         }
     }
 
-    // expand subtrees
-    for (auto& node: _abstract_tree.nodes()) {
-        auto subtree = dynamic_cast< SubtreeNodeModel*>( node.graphic_node->nodeDataModel() );
-        if (subtree && !subtree->expanded())
-        {
-            main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
-        }
-    }
-
     if (xml_filename.isNull()) {
         QString xml_text = main_win->saveToXML(bt_name);
         _tree = factory.createTreeFromText(xml_text.toStdString());
@@ -115,6 +105,13 @@ void SidepanelInterpreter::setTree(const QString& bt_name)
     setTree(bt_name, QString::null);
 }
 
+void SidepanelInterpreter::updateTree()
+{
+    auto main_win = dynamic_cast<MainWindow*>( _parent );
+    auto container = main_win->getTabByName(_tree_name);
+    _abstract_tree = BuildTreeFromScene( container->scene() );
+}
+
 void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
 {
     BT::StdCoutLogger logger_cout(_tree);
@@ -130,7 +127,7 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
         }
         i++;
     }
-    emit changeNodeStyle(_tree_name, node_status);
+    emit changeNodeStyle(_tree_name, node_status, true);
     _updated = true;
 }
 
@@ -152,13 +149,26 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
         }
         i++;
     }
-    emit changeNodeStyle(_tree_name, node_status);
+    emit changeNodeStyle(_tree_name, node_status, true);
     _updated = true;
 }
 
 void SidepanelInterpreter::tickRoot()
 {
     BT::StdCoutLogger logger_cout(_tree);
+    std::vector<std::pair<int, NodeStatus>> prev_node_status;
+    std::vector<std::pair<int, NodeStatus>> node_status;
+    int i;
+
+    // set previous status
+    prev_node_status.push_back( {0, _root_status} );
+    i = 1;
+    for (auto& node: _tree.nodes) {
+        prev_node_status.push_back( {i, node->status()} );
+        i++;
+    }
+
+    // tick tree
     _root_status = _tree.tickRoot();
     if (_root_status != NodeStatus::RUNNING) {
         // stop evaluations until the next change
@@ -169,15 +179,38 @@ void SidepanelInterpreter::tickRoot()
         return;
     }
 
-    std::vector<std::pair<int, NodeStatus>> node_status;
-    node_status.push_back( {0, _root_status} );
+    // set changed status
+    if (_root_status != prev_node_status.at(0).second) {
+        node_status.push_back( {0, _root_status} );
+    }
 
-    int i = 1;
+    i = 1;
     for (auto& node: _tree.nodes) {
-        node_status.push_back( {i, node->status()} );
+        if (node->status() != prev_node_status.at(i).second) {
+            node_status.push_back( {i, node->status()} );
+        }
         i++;
     }
-    emit changeNodeStyle(_tree_name, node_status);
+
+    if (node_status.size() == 0) {
+        return;
+    }
+
+    // expand subtrees as needed
+    int last_change_index = node_status.back().first;
+    auto main_win = dynamic_cast<MainWindow*>( _parent );
+    auto container = main_win->getTabByName(_tree_name);
+
+    for (i=0; i<last_change_index; i++) {
+        auto node = _abstract_tree.nodes().at(i);
+        auto subtree = dynamic_cast< SubtreeNodeModel*>( node.graphic_node->nodeDataModel() );
+        if (subtree && !subtree->expanded())
+            {
+                main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
+            }
+    }
+
+    emit changeNodeStyle(_tree_name, node_status, false);
 }
 
 void SidepanelInterpreter::runStep()

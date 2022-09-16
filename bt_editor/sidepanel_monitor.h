@@ -34,7 +34,8 @@ signals:
     void connectionUpdate(bool connected);
 
     void changeNodeStyle(const QString& bt_name,
-                         const std::vector<std::pair<int, NodeStatus>>& node_status);
+                         const std::vector<std::pair<int, NodeStatus>>& node_status,
+                         bool reset_before_update);
 
     void addNewModel(const NodeModel &new_model);
 
