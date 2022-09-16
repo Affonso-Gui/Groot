@@ -112,6 +112,30 @@ void SidepanelInterpreter::updateTree()
     _abstract_tree = BuildTreeFromScene( container->scene() );
 }
 
+void SidepanelInterpreter::
+expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
+                         bool reset_before_update)
+{
+    if (node_status.size() == 0) {
+        return;
+    }
+
+    int last_change_index = std::max_element(node_status.begin(), node_status.end())->first;
+    auto main_win = dynamic_cast<MainWindow*>( _parent );
+    auto container = main_win->getTabByName(_tree_name);
+
+    for (int i=0; i<last_change_index; i++) {
+        auto node = _abstract_tree.nodes().at(i);
+        auto subtree = dynamic_cast< SubtreeNodeModel*>( node.graphic_node->nodeDataModel() );
+        if (subtree && !subtree->expanded())
+            {
+                main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
+            }
+    }
+
+    emit changeNodeStyle(_tree_name, node_status, reset_before_update);
+}
+
 void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
 {
     BT::StdCoutLogger logger_cout(_tree);
@@ -127,7 +151,7 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
         }
         i++;
     }
-    emit changeNodeStyle(_tree_name, node_status, true);
+    expandAndChangeNodeStyle(node_status, true);
     _updated = true;
 }
 
@@ -149,7 +173,7 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
         }
         i++;
     }
-    emit changeNodeStyle(_tree_name, node_status, true);
+    expandAndChangeNodeStyle(node_status, true);
     _updated = true;
 }
 
@@ -192,25 +216,7 @@ void SidepanelInterpreter::tickRoot()
         i++;
     }
 
-    if (node_status.size() == 0) {
-        return;
-    }
-
-    // expand subtrees as needed
-    int last_change_index = node_status.back().first;
-    auto main_win = dynamic_cast<MainWindow*>( _parent );
-    auto container = main_win->getTabByName(_tree_name);
-
-    for (i=0; i<last_change_index; i++) {
-        auto node = _abstract_tree.nodes().at(i);
-        auto subtree = dynamic_cast< SubtreeNodeModel*>( node.graphic_node->nodeDataModel() );
-        if (subtree && !subtree->expanded())
-            {
-                main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
-            }
-    }
-
-    emit changeNodeStyle(_tree_name, node_status, false);
+    expandAndChangeNodeStyle(node_status, false);
 }
 
 void SidepanelInterpreter::runStep()
