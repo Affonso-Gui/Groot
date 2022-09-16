@@ -27,6 +27,9 @@ public:
 
 private slots:
 
+    void expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
+                                  bool reset_before_update);
+
     void changeSelectedStyle(const NodeStatus& status);
 
     void changeRunningStyle(const NodeStatus& status);
