@@ -120,6 +120,24 @@ expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
         return;
     }
 
+    auto check_range = [node_status](int min, int size) {
+        for (auto& it: node_status) {
+            if (min < it.first && min+size >= it.first) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    auto update_range = [node_status](int min, int size) mutable {
+        for (auto& it: node_status) {
+            if (min+size < it.first) {
+                it.first -= size;
+            }
+        }
+        return node_status;
+    };
+
     int last_change_index = std::max_element(node_status.begin(), node_status.end())->first;
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     auto container = main_win->getTabByName(_tree_name);
@@ -128,9 +146,18 @@ expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
         auto node = _abstract_tree.nodes().at(i);
         auto subtree = dynamic_cast< SubtreeNodeModel*>( node.graphic_node->nodeDataModel() );
         if (subtree && !subtree->expanded())
+        {
+            main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
+            auto subtree_nodes = container->getSubtreeNodesRecursively(*(node.graphic_node));
+            int subtree_size = subtree_nodes.size() - 1;  // don't count subtree root
+            if (!check_range(i, subtree_size))
             {
+                // fold back subtree and update indexes
                 main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
+                node_status = update_range(i, subtree_size);
+                last_change_index -= subtree_size;
             }
+        }
     }
 
     emit changeNodeStyle(_tree_name, node_status, reset_before_update);
