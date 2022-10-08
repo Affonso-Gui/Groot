@@ -38,6 +38,8 @@ SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     _parent(parent)
 {
     ui->setupUi(this);
+    _timer = new QTimer(this);
+    connect( _timer, &QTimer::timeout, this, &SidepanelInterpreter::runStep);
     toggleButtonAutoExecution();
 }
 
@@ -92,9 +94,6 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     }
 
     _updated = true;
-    _timer = new QTimer(this);
-    connect( _timer, &QTimer::timeout, this, &SidepanelInterpreter::runStep);
-
     if (_autorun) {
         _timer->start(20);
     }
