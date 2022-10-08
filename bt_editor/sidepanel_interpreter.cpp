@@ -8,6 +8,14 @@
 #include "mainwindow.h"
 #include "utils.h"
 
+class ConditionEvaluation : public std::exception
+{
+public:
+    const char* what () {
+        return "Condition Evaluation";
+    }
+};
+
 class InterpreterNode : public BT::AsyncActionNode
 {
 public:
@@ -25,6 +33,38 @@ public:
     {
         setStatus(status);
     }
+};
+
+class InterpreterConditionNode : public BT::ConditionNode
+{
+public:
+    InterpreterConditionNode(const std::string& name, const BT::NodeConfiguration& config) :
+        BT::ConditionNode(name,config), return_status_(BT::NodeStatus::IDLE)
+    {}
+
+    BT::NodeStatus tick() override {
+        return return_status_;
+    }
+
+    BT::NodeStatus executeTick() override {
+        const NodeStatus status = tick();
+        if (status == NodeStatus::IDLE) {
+            setStatus(NodeStatus::RUNNING);
+            throw ConditionEvaluation();
+        }
+        return_status_ = NodeStatus::IDLE;
+        setStatus(status);
+        return status;
+    }
+
+    void set_status(const BT::NodeStatus& status)
+    {
+        return_status_ = status;
+        setStatus(status);
+    }
+
+private:
+    BT::NodeStatus return_status_;
 };
 
 
@@ -76,7 +116,12 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
                 ports.insert( {it.first.toStdString(), BT::PortInfo(it.second.direction)} );
             }
             try {
-                factory.registerNodeType<InterpreterNode>(registration_ID, ports);
+                if (node.model.type == NodeType::CONDITION) {
+                    factory.registerNodeType<InterpreterConditionNode>(registration_ID, ports);
+                }
+                else {
+                    factory.registerNodeType<InterpreterNode>(registration_ID, ports);
+                }
             }
             catch(BT::BehaviorTreeException err) {
                 // Duplicated node
@@ -172,8 +217,7 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
             node_status.push_back( {i, status} );
 
             auto tree_node = _tree.nodes.at(i-1);  // skip root
-            auto tree_node_ref = std::static_pointer_cast<InterpreterNode>(tree_node);
-            tree_node_ref->set_status(status);
+            changeTreeNodeStatus(tree_node, status);
         }
         i++;
     }
@@ -193,14 +237,25 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
     int i = 1;  // skip root
     for (auto& tree_node: _tree.nodes) {
         if (tree_node->status() == NodeStatus::RUNNING) {
-            auto tree_node_ref = std::static_pointer_cast<InterpreterNode>(tree_node);
-            tree_node_ref->set_status(status);
+            changeTreeNodeStatus(tree_node, status);
             node_status.push_back( {i, status} );
         }
         i++;
     }
     expandAndChangeNodeStyle(node_status, true);
     _updated = true;
+}
+
+void SidepanelInterpreter::changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> node,
+                                                const NodeStatus& status)
+{
+    if (node->type() == NodeType::CONDITION) {
+        auto node_ref = std::static_pointer_cast<InterpreterConditionNode>(node);
+        node_ref->set_status(status);
+        return;
+    }
+    auto node_ref = std::static_pointer_cast<InterpreterNode>(node);
+    node_ref->set_status(status);
 }
 
 void SidepanelInterpreter::tickRoot()
@@ -218,8 +273,15 @@ void SidepanelInterpreter::tickRoot()
         i++;
     }
 
+    bool conditionRunning = false;
     // tick tree
-    _root_status = _tree.tickRoot();
+    try {
+        _root_status = _tree.tickRoot();
+    }
+    catch (ConditionEvaluation c_eval) {
+        conditionRunning = true;
+    }
+
     if (_root_status != NodeStatus::RUNNING) {
         // stop evaluations until the next change
         _updated = false;
@@ -236,11 +298,27 @@ void SidepanelInterpreter::tickRoot()
 
     i = 1;
     for (auto& node: _tree.nodes) {
-        if (node->status() != prev_node_status.at(i).second) {
-            // pushing the previous status allows to display grayed-out
-            // colors when the node is set to IDLE (#72)
-            node_status.push_back( {i, prev_node_status.at(i).second} );
+        NodeStatus new_status = node->status();
+        NodeStatus prev_status = prev_node_status.at(i).second;
+
+        if (new_status != prev_status) {
+            if (new_status == NodeStatus::IDLE) {
+                // pushing the previous status allows to display grayed-out
+                // colors when the node is set to IDLE (#72)
+                node_status.push_back( {i, prev_status} );
+            }
             node_status.push_back( {i, node->status()} );
+        }
+        else {
+            if (new_status == NodeStatus::RUNNING &&
+                node->type() != NodeType::CONDITION) {
+                // force update
+                node_status.push_back( {i, node->status()} );
+                // artificially gray-out running nodes
+                if (conditionRunning) {
+                    node_status.push_back( {i, NodeStatus::IDLE} );
+                }
+            }
         }
         i++;
     }
@@ -253,6 +331,7 @@ void SidepanelInterpreter::runStep()
     if (_updated && _autorun) {
         try {
             tickRoot();
+            _updated = false;
         }
         catch (std::exception& err) {
             on_buttonDisableAutoExecution_clicked();
