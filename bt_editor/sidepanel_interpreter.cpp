@@ -237,6 +237,9 @@ void SidepanelInterpreter::tickRoot()
     i = 1;
     for (auto& node: _tree.nodes) {
         if (node->status() != prev_node_status.at(i).second) {
+            // pushing the previous status allows to display grayed-out
+            // colors when the node is set to IDLE (#72)
+            node_status.push_back( {i, prev_node_status.at(i).second} );
             node_status.push_back( {i, node->status()} );
         }
         i++;
