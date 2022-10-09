@@ -1407,6 +1407,7 @@ void MainWindow::updateCurrentMode()
         _editor_widget->updateTreeView();
     }
     ui->actionEditor_mode->setEnabled( _current_mode != GraphicMode::EDITOR);
+    ui->actionInterpreter_mode->setEnabled( _current_mode != GraphicMode::INTERPRETER);
 #ifdef ZMQ_FOUND
     ui->actionMonitor_mode->setEnabled( _current_mode != GraphicMode::MONITOR);
 #endif
