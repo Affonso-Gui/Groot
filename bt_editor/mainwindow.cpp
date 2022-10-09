@@ -697,7 +697,8 @@ void MainWindow::onSceneChanged()
     ui->labelSemaphore->setScaledContents(true);
 
     lockEditing( _current_mode != GraphicMode::EDITOR,
-                 _current_mode == GraphicMode::INTERPRETER );
+                 _current_mode == GraphicMode::INTERPRETER,
+                 _current_mode != GraphicMode::INTERPRETER);
 }
 
 
@@ -727,17 +728,17 @@ const std::map<QString, GraphicContainer*> MainWindow::getTabInfo()
     return _tab_info;
 }
 
-void MainWindow::lockEditing(bool locked, bool selectable)
+void MainWindow::lockEditing(bool locked, bool selectable, bool subtree_locked)
 {
     for(auto& tab_it: _tab_info)
     {
-        tab_it.second->lockEditing(locked, selectable);
+        tab_it.second->lockEditing(locked, selectable, subtree_locked);
     }
 }
 
 void MainWindow::lockEditing(bool locked)
 {
-    lockEditing(locked, false);
+    lockEditing(locked, false, true);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
@@ -1331,7 +1332,8 @@ void MainWindow::updateCurrentMode()
                 _replay_widget, &SidepanelReplay::on_LoadLog );
     }
     lockEditing( _current_mode != GraphicMode::EDITOR,
-                 _current_mode == GraphicMode::INTERPRETER);
+                 _current_mode == GraphicMode::INTERPRETER,
+                 _current_mode != GraphicMode::INTERPRETER);
 
     if( _current_mode == GraphicMode::EDITOR)
     {
