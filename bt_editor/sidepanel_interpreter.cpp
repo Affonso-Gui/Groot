@@ -227,6 +227,10 @@ expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
 
 void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
 {
+    if (_tree.nodes.size() <= 1) {
+        return;
+    }
+
     BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> node_status;
     int i = 0;
@@ -247,12 +251,12 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
 
 void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
 {
-    BT::StdCoutLogger logger_cout(_tree);
-    std::vector<std::pair<int, NodeStatus>> node_status;
-
-    if (_tree.nodes.size() == 1 && _tree.rootNode()->name() == "Root") {
+    if (_tree.nodes.size() <= 1) {
         return;
     }
+
+    BT::StdCoutLogger logger_cout(_tree);
+    std::vector<std::pair<int, NodeStatus>> node_status;
 
     int i = 1;  // skip root
     for (auto& tree_node: _tree.nodes) {
