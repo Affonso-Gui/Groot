@@ -215,7 +215,7 @@ border-radius: 10px;
        </property>
        <property name="icon">
         <iconset resource="resources/icons.qrc">
-         <normaloff>:/icons/BT-monitor.png</normaloff>:/icons/BT-monitor.png</iconset>
+         <normaloff>:/icons/BT-interpreter.png</normaloff>:/icons/BT-interpreter.png</iconset>
        </property>
        <property name="iconSize">
         <size>
