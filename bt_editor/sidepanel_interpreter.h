@@ -27,6 +27,9 @@ public:
 
 private slots:
 
+    void translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
+                            bool tree_index);
+
     void expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
                                   bool reset_before_update);
 
