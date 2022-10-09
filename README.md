@@ -78,6 +78,8 @@ git clone --branch v3.8 https://github.com/BehaviorTree/BehaviorTree.CPP.git
 | N | New Node |
 | + | Zoom In |
 | - | Zoom Out |
+| CTRL-SHIFT-E | Switch to Editor Mode |
+| CTRL-SHIFT-I | Switch to Interpreter Mode |
 
 # Licence       
 

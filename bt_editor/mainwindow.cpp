@@ -157,6 +157,11 @@ MainWindow::MainWindow(GraphicMode initial_mode, QWidget *parent) :
     QShortcut* redo_shortcut_option = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Y), this);
     connect(redo_shortcut_option, &QShortcut::activated, redo_shortcut, &QShortcut::activated);
 
+    QShortcut* editor_mode_shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_E), this);
+    connect( editor_mode_shortcut, &QShortcut::activated, this, &MainWindow::on_actionEditor_mode_triggered );
+
+    QShortcut* interpreter_mode_shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_I), this);
+    connect( interpreter_mode_shortcut, &QShortcut::activated, this, &MainWindow::on_actionInterpreter_mode_triggered );
 
     // Other connections
     connect( _editor_widget, &SidepanelEditor::nodeModelEdited,
@@ -1514,6 +1519,10 @@ void MainWindow::on_toolButtonLayout_clicked()
 
 void MainWindow::on_actionEditor_mode_triggered()
 {
+    if (_current_mode == GraphicMode::EDITOR) {
+        return;
+    }
+
     _current_mode = GraphicMode::EDITOR;
     updateCurrentMode();
 
@@ -1530,6 +1539,10 @@ void MainWindow::on_actionEditor_mode_triggered()
 
 void MainWindow::on_actionInterpreter_mode_triggered()
 {
+    if (_current_mode == GraphicMode::INTERPRETER) {
+        return;
+    }
+
     _current_mode = GraphicMode::INTERPRETER;
     updateCurrentMode();
     _interpreter_widget->setTree(currentTabName());
