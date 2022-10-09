@@ -1374,7 +1374,8 @@ void MainWindow::updateCurrentMode()
         disconnect( _load_shortcut, &QShortcut::activated,
                     _replay_widget, &SidepanelReplay::on_LoadLog);
         connect( _load_shortcut, &QShortcut::activated,
-                 this, &MainWindow::on_actionLoad_triggered );
+                 this, &MainWindow::on_actionLoad_triggered,
+                 Qt::UniqueConnection);
     }
     else if( _current_mode == GraphicMode::REPLAY )
     {
