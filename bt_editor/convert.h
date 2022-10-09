@@ -15,5 +15,9 @@ roseus_bt::NodeType convert(BT::NodeType);
 
 BT::NodeType convert(roseus_bt::NodeType);
 
+bool operator==(const BT::NodeType& node_type_1, const roseus_bt::NodeType& node_type_2);
+bool operator!=(const BT::NodeType& node_type_1, const roseus_bt::NodeType& node_type_2);
+bool operator==(const roseus_bt::NodeType& node_type_1, const BT::NodeType& node_type_2);
+bool operator!=(const roseus_bt::NodeType& node_type_1, const BT::NodeType& node_type_2);
 
 #endif // NODE_CONVERT_H

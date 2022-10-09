@@ -89,3 +89,19 @@ BT::NodeType convert(roseus_bt::NodeType type) {
     }
     return BT::NodeType::UNDEFINED;
 }
+
+bool operator==(const BT::NodeType& node_type_1, const roseus_bt::NodeType& node_type_2) {
+    return (node_type_1 == convert(node_type_2));
+}
+
+bool operator!=(const BT::NodeType& node_type_1, const roseus_bt::NodeType& node_type_2) {
+    return !(node_type_1 == node_type_2);
+}
+
+bool operator==(const roseus_bt::NodeType& node_type_1, const BT::NodeType& node_type_2) {
+    return (convert(node_type_1) == node_type_2);
+}
+
+bool operator!=(const roseus_bt::NodeType& node_type_1, const BT::NodeType& node_type_2) {
+    return !(node_type_1 == node_type_2);
+}
