@@ -71,9 +71,10 @@ git clone --branch v3.8 https://github.com/BehaviorTree/BehaviorTree.CPP.git
 | CTRL-Z | Undo |
 | CTRL-Y | Redo |
 | CTRL-SHIFT-Z | Redo |
-| C | Center View |
+| CTRL-A | Reorder (Arrange) Nodes |
+| R | Reorder (Arrange) Nodes |
 | L | Toggle Layout |
-| R | Reorder Nodes |
+| C | Center View |
 | N | New Node |
 | + | Zoom In |
 | - | Zoom Out |
