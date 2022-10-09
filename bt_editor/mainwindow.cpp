@@ -1454,6 +1454,9 @@ void MainWindow::on_actionEditor_mode_triggered()
 
     _interpreter_widget->clear();
     _replay_widget->clear();
+
+    auto tree = BuildTreeFromScene( currentTabInfo()->scene() );
+    resetTreeStyle(tree);
 }
 
 void MainWindow::on_actionInterpreter_mode_triggered()
