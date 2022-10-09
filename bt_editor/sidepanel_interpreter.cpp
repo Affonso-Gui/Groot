@@ -157,9 +157,12 @@ void SidepanelInterpreter::updateTree()
 }
 
 void SidepanelInterpreter::
-expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
-                         bool reset_before_update)
+translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
+                   bool tree_index)
 {
+    // translate _tree node indexes into _abstract_tree indexes
+    // if tree_index is false, translate _abstract_tree into _tree indexes
+
     if (node_status.size() == 0) {
         return;
     }
@@ -173,10 +176,13 @@ expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
         return false;
     };
 
-    auto update_range = [node_status](int min, int size) mutable {
+    auto update_range = [node_status, tree_index](int min, int size) mutable {
         for (auto& it: node_status) {
-            if (min+size < it.first) {
+            if (tree_index && min+size < it.first) {
                 it.first -= size;
+            }
+            if (!tree_index && min < it.first) {
+                it.first += size;
             }
         }
         return node_status;
@@ -194,16 +200,28 @@ expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
             main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
             auto subtree_nodes = container->getSubtreeNodesRecursively(*(node.graphic_node));
             int subtree_size = subtree_nodes.size() - 1;  // don't count subtree root
-            if (!check_range(i, subtree_size))
+            if (!tree_index || !check_range(i, subtree_size))
             {
                 // fold back subtree and update indexes
                 main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
                 node_status = update_range(i, subtree_size);
-                last_change_index -= subtree_size;
+                if (tree_index) {
+                    last_change_index -= subtree_size;
+                }
             }
         }
     }
+}
 
+void SidepanelInterpreter::
+expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
+                         bool reset_before_update)
+{
+    if (node_status.size() == 0) {
+        return;
+    }
+
+    translateNodeIndex(node_status, true);
     emit changeNodeStyle(_tree_name, node_status, reset_before_update);
 }
 
@@ -215,13 +233,15 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
     for (auto& node: _abstract_tree.nodes()) {
         if (node.graphic_node->nodeGraphicsObject().isSelected()) {
             node_status.push_back( {i, status} );
-
-            auto tree_node = _tree.nodes.at(i-1);  // skip root
-            changeTreeNodeStatus(tree_node, status);
         }
         i++;
     }
-    expandAndChangeNodeStyle(node_status, true);
+    emit changeNodeStyle(_tree_name, node_status, true);
+    translateNodeIndex(node_status, false);
+    for (auto it: node_status) {
+        auto tree_node = _tree.nodes.at(it.first - 1);  // skip root
+        changeTreeNodeStatus(tree_node, it.second);
+    }
     _updated = true;
 }
 
