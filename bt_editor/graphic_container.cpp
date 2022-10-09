@@ -69,7 +69,7 @@ GraphicContainer::GraphicContainer(std::shared_ptr<DataModelRegistry> model_regi
 
 }
 
-void GraphicContainer::lockEditing(bool locked, bool selectable)
+void GraphicContainer::lockEditing(bool locked, bool selectable, bool subtree_locked)
 {
     std::vector<QtNodes::Node*> subtrees_expanded;
     for (auto& nodes_it: _scene->nodes() )
@@ -108,7 +108,7 @@ void GraphicContainer::lockEditing(bool locked, bool selectable)
 
     for (auto& subtree: subtrees_expanded )
     {
-        lockSubtreeEditing(*subtree, true, !locked);
+        lockSubtreeEditing(*subtree, subtree_locked, !locked);
     }
 
     for (auto& conn_it: _scene->connections() )
