@@ -471,27 +471,27 @@ getStyleFromStatus(NodeStatus status, NodeStatus prev_status)
     {
         if(prev_status != NodeStatus::IDLE){
             node_style.PenWidth *= penWidth;
-            node_style.HoveredPenWidth = node_style.PenWidth;
+            // node_style.HoveredPenWidth = node_style.PenWidth;
 
             if( prev_status == NodeStatus::SUCCESS )
             {
-                node_style.NormalBoundaryColor =
-                        node_style.ShadowColor = QColor(100, 150, 100);
-                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
+                node_style.NormalBoundaryColor = QColor(100, 150, 100);
+                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor.lighter(120);
+                node_style.ShadowColor = node_style.NormalBoundaryColor;
                 conn_style.NormalColor = node_style.NormalBoundaryColor;
             }
             else if( prev_status == NodeStatus::RUNNING )
             {
-                node_style.NormalBoundaryColor =
-                        node_style.ShadowColor =  QColor(150, 130, 40);
-                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
+                node_style.NormalBoundaryColor = QColor(150, 130, 40);
+                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor.lighter(120);
+                node_style.ShadowColor = node_style.NormalBoundaryColor;
                 conn_style.NormalColor = node_style.NormalBoundaryColor;
             }
             else if( prev_status == NodeStatus::FAILURE )
             {
-                node_style.NormalBoundaryColor =
-                        node_style.ShadowColor = QColor(150, 80, 80);
-                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
+                node_style.NormalBoundaryColor = QColor(150, 80, 80);
+                node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor.lighter(120);
+                node_style.ShadowColor = node_style.NormalBoundaryColor;
                 conn_style.NormalColor = node_style.NormalBoundaryColor;
             }
         }
@@ -500,27 +500,27 @@ getStyleFromStatus(NodeStatus status, NodeStatus prev_status)
     }
 
     node_style.PenWidth *= penWidth;
-    node_style.HoveredPenWidth = node_style.PenWidth;
+    // node_style.HoveredPenWidth = node_style.PenWidth;
 
     if( status == NodeStatus::SUCCESS )
     {
-        node_style.NormalBoundaryColor =
-                node_style.ShadowColor = QColor(51, 200, 51);
-        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
+        node_style.NormalBoundaryColor = QColor(51, 200, 51);
+        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor.lighter(120);
+        node_style.ShadowColor = node_style.NormalBoundaryColor;
         conn_style.NormalColor = node_style.NormalBoundaryColor;
     }
     else if( status == NodeStatus::RUNNING )
     {
-        node_style.NormalBoundaryColor =
-                node_style.ShadowColor =  QColor(220, 140, 20);
-        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
+        node_style.NormalBoundaryColor = QColor(220, 140, 20);
+        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor.lighter(120);
+        node_style.ShadowColor = node_style.NormalBoundaryColor;
         conn_style.NormalColor = node_style.NormalBoundaryColor;
     }
     else if( status == NodeStatus::FAILURE )
     {
-        node_style.NormalBoundaryColor =
-                node_style.ShadowColor = QColor(250, 50, 50);
-        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor;
+        node_style.NormalBoundaryColor = QColor(250, 50, 50);
+        node_style.SelectedBoundaryColor = node_style.NormalBoundaryColor.lighter(120);
+        node_style.ShadowColor = node_style.NormalBoundaryColor;
         conn_style.NormalColor = node_style.NormalBoundaryColor;
     }
 
