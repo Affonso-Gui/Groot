@@ -176,7 +176,7 @@ translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
         return false;
     };
 
-    auto update_range = [node_status, tree_index](int min, int size) mutable {
+    auto update_range = [&node_status, tree_index](int min, int size) {
         for (auto& it: node_status) {
             if (tree_index && min+size < it.first) {
                 it.first -= size;
@@ -185,9 +185,9 @@ translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
                 it.first += size;
             }
         }
-        return node_status;
     };
 
+    int offset=0;
     int last_change_index = std::max_element(node_status.begin(), node_status.end())->first;
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     auto container = main_win->getTabByName(_tree_name);
@@ -204,9 +204,12 @@ translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
             {
                 // fold back subtree and update indexes
                 main_win->onRequestSubTreeExpand(*container, *node.graphic_node);
-                node_status = update_range(i, subtree_size);
+                update_range(i+offset, subtree_size);
                 if (tree_index) {
                     last_change_index -= subtree_size;
+                }
+                else {
+                    offset += subtree_size;
                 }
             }
         }
