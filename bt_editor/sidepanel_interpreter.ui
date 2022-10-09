@@ -41,10 +41,13 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>20</width>
-         <height>40</height>
+         <height>10</height>
         </size>
        </property>
       </spacer>
@@ -52,21 +55,21 @@
      <item>
       <widget class="QPushButton" name="buttonSetSuccess">
        <property name="text">
-        <string>Set SUCCESS</string>
+        <string>Selection to SUCCESS</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="buttonSetFailure">
        <property name="text">
-        <string>Set FAILURE</string>
+        <string>Selection to FAILURE</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="buttonSetIdle">
        <property name="text">
-        <string>Set IDLE</string>
+        <string>Selection to IDLE</string>
        </property>
       </widget>
      </item>
@@ -75,10 +78,13 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>20</width>
-         <height>40</height>
+         <height>10</height>
         </size>
        </property>
       </spacer>
@@ -86,14 +92,14 @@
      <item>
       <widget class="QPushButton" name="buttonSetRunningSuccess">
        <property name="text">
-        <string>Running to Success</string>
+        <string>Running to SUCCESS</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="buttonSetRunningFailure">
        <property name="text">
-        <string>Running to Failure</string>
+        <string>Running to FAILURE</string>
        </property>
       </widget>
      </item>
@@ -102,10 +108,13 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>20</width>
-         <height>40</height>
+         <height>10</height>
         </size>
        </property>
       </spacer>
@@ -125,9 +134,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="buttonRunNode">
+      <widget class="QPushButton" name="buttonRunTree">
+       <property name="toolTip">
+        <string/>
+       </property>
        <property name="text">
-        <string>Run Node</string>
+        <string>Tick Tree</string>
        </property>
       </widget>
      </item>
