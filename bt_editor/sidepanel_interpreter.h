@@ -61,7 +61,7 @@ private slots:
 
     void on_buttonDisableAutoExecution_clicked();
 
-    void on_buttonRunNode_clicked();
+    void on_buttonRunTree_clicked();
 
 signals:
     void changeNodeStyle(const QString& bt_name,

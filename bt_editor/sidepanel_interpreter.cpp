@@ -284,6 +284,10 @@ void SidepanelInterpreter::changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> no
 
 void SidepanelInterpreter::tickRoot()
 {
+    if (_tree.nodes.size() <= 1) {
+        return;
+    }
+
     BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> prev_node_status;
     std::vector<std::pair<int, NodeStatus>> node_status;
@@ -368,7 +372,7 @@ void SidepanelInterpreter::toggleButtonAutoExecution()
 {
     ui->buttonDisableAutoExecution->setEnabled(_autorun);
     ui->buttonEnableAutoExecution->setEnabled(!_autorun);
-    ui->buttonRunNode->setEnabled(!_autorun);
+    ui->buttonRunTree->setEnabled(!_autorun);
 }
 
 void SidepanelInterpreter::on_buttonResetTree_clicked()
@@ -424,8 +428,8 @@ void SidepanelInterpreter::on_buttonDisableAutoExecution_clicked()
     _timer->stop();
 }
 
-void SidepanelInterpreter::on_buttonRunNode_clicked() {
-    qDebug() << "buttonRunNode";
+void SidepanelInterpreter::on_buttonRunTree_clicked() {
+    qDebug() << "buttonRunTree";
     try {
         tickRoot();
     }
