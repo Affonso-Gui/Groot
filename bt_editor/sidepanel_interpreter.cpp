@@ -7,66 +7,7 @@
 
 #include "mainwindow.h"
 #include "utils.h"
-
-class ConditionEvaluation : public std::exception
-{
-public:
-    const char* what () {
-        return "Condition Evaluation";
-    }
-};
-
-class InterpreterNode : public BT::AsyncActionNode
-{
-public:
-    InterpreterNode(const std::string& name, const BT::NodeConfiguration& config) :
-        BT::AsyncActionNode(name,config)
-    {}
-
-    virtual void halt() override {}
-
-    BT::NodeStatus tick() override {
-        return BT::NodeStatus::RUNNING;
-    }
-
-    void set_status(const BT::NodeStatus& status)
-    {
-        setStatus(status);
-    }
-};
-
-class InterpreterConditionNode : public BT::ConditionNode
-{
-public:
-    InterpreterConditionNode(const std::string& name, const BT::NodeConfiguration& config) :
-        BT::ConditionNode(name,config), return_status_(BT::NodeStatus::IDLE)
-    {}
-
-    BT::NodeStatus tick() override {
-        return return_status_;
-    }
-
-    BT::NodeStatus executeTick() override {
-        const NodeStatus status = tick();
-        if (status == NodeStatus::IDLE) {
-            setStatus(NodeStatus::RUNNING);
-            throw ConditionEvaluation();
-        }
-        return_status_ = NodeStatus::IDLE;
-        setStatus(status);
-        return status;
-    }
-
-    void set_status(const BT::NodeStatus& status)
-    {
-        return_status_ = status;
-        setStatus(status);
-    }
-
-private:
-    BT::NodeStatus return_status_;
-};
-
+#include "interpreter_utils.h"
 
 SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     QFrame(parent),
@@ -104,7 +45,7 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     }
 
     BT::BehaviorTreeFactory factory;
-    factory.registerNodeType<InterpreterNode>("Root", {});
+    factory.registerNodeType<Interpreter::InterpreterNode>("Root", {});
 
     // register nodes
     for (auto& tab: main_win->getTabInfo()) {
@@ -117,10 +58,10 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
             }
             try {
                 if (node.model.type == NodeType::CONDITION) {
-                    factory.registerNodeType<InterpreterConditionNode>(registration_ID, ports);
+                    factory.registerNodeType<Interpreter::InterpreterConditionNode>(registration_ID, ports);
                 }
                 else {
-                    factory.registerNodeType<InterpreterNode>(registration_ID, ports);
+                    factory.registerNodeType<Interpreter::InterpreterNode>(registration_ID, ports);
                 }
             }
             catch(BT::BehaviorTreeException err) {
@@ -277,11 +218,11 @@ void SidepanelInterpreter::changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> no
                                                 const NodeStatus& status)
 {
     if (node->type() == NodeType::CONDITION) {
-        auto node_ref = std::static_pointer_cast<InterpreterConditionNode>(node);
+        auto node_ref = std::static_pointer_cast<Interpreter::InterpreterConditionNode>(node);
         node_ref->set_status(status);
         return;
     }
-    auto node_ref = std::static_pointer_cast<InterpreterNode>(node);
+    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterNode>(node);
     node_ref->set_status(status);
 }
 
@@ -309,7 +250,7 @@ void SidepanelInterpreter::tickRoot()
     try {
         _root_status = _tree.tickRoot();
     }
-    catch (ConditionEvaluation c_eval) {
+    catch (Interpreter::ConditionEvaluation c_eval) {
         conditionRunning = true;
     }
 
