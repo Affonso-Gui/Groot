@@ -99,13 +99,15 @@ MainWindow::MainWindow(GraphicMode initial_mode, QWidget *parent) :
     _monitor_widget = new SidepanelMonitor(this);
     ui->leftFrame->layout()->addWidget( _monitor_widget );
 
-    connect( ui->toolButtonConnect, &QToolButton::clicked,
-            _monitor_widget, &SidepanelMonitor::on_Connect );
-
     connect( _monitor_widget, &SidepanelMonitor::connectionUpdate,
             this, &MainWindow::onConnectionUpdate );
+
+    connect( _interpreter_widget, &SidepanelInterpreter::connectionUpdate,
+             this, &MainWindow::onConnectionUpdate );
 #else
     ui->actionMonitor_mode->setVisible(false);
+    connect( ui->toolButtonConnect, &QToolButton::clicked,
+             _interpreter_widget, &SidepanelInterpreter::on_Connect );
 #endif
 
     _load_shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_L), this);
@@ -1351,7 +1353,8 @@ void MainWindow::updateCurrentMode()
 #endif
 
     ui->toolButtonLoadFile->setHidden( _current_mode == GraphicMode::MONITOR );
-    ui->toolButtonConnect->setHidden( _current_mode != GraphicMode::MONITOR );
+    ui->toolButtonConnect->setHidden( _current_mode != GraphicMode::MONITOR &&
+                                      _current_mode != GraphicMode::INTERPRETER);
 
     if( EDITOR_LIKE )
     {
@@ -1369,6 +1372,13 @@ void MainWindow::updateCurrentMode()
 
     if( EDITOR_LIKE )
     {
+#ifdef ZMQ_FOUND
+        // Connect Button
+        disconnect( ui->toolButtonConnect, &QToolButton::clicked,
+                    _monitor_widget, &SidepanelMonitor::on_Connect );
+        connect( ui->toolButtonConnect, &QToolButton::clicked,
+                 _interpreter_widget, &SidepanelInterpreter::on_Connect );
+#endif
         // Load Button
         connect( ui->toolButtonLoadFile, &QToolButton::clicked,
                  this, &MainWindow::on_actionLoad_triggered,
@@ -1397,6 +1407,13 @@ void MainWindow::updateCurrentMode()
     }
     else if( _current_mode == GraphicMode::MONITOR )
     {
+#ifdef ZMQ_FOUND
+        // Connect Button
+        disconnect( ui->toolButtonConnect, &QToolButton::clicked,
+                    _interpreter_widget, &SidepanelInterpreter::on_Connect );
+        connect( ui->toolButtonConnect, &QToolButton::clicked,
+                 _monitor_widget, &SidepanelMonitor::on_Connect );
+#endif
         // Load Shortcut
         disconnect( _load_shortcut, &QShortcut::activated,
                     this, &MainWindow::on_actionLoad_triggered );

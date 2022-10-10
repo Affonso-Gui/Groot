@@ -16,12 +16,14 @@ SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     _tree_name("BehaviorTree"),
     _autorun(true),
     _updated(true),
+    _connected(false),
     _parent(parent)
 {
     ui->setupUi(this);
     _timer = new QTimer(this);
     connect( _timer, &QTimer::timeout, this, &SidepanelInterpreter::runStep);
     toggleButtonAutoExecution();
+    toggleButtonConnect();
 }
 
 SidepanelInterpreter::~SidepanelInterpreter()
@@ -31,6 +33,20 @@ SidepanelInterpreter::~SidepanelInterpreter()
 
 void SidepanelInterpreter::clear()
 {
+}
+
+void SidepanelInterpreter::on_Connect()
+{
+    qDebug() << "buttonConnect";
+    qDebug() << ui->lineEdit->text() << ui->lineEdit->placeholderText() <<
+        ui->lineEdit_server->text();
+    if( !_connected) {
+        _connected = true;
+    }
+    else{
+        _connected = false;
+    }
+    toggleButtonConnect();
 }
 
 void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename) {
@@ -319,6 +335,15 @@ void SidepanelInterpreter::toggleButtonAutoExecution()
     ui->buttonRunTree->setEnabled(!_autorun);
 }
 
+void SidepanelInterpreter::toggleButtonConnect()
+{
+    connectionUpdate(_connected);
+    ui->lineEdit->setDisabled(_connected);
+    ui->lineEdit_server->setDisabled(_connected);
+    ui->buttonExecSelection->setEnabled(_connected);
+    ui->buttonExecRunning->setEnabled(_connected);
+}
+
 void SidepanelInterpreter::on_buttonResetTree_clicked()
 {
     auto main_win = dynamic_cast<MainWindow*>( _parent );
@@ -372,7 +397,8 @@ void SidepanelInterpreter::on_buttonDisableAutoExecution_clicked()
     _timer->stop();
 }
 
-void SidepanelInterpreter::on_buttonRunTree_clicked() {
+void SidepanelInterpreter::on_buttonRunTree_clicked()
+{
     qDebug() << "buttonRunTree";
     try {
         tickRoot();
@@ -382,4 +408,14 @@ void SidepanelInterpreter::on_buttonRunTree_clicked() {
         messageBox.critical(this,"Error Running Tree", err.what() );
         messageBox.show();
     }
+}
+
+void SidepanelInterpreter::on_buttonExecSelection_clicked()
+{
+    qDebug() << "buttonExecSelection";
+}
+
+void SidepanelInterpreter::on_buttonExecRunning_clicked()
+{
+    qDebug() << "buttonExecRunning";
 }

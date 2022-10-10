@@ -19,6 +19,8 @@ public:
 
     void clear();
 
+    void on_Connect();
+
     void setTree(const QString& bt_name, const QString& xml_filename);
 
     void setTree(const QString& bt_name);
@@ -45,6 +47,8 @@ private slots:
 
     void toggleButtonAutoExecution();
 
+    void toggleButtonConnect();
+
     void on_buttonResetTree_clicked();
 
     void on_buttonSetSuccess_clicked();
@@ -63,7 +67,13 @@ private slots:
 
     void on_buttonRunTree_clicked();
 
+    void on_buttonExecSelection_clicked();
+
+    void on_buttonExecRunning_clicked();
+
 signals:
+    void connectionUpdate(bool connected);
+
     void changeNodeStyle(const QString& bt_name,
                          const std::vector<std::pair<int, NodeStatus>>& node_status,
                          bool reset_before_update);
@@ -79,6 +89,8 @@ private:
     NodeStatus _root_status;
     bool _autorun;
     bool _updated;
+
+    bool _connected;
 
     QWidget *_parent;
 
