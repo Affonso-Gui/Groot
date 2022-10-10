@@ -296,6 +296,44 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     return topic_type;
 }
 
+rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTreeNode& node,
+                                                              const PortsMapping& port_mapping)
+{
+    rapidjson::Document goal;
+    goal.SetObject();
+    for(const auto& port_it: port_mapping) {
+        auto port_model = node.model.ports.find(port_it.first)->second;
+        std::string name = port_it.first.toStdString();
+        std::string type = port_model.type_name.toStdString();
+        std::string value = port_model.default_value.toStdString();
+        if (port_model.direction == PortDirection::OUTPUT) {
+            continue;
+        }
+        if (!port_it.second.isEmpty()) {
+            value = port_it.second.toStdString();
+        }
+        rapidjson::Value jname, jval;
+        jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
+        // all ros types defined in: http://wiki.ros.org/msg
+        if (type == "bool")
+            jval.SetBool(boost::lexical_cast<bool>(value));
+        if (type == "int8" || type == "int16" || type == "int32")
+            jval.SetInt(boost::lexical_cast<int>(value));
+        if (type == "uint8" || type == "uint16" || type == "uint32")
+            jval.SetUint(boost::lexical_cast<uint32_t>(value));
+        if (type == "int64")
+            jval.SetInt64(boost::lexical_cast<int64_t>(value));
+        if (type == "uint64")
+            jval.SetUint64(boost::lexical_cast<uint64_t>(value));
+        if (type == "float32" || type == "float64")
+            jval.SetDouble(boost::lexical_cast<double>(value));
+        if (type == "string")
+            jval.SetString(value.c_str(), value.size(), goal.GetAllocator());
+        goal.AddMember(jname, jval, goal.GetAllocator());
+    }
+    return goal;
+}
+
 BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node)
 {
     const auto* bt_node =
@@ -307,16 +345,7 @@ BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode
                         ui->lineEdit_port->text().toInt(),
                         node.model.ports.find("service_name")->second.default_value.toStdString());
 
-    rapidjson::Document request;
-    request.SetObject();
-    for(const auto& port_it: port_mapping) {
-        std::string name = port_it.first.toStdString();
-        std::string value = port_it.second.toStdString();
-        rapidjson::Value jname, jval;
-        jname.SetString(name.c_str(), name.size(),  request.GetAllocator());
-        jval.SetString(value.c_str(), value.size(), request.GetAllocator());
-        request.AddMember(jname, jval, request.GetAllocator());
-    }
+    rapidjson::Document request = getRequestFromPorts(node, port_mapping);
     service_client_.call(request);
     service_client_.waitForResult();
     auto result = service_client_.getResult();
@@ -341,16 +370,8 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
                                          ui->lineEdit_port->text().toInt(),
                                          server_name,
                                          topic_type);
-    rapidjson::Document goal;
-    goal.SetObject();
-    for(const auto& port_it: port_mapping) {
-        std::string name = port_it.first.toStdString();
-        std::string value = port_it.second.toStdString();
-        rapidjson::Value jname, jval;
-        jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
-        jval.SetString(value.c_str(), value.size(), goal.GetAllocator());
-        goal.AddMember(jname, jval, goal.GetAllocator());
-    }
+
+    rapidjson::Document goal = getRequestFromPorts(node, port_mapping);
     action_client_.sendGoal(goal);
 
     // if (action_client_.isActive()) {

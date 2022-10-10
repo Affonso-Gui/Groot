@@ -4,6 +4,7 @@
 #include <QFrame>
 
 #include "interpreter_utils.h"
+#include <boost/lexical_cast.hpp>
 
 namespace Ui {
 class SidepanelInterpreter;
@@ -42,6 +43,9 @@ private slots:
     void changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> node, const NodeStatus& status);
 
     std::string getActionType(const std::string& server_name);
+
+    rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
+                                            const PortsMapping& port_mapping);
 
     BT::NodeStatus executeConditionNode(const AbstractTreeNode& node);
 
