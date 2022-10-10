@@ -296,6 +296,42 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     return topic_type;
 }
 
+std::string SidepanelInterpreter::getPortValue(const PortModel& port_model,
+                                               const QString& mapping_value,
+                                               const bool output_port)
+{
+    std::string value = port_model.default_value.toStdString();
+    if (!mapping_value.isEmpty()) {
+        value = mapping_value.toStdString();
+    }
+    if (value.front() == '$') {
+        std::string ref_name = value.substr(1, value.size());
+        if (output_port) {
+            return ref_name;
+        }
+        return _blackboard[ref_name.c_str()];
+    }
+    if (value.front() == '{' && value.back() == '}') {
+        std::string ref_name = value.substr(1, value.size());
+        ref_name.pop_back();
+        if (output_port) {
+            return ref_name;
+        }
+        return _blackboard[ref_name.c_str()];
+    }
+    return value;
+}
+
+std::string SidepanelInterpreter::getPortValue(const AbstractTreeNode& node,
+                                               PortsMapping port_mapping,
+                                               const QString& port_name,
+                                               const bool output_port)
+{
+    auto port_model = node.model.ports.find(port_name)->second;
+    QString mapping_value = port_mapping[port_name];
+    return getPortValue(port_model, mapping_value, output_port);
+}
+
 rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTreeNode& node,
                                                               const PortsMapping& port_mapping)
 {
@@ -305,12 +341,9 @@ rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTree
         auto port_model = node.model.ports.find(port_it.first)->second;
         std::string name = port_it.first.toStdString();
         std::string type = port_model.type_name.toStdString();
-        std::string value = port_model.default_value.toStdString();
+        std::string value = getPortValue(port_model, port_it.second, false);
         if (port_model.direction == PortDirection::OUTPUT) {
             continue;
-        }
-        if (!port_it.second.isEmpty()) {
-            value = port_it.second.toStdString();
         }
         rapidjson::Value jname, jval;
         jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
@@ -370,6 +403,25 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
                                          ui->lineEdit_port->text().toInt(),
                                          server_name,
                                          topic_type);
+
+    auto cb = [this, node, port_mapping](std::shared_ptr<WsClient::Connection> connection,
+                                         std::shared_ptr<WsClient::InMessage> in_message) {
+        std::string message = in_message->string();
+        rapidjson::Document document, feedbackMessage;
+        document.Parse(message.c_str());
+        feedbackMessage.Swap(document["msg"]["feedback"]);
+
+        std::string field_name = feedbackMessage["update_field_name"].GetString();
+        std::string key_name = getPortValue(node, port_mapping, QString(field_name.c_str()),
+                                            true);
+        rapidjson::StringBuffer strbuf;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+        rapidjson::Document doc;
+        doc.CopyFrom(feedbackMessage[field_name.c_str()], doc.GetAllocator());
+        doc.Accept(writer);
+        _blackboard.insert( {key_name, strbuf.GetString()} );
+    };
+    action_client_.registerFeedbackCallback(cb);
 
     rapidjson::Document goal = getRequestFromPorts(node, port_mapping);
     action_client_.sendGoal(goal);
