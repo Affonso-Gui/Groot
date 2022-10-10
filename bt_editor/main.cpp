@@ -36,7 +36,7 @@ main(int argc, char *argv[])
     parser.addOption(test_option);
 
     QCommandLineOption mode_option(QStringList() << "mode",
-                                   "Start in one of these modes: [editor,monitor,replay]",
+                                   "Start in one of these modes: [editor,interpreter,monitor,replay]",
                                    "mode");
     parser.addOption(mode_option);
     parser.process( app );
@@ -64,6 +64,10 @@ main(int argc, char *argv[])
             {
                 mode = GraphicMode::EDITOR;
             }
+            else if( opt_mode == "interpreter")
+            {
+                mode = GraphicMode::INTERPRETER;
+            }
             else if( opt_mode == "monitor")
             {
                 mode = GraphicMode::MONITOR;
@@ -73,7 +77,7 @@ main(int argc, char *argv[])
                 mode = GraphicMode::REPLAY;
             }
             else{
-                std::cout << "wrong mode passed to --mode. Use on of these: editor / monitor /replay"
+                std::cout << "wrong mode passed to --mode. Use on of these: editor / interpreter / monitor / replay"
                           << std::endl;
                 return 0;
             }
