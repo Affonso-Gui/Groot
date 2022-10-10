@@ -50,10 +50,10 @@ void SidepanelInterpreter::on_Connect()
             hostname = ui->lineEdit->placeholderText();
             ui->lineEdit->setText(hostname);
         }
-        QString port = ui->lineEdit_server->text();
+        QString port = ui->lineEdit_port->text();
         if( port.isEmpty() ) {
-            port = ui->lineEdit_server->placeholderText();
-            ui->lineEdit_server->setText(port);
+            port = ui->lineEdit_port->placeholderText();
+            ui->lineEdit_port->setText(port);
         }
 
         _rbc_thread = new Interpreter::RosBridgeConnectionThread(hostname.toStdString(),
@@ -367,7 +367,7 @@ void SidepanelInterpreter::toggleButtonConnect()
 {
     connectionUpdate(_connected);
     ui->lineEdit->setDisabled(_connected);
-    ui->lineEdit_server->setDisabled(_connected);
+    ui->lineEdit_port->setDisabled(_connected);
     ui->buttonExecSelection->setEnabled(_connected);
     ui->buttonExecRunning->setEnabled(_connected);
 }
