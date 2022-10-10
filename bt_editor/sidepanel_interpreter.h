@@ -3,7 +3,7 @@
 
 #include <QFrame>
 
-#include "bt_editor_base.h"
+#include "interpreter_utils.h"
 
 namespace Ui {
 class SidepanelInterpreter;
@@ -95,6 +95,7 @@ private:
     bool _updated;
 
     bool _connected;
+    Interpreter::RosBridgeConnectionThread* _rbc_thread;
 
     QWidget *_parent;
 

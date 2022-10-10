@@ -90,3 +90,8 @@ void Interpreter::RosBridgeConnectionThread::run()
     client->on_close = NULL;
     client->on_error = NULL;
 }
+
+void Interpreter::RosBridgeConnectionThread::stop()
+{
+    _rbc.stopClient(_client_name);
+}

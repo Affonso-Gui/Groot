@@ -17,6 +17,7 @@ SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     _autorun(true),
     _updated(true),
     _connected(false),
+    _rbc_thread(nullptr),
     _parent(parent)
 {
     ui->setupUi(this);
@@ -41,19 +42,28 @@ void SidepanelInterpreter::on_Connect()
     qDebug() << ui->lineEdit->text() << ui->lineEdit->placeholderText() <<
         ui->lineEdit_server->text();
     if( !_connected) {
-        Interpreter::RosBridgeConnectionThread* rbc_thread =
-            new Interpreter::RosBridgeConnectionThread("localhost:9090");
-        connect( rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
+        if (_rbc_thread && _rbc_thread->isRunning()) {
+            qDebug() << "still connecting...";
+            return;
+        }
+        _rbc_thread = new Interpreter::RosBridgeConnectionThread("localhost:9090");
+        connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
                  this, &SidepanelInterpreter::on_connectionCreated);
-        connect( rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
+        connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
                  this, &SidepanelInterpreter::on_connectionError);
-        rbc_thread->start();
+        _rbc_thread->start();
+        return;
+    }
 
+    if (_rbc_thread) {
+        disconnect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
+                    this, &SidepanelInterpreter::on_connectionCreated);
+        disconnect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
+                    this, &SidepanelInterpreter::on_connectionError);
+        _rbc_thread->stop();
     }
-    else{
-        _connected = false;
-        toggleButtonConnect();
-    }
+    _connected = false;
+    toggleButtonConnect();
 }
 
 void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename) {

@@ -54,6 +54,7 @@ public:
     explicit RosBridgeConnectionThread(const std::string& address);
 
     void run();
+    void stop();
 
 private:
     RosbridgeWsClient _rbc;
