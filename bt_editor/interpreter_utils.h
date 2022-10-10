@@ -3,6 +3,8 @@
 
 #include <QThread>
 #include <rosbridgecpp/rosbridge_ws_client.hpp>
+#include <roseus_bt/ws_service_client.h>
+#include <roseus_bt/ws_action_client.h>
 #include <fmt/format.h>
 #include "bt_editor_base.h"
 

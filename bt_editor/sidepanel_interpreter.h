@@ -41,6 +41,12 @@ private slots:
 
     void changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> node, const NodeStatus& status);
 
+    BT::NodeStatus executeConditionNode(const AbstractTreeNode& node);
+
+    BT::NodeStatus executeActionNode(const AbstractTreeNode& node);
+
+    void executeNode(const int node_id);
+
     void tickRoot();
 
     void runStep();

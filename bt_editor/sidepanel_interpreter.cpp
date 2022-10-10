@@ -77,7 +77,8 @@ void SidepanelInterpreter::on_Connect()
     toggleButtonConnect();
 }
 
-void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename) {
+void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename)
+{
     qDebug() << "Updating interpreter_widget tree model";
     _tree_name = bt_name;
 
@@ -270,6 +271,62 @@ void SidepanelInterpreter::changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> no
     node_ref->set_status(status);
 }
 
+BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node)
+{
+    const auto* bt_node =
+        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
+    auto port_mapping = bt_node->getCurrentPortMapping();
+
+    RosbridgeServiceClient
+        service_client_(ui->lineEdit->text().toStdString(),
+                        ui->lineEdit_port->text().toInt(),
+                        node.model.ports.find("service_name")->second.default_value.toStdString());
+
+    rapidjson::Document request;
+    request.SetObject();
+    for(const auto& port_it: port_mapping) {
+        std::string name = port_it.first.toStdString();
+        std::string value = port_it.second.toStdString();
+        rapidjson::Value jname, jval;
+        jname.SetString(name.c_str(), name.size(),  request.GetAllocator());
+        jval.SetString(value.c_str(), value.size(), request.GetAllocator());
+        request.AddMember(jname, jval, request.GetAllocator());
+    }
+    service_client_.call(request);
+    service_client_.waitForResult();
+    auto result = service_client_.getResult();
+    if (result.HasMember("success") &&
+        result["success"].IsBool() &&
+        result["success"].GetBool()) {
+        return NodeStatus::SUCCESS;
+    }
+    return NodeStatus::FAILURE;
+}
+
+BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node)
+{
+    return NodeStatus::RUNNING;
+}
+
+void SidepanelInterpreter::executeNode(const int node_id)
+{
+    auto node = _abstract_tree.node(node_id);
+    std::vector<std::pair<int, NodeStatus>> node_status;
+    if (node->model.type == NodeType::CONDITION) {
+        node_status.push_back( {node_id, executeConditionNode(*node)} );
+    }
+    else {
+        node_status.push_back( {node_id, executeActionNode(*node)} );
+    }
+    emit changeNodeStyle(_tree_name, node_status, true);
+    translateNodeIndex(node_status, false);
+    for (auto it: node_status) {
+        auto tree_node = _tree.nodes.at(it.first - 1);  // skip root
+        changeTreeNodeStatus(tree_node, it.second);
+    }
+    _updated = true;
+}
+
 void SidepanelInterpreter::tickRoot()
 {
     if (_tree.nodes.size() <= 1) {
@@ -459,6 +516,20 @@ void SidepanelInterpreter::on_buttonRunTree_clicked()
 void SidepanelInterpreter::on_buttonExecSelection_clicked()
 {
     qDebug() << "buttonExecSelection";
+
+    if (_tree.nodes.size() <= 1) {
+        return;
+    }
+
+    BT::StdCoutLogger logger_cout(_tree);
+    int i = 0;
+    for (auto& node: _abstract_tree.nodes()) {
+        if (node.graphic_node->nodeGraphicsObject().isSelected()) {
+            executeNode(i);
+            return;
+        }
+        i++;
+    }
 }
 
 void SidepanelInterpreter::on_buttonExecRunning_clicked()
