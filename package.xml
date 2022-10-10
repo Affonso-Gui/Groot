@@ -17,6 +17,7 @@
 
   <build_depend>behaviortree_cpp_v3</build_depend>
   <build_depend>roseus_bt</build_depend>
+  <build_depend>fmt</build_depend>
   <build_depend>qtbase5-dev</build_depend>
   <build_depend>libqt5-core</build_depend>
   <build_depend>libqt5-gui</build_depend>
@@ -30,6 +31,7 @@
 
   <exec_depend version_eq="3.8.0">behaviortree_cpp_v3</exec_depend>
   <exec_depend>roseus_bt</exec_depend>
+  <exec_depend>fmt</exec_depend>
 
   <export>
     <build_type condition="$ROS_VERSION == 1">catkin</build_type>

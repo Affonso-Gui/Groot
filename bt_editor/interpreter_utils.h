@@ -1,6 +1,9 @@
 #ifndef INTERPRETER_UTILS_H
 #define INTERPRETER_UTILS_H
 
+#include <QThread>
+#include <rosbridgecpp/rosbridge_ws_client.hpp>
+#include <fmt/format.h>
 #include "bt_editor_base.h"
 
 namespace Interpreter
@@ -41,6 +44,25 @@ public:
 
 private:
     BT::NodeStatus return_status_;
+};
+
+
+class RosBridgeConnectionThread : public QThread
+{
+Q_OBJECT
+public:
+    explicit RosBridgeConnectionThread(const std::string& address);
+
+    void run();
+
+private:
+    RosbridgeWsClient _rbc;
+    std::string _address;
+    std::string _client_name;
+
+signals:
+    void connectionCreated();
+    void connectionError(const QString& message);
 };
 
 }  // namespace

@@ -41,12 +41,19 @@ void SidepanelInterpreter::on_Connect()
     qDebug() << ui->lineEdit->text() << ui->lineEdit->placeholderText() <<
         ui->lineEdit_server->text();
     if( !_connected) {
-        _connected = true;
+        Interpreter::RosBridgeConnectionThread* rbc_thread =
+            new Interpreter::RosBridgeConnectionThread("localhost:9090");
+        connect( rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
+                 this, &SidepanelInterpreter::on_connectionCreated);
+        connect( rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
+                 this, &SidepanelInterpreter::on_connectionError);
+        rbc_thread->start();
+
     }
     else{
         _connected = false;
+        toggleButtonConnect();
     }
-    toggleButtonConnect();
 }
 
 void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename) {
@@ -342,6 +349,24 @@ void SidepanelInterpreter::toggleButtonConnect()
     ui->lineEdit_server->setDisabled(_connected);
     ui->buttonExecSelection->setEnabled(_connected);
     ui->buttonExecRunning->setEnabled(_connected);
+}
+
+void SidepanelInterpreter::on_connectionCreated()
+{
+    _connected = true;
+    toggleButtonConnect();
+}
+
+void SidepanelInterpreter::on_connectionError(const QString& message)
+{
+    // close connection
+    _connected = false;
+    toggleButtonConnect();
+
+    // display error message
+    QMessageBox messageBox;
+    messageBox.critical(this, "Connection Error", message);
+    messageBox.show();
 }
 
 void SidepanelInterpreter::on_buttonResetTree_clicked()

@@ -12,10 +12,10 @@ find_package(Qt5 COMPONENTS  Core Widgets Gui OpenGL Xml Svg)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}  "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.1)
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif()
 
 #############################################################
@@ -42,6 +42,7 @@ elseif(catkin_FOUND OR CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     behaviortree_cpp_v3
     behaviortree_ros
     roseus_bt)
+  find_package(fmt)
 
   message(STATUS "----------------------")
   message(STATUS "Compiling with CATKIN.")
@@ -51,7 +52,7 @@ elseif(catkin_FOUND OR CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE )
     INCLUDE_DIRS 
     LIBRARIES qt_node_editor
     CATKIN_DEPENDS behaviortree_cpp_v3
-    DEPENDS 
+    DEPENDS fmt
     )
 endif()
 #############################################################
@@ -75,6 +76,7 @@ else()
 endif()
 
 add_subdirectory( QtNodeEditor )
+add_subdirectory(${roseus_bt_SOURCE_PREFIX}/include/rosbridgecpp rosbridgecpp)
 
 ##########################################
 # FIX ME in the future....
@@ -185,8 +187,8 @@ if( ZMQ_FOUND )
     endif()
 endif()
 
-target_link_libraries(behavior_tree_editor ${GROOT_DEPENDENCIES} )
-
+target_link_libraries(behavior_tree_editor ${GROOT_DEPENDENCIES} rosbridgecpp fmt::fmt)
+target_compile_features(behavior_tree_editor PUBLIC cxx_std_14)
 
 add_executable(Groot ./bt_editor/main.cpp  ${RESOURCE_FILES})
 target_link_libraries(Groot behavior_tree_editor )

@@ -49,6 +49,10 @@ private slots:
 
     void toggleButtonConnect();
 
+    void on_connectionCreated();
+
+    void on_connectionError(const QString& message);
+
     void on_buttonResetTree_clicked();
 
     void on_buttonSetSuccess_clicked();
