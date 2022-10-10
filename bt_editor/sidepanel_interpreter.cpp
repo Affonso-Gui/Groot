@@ -270,6 +270,32 @@ void SidepanelInterpreter::changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> no
     node_ref->set_status(status);
 }
 
+std::string SidepanelInterpreter::getActionType(const std::string& server_name)
+{
+    std::string topic_type("");
+    std::string topic_name = server_name + "/goal";
+
+    RosbridgeServiceClient service_client_(ui->lineEdit->text().toStdString(),
+                                           ui->lineEdit_port->text().toInt(),
+                                           "/rosapi/topic_type");
+    rapidjson::Document request;
+    request.SetObject();
+    rapidjson::Value topic;
+    topic.SetString(topic_name.c_str(), topic_name.size(), request.GetAllocator());
+    request.AddMember("topic", topic, request.GetAllocator());
+    service_client_.call(request);
+    service_client_.waitForResult();
+    auto result = service_client_.getResult();
+    if (result.HasMember("type") &&
+        result["type"].IsString()) {
+        topic_type = result["type"].GetString();
+        if (topic_type.substr(topic_type.size() - 4) == "Goal") {
+            topic_type = topic_type.substr(0, topic_type.size() - 4);
+        }
+    }
+    return topic_type;
+}
+
 BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node)
 {
     const auto* bt_node =
@@ -304,7 +330,41 @@ BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode
 
 BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node)
 {
-    return NodeStatus::SUCCESS;
+    const auto* bt_node =
+        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
+    auto port_mapping = bt_node->getCurrentPortMapping();
+    auto server_name_port = node.model.ports.find("server_name")->second;
+    std::string server_name = server_name_port.default_value.toStdString();
+    std::string topic_type = getActionType(server_name);
+
+    RosbridgeActionClient action_client_(ui->lineEdit->text().toStdString(),
+                                         ui->lineEdit_port->text().toInt(),
+                                         server_name,
+                                         topic_type);
+    rapidjson::Document goal;
+    goal.SetObject();
+    for(const auto& port_it: port_mapping) {
+        std::string name = port_it.first.toStdString();
+        std::string value = port_it.second.toStdString();
+        rapidjson::Value jname, jval;
+        jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
+        jval.SetString(value.c_str(), value.size(), goal.GetAllocator());
+        goal.AddMember(jname, jval, goal.GetAllocator());
+    }
+    action_client_.sendGoal(goal);
+
+    // if (action_client_.isActive()) {
+    //     return NodeStatus::RUNNING;
+    // }
+    action_client_.waitForResult();
+
+    auto result = action_client_.getResult();
+    if (result.HasMember("success") &&
+        result["success"].IsBool() &&
+        result["success"].GetBool()) {
+        return NodeStatus::SUCCESS;
+    }
+    return NodeStatus::FAILURE;
 }
 
 void SidepanelInterpreter::executeNode(const int node_id)
