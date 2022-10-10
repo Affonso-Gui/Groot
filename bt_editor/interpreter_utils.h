@@ -51,7 +51,7 @@ class RosBridgeConnectionThread : public QThread
 {
 Q_OBJECT
 public:
-    explicit RosBridgeConnectionThread(const std::string& address);
+    explicit RosBridgeConnectionThread(const std::string& hostname, const std::string& port);
 
     void run();
     void stop();
@@ -59,7 +59,7 @@ public:
 private:
     RosbridgeWsClient _rbc;
     std::string _address;
-    std::string _client_name;
+    const std::string _client_name = std::string("base_connection");
 
 signals:
     void connectionCreated();

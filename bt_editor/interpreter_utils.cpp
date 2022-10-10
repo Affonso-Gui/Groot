@@ -64,8 +64,9 @@ void Interpreter::InterpreterConditionNode::set_status(const BT::NodeStatus& sta
 //////
 
 Interpreter::RosBridgeConnectionThread::
-RosBridgeConnectionThread(const std::string& address) :
-    _rbc(address), _address(address), _client_name("base_connection")
+RosBridgeConnectionThread(const std::string& hostname, const std::string& port) :
+    _rbc(fmt::format("{}:{}", hostname, port)),
+    _address(fmt::format("{}:{}", hostname, port))
 {}
 
 void Interpreter::RosBridgeConnectionThread::run()

@@ -39,14 +39,25 @@ void SidepanelInterpreter::clear()
 void SidepanelInterpreter::on_Connect()
 {
     qDebug() << "buttonConnect";
-    qDebug() << ui->lineEdit->text() << ui->lineEdit->placeholderText() <<
-        ui->lineEdit_server->text();
     if( !_connected) {
         if (_rbc_thread && _rbc_thread->isRunning()) {
             qDebug() << "still connecting...";
             return;
         }
-        _rbc_thread = new Interpreter::RosBridgeConnectionThread("localhost:9090");
+
+        QString hostname = ui->lineEdit->text();
+        if( hostname.isEmpty() ) {
+            hostname = ui->lineEdit->placeholderText();
+            ui->lineEdit->setText(hostname);
+        }
+        QString port = ui->lineEdit_server->text();
+        if( port.isEmpty() ) {
+            port = ui->lineEdit_server->placeholderText();
+            ui->lineEdit_server->setText(port);
+        }
+
+        _rbc_thread = new Interpreter::RosBridgeConnectionThread(hostname.toStdString(),
+                                                                 port.toStdString());
         connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
                  this, &SidepanelInterpreter::on_connectionCreated);
         connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
