@@ -38,7 +38,6 @@ void SidepanelInterpreter::clear()
 
 void SidepanelInterpreter::on_Connect()
 {
-    qDebug() << "buttonConnect";
     if( !_connected) {
         if (_rbc_thread && _rbc_thread->isRunning()) {
             qDebug() << "still connecting...";
@@ -305,7 +304,7 @@ BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode
 
 BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node)
 {
-    return NodeStatus::RUNNING;
+    return NodeStatus::SUCCESS;
 }
 
 void SidepanelInterpreter::executeNode(const int node_id)
@@ -315,8 +314,11 @@ void SidepanelInterpreter::executeNode(const int node_id)
     if (node->model.type == NodeType::CONDITION) {
         node_status.push_back( {node_id, executeConditionNode(*node)} );
     }
-    else {
+    else if (node->model.type == NodeType::ACTION) {
         node_status.push_back( {node_id, executeActionNode(*node)} );
+    }
+    else {  /* decorators, control, subtrees */
+        return;
     }
     emit changeNodeStyle(_tree_name, node_status, true);
     translateNodeIndex(node_status, false);
@@ -324,7 +326,6 @@ void SidepanelInterpreter::executeNode(const int node_id)
         auto tree_node = _tree.nodes.at(it.first - 1);  // skip root
         changeTreeNodeStatus(tree_node, it.second);
     }
-    _updated = true;
 }
 
 void SidepanelInterpreter::tickRoot()
@@ -526,13 +527,34 @@ void SidepanelInterpreter::on_buttonExecSelection_clicked()
     for (auto& node: _abstract_tree.nodes()) {
         if (node.graphic_node->nodeGraphicsObject().isSelected()) {
             executeNode(i);
-            return;
         }
         i++;
     }
+    _updated = true;
 }
 
 void SidepanelInterpreter::on_buttonExecRunning_clicked()
 {
     qDebug() << "buttonExecRunning";
+
+    if (_tree.nodes.size() <= 1) {
+        return;
+    }
+
+    BT::StdCoutLogger logger_cout(_tree);
+    std::vector<std::pair<int, NodeStatus>> node_status;
+
+    int i = 1;  // skip root
+    for (auto& tree_node: _tree.nodes) {
+        if (tree_node->status() == NodeStatus::RUNNING) {
+            node_status.push_back( {i, NodeStatus::RUNNING} );
+        }
+        i++;
+    }
+
+    translateNodeIndex(node_status, true);
+    for (auto it: node_status) {
+        executeNode(it.first);
+    }
+    _updated = true;
 }
