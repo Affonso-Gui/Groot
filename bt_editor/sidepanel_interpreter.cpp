@@ -301,23 +301,22 @@ std::string SidepanelInterpreter::getPortValue(const PortModel& port_model,
                                                const bool output_port)
 {
     std::string value = port_model.default_value.toStdString();
+    bool refval = false;
     if (!mapping_value.isEmpty()) {
         value = mapping_value.toStdString();
     }
     if (value.front() == '$') {
-        std::string ref_name = value.substr(1, value.size());
-        if (output_port) {
-            return ref_name;
-        }
-        return _blackboard[ref_name.c_str()];
+        refval = true;
+        value = value.substr(1, value.size());
     }
     if (value.front() == '{' && value.back() == '}') {
-        std::string ref_name = value.substr(1, value.size());
-        ref_name.pop_back();
-        if (output_port) {
-            return ref_name;
-        }
-        return _blackboard[ref_name.c_str()];
+        refval = true;
+        value = value.substr(1, value.size());
+        value.pop_back();
+    }
+
+    if (!output_port && refval) {
+        return _blackboard[value];
     }
     return value;
 }
@@ -419,7 +418,8 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
         rapidjson::Document doc;
         doc.CopyFrom(feedbackMessage[field_name.c_str()], doc.GetAllocator());
         doc.Accept(writer);
-        _blackboard.insert( {key_name, strbuf.GetString()} );
+
+        _blackboard[key_name] = strbuf.GetString();
     };
     action_client_.registerFeedbackCallback(cb);
 
