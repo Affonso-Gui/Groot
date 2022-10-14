@@ -44,14 +44,12 @@ private slots:
 
     std::string getActionType(const std::string& server_name);
 
-    std::string getPortValue(const PortModel& port_model,
-                             const QString& mapping_value,
-                             const bool output_port);
+    std::pair<std::string, bool> getPortValue(const PortModel& port_model,
+                                              const QString& mapping_value);
 
-    std::string getPortValue(const AbstractTreeNode& node,
-                             PortsMapping port_mapping,
-                             const QString& port_name,
-                             const bool output_port);
+    std::pair<std::string, bool> getPortValue(const AbstractTreeNode& node,
+                                              PortsMapping port_mapping,
+                                              const QString& port_name);
 
     rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
                                             const PortsMapping& port_mapping);
@@ -117,7 +115,7 @@ private:
 
     bool _connected;
     Interpreter::RosBridgeConnectionThread* _rbc_thread;
-    std::map<std::string, std::string> _blackboard;
+    std::map<std::string, rapidjson::Document> _blackboard;
 
     QWidget *_parent;
 

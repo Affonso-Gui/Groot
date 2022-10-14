@@ -296,9 +296,8 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     return topic_type;
 }
 
-std::string SidepanelInterpreter::getPortValue(const PortModel& port_model,
-                                               const QString& mapping_value,
-                                               const bool output_port)
+std::pair<std::string, bool> SidepanelInterpreter::getPortValue(const PortModel& port_model,
+                                                                const QString& mapping_value)
 {
     std::string value = port_model.default_value.toStdString();
     bool refval = false;
@@ -314,21 +313,16 @@ std::string SidepanelInterpreter::getPortValue(const PortModel& port_model,
         value = value.substr(1, value.size());
         value.pop_back();
     }
-
-    if (!output_port && refval) {
-        return _blackboard[value];
-    }
-    return value;
+    return std::pair<std::string, bool> (value, refval);
 }
 
-std::string SidepanelInterpreter::getPortValue(const AbstractTreeNode& node,
-                                               PortsMapping port_mapping,
-                                               const QString& port_name,
-                                               const bool output_port)
+std::pair<std::string, bool> SidepanelInterpreter::getPortValue(const AbstractTreeNode& node,
+                                                                PortsMapping port_mapping,
+                                                                const QString& port_name)
 {
     auto port_model = node.model.ports.find(port_name)->second;
     QString mapping_value = port_mapping[port_name];
-    return getPortValue(port_model, mapping_value, output_port);
+    return getPortValue(port_model, mapping_value);
 }
 
 rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTreeNode& node,
@@ -340,12 +334,19 @@ rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTree
         auto port_model = node.model.ports.find(port_it.first)->second;
         std::string name = port_it.first.toStdString();
         std::string type = port_model.type_name.toStdString();
-        std::string value = getPortValue(port_model, port_it.second, false);
         if (port_model.direction == PortDirection::OUTPUT) {
             continue;
         }
+        std::pair<std::string, bool> value_pair = getPortValue(port_model, port_it.second);
         rapidjson::Value jname, jval;
         jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
+        if (value_pair.second) {
+            jval.SetObject();
+            jval.CopyFrom(_blackboard[value_pair.first], goal.GetAllocator());
+            goal.AddMember(jname, jval, goal.GetAllocator());
+            return goal;
+        }
+        const std::string& value = value_pair.first;
         // all ros types defined in: http://wiki.ros.org/msg
         if (type == "bool")
             jval.SetBool(boost::lexical_cast<bool>(value));
@@ -408,18 +409,12 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
         std::string message = in_message->string();
         rapidjson::Document document, feedbackMessage;
         document.Parse(message.c_str());
-        feedbackMessage.Swap(document["msg"]["feedback"]);
+        document.Swap(document["msg"]["feedback"]);
 
-        std::string field_name = feedbackMessage["update_field_name"].GetString();
-        std::string key_name = getPortValue(node, port_mapping, QString(field_name.c_str()),
-                                            true);
-        rapidjson::StringBuffer strbuf;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
-        rapidjson::Document doc;
-        doc.CopyFrom(feedbackMessage[field_name.c_str()], doc.GetAllocator());
-        doc.Accept(writer);
-
-        _blackboard[key_name] = strbuf.GetString();
+        std::string field_name = document["update_field_name"].GetString();
+        std::string key_name = getPortValue(node, port_mapping, QString(field_name.c_str())).first;
+        document.Swap(document[field_name.c_str()]);
+        _blackboard[key_name] = std::move(document);
     };
     action_client_.registerFeedbackCallback(cb);
 
