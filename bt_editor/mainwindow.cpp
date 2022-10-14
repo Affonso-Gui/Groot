@@ -1377,7 +1377,8 @@ void MainWindow::updateCurrentMode()
         disconnect( ui->toolButtonConnect, &QToolButton::clicked,
                     _monitor_widget, &SidepanelMonitor::on_Connect );
         connect( ui->toolButtonConnect, &QToolButton::clicked,
-                 _interpreter_widget, &SidepanelInterpreter::on_Connect );
+                 _interpreter_widget, &SidepanelInterpreter::on_Connect,
+                 Qt::UniqueConnection);
 #endif
         // Load Button
         connect( ui->toolButtonLoadFile, &QToolButton::clicked,
@@ -1412,7 +1413,8 @@ void MainWindow::updateCurrentMode()
         disconnect( ui->toolButtonConnect, &QToolButton::clicked,
                     _interpreter_widget, &SidepanelInterpreter::on_Connect );
         connect( ui->toolButtonConnect, &QToolButton::clicked,
-                 _monitor_widget, &SidepanelMonitor::on_Connect );
+                 _monitor_widget, &SidepanelMonitor::on_Connect,
+                 Qt::UniqueConnection);
 #endif
         // Load Shortcut
         disconnect( _load_shortcut, &QShortcut::activated,
