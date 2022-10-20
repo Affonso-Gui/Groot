@@ -191,6 +191,7 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeTick()
     }
     _return_status = NodeStatus::IDLE;
     setStatus(status);
+    BT::Tree::transversed_nodes.push_back(this);
     return status;
 }
 

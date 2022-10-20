@@ -549,20 +549,11 @@ void SidepanelInterpreter::tickRoot()
         return;
     }
 
-    std::vector<std::pair<int, NodeStatus>> prev_node_status;
-    std::vector<std::pair<int, NodeStatus>> node_status;
-    int i;
-
     // clear background nodes
     _background_nodes.clear();
 
-    // set previous status
-    prev_node_status.push_back( {0, _root_status} );
-    i = 1;
-    for (auto& node: _tree.nodes) {
-        prev_node_status.push_back( {i, node->status()} );
-        i++;
-    }
+    std::vector<std::pair<int, NodeStatus>> node_status;
+    NodeStatus prev_root_status = _root_status;
 
     bool conditionRunning = false;
     // tick tree
@@ -586,14 +577,14 @@ void SidepanelInterpreter::tickRoot()
     }
 
     // set changed status
-    if (_root_status != prev_node_status.at(0).second) {
+    if (_root_status != prev_root_status) {
         node_status.push_back( {0, _root_status} );
     }
 
-    i = 1;
+    int i = 1;
     for (auto& node: _tree.nodes) {
         NodeStatus new_status = node->status();
-        NodeStatus prev_status = prev_node_status.at(i).second;
+        NodeStatus prev_status = node->previousStatus();
 
         if (new_status != prev_status) {
             if (new_status == NodeStatus::IDLE) {
