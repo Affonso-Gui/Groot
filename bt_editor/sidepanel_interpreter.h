@@ -130,7 +130,7 @@ signals:
 private:
     Ui::SidepanelInterpreter *ui;
 
-    BT::Tree _tree;
+    BT::Tree::Ptr _tree;
     AbsBehaviorTree _abstract_tree;
     QString _tree_name;
     std::unique_ptr<BT::StdCoutLogger> _logger_cout;

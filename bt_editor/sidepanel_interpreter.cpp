@@ -273,10 +273,10 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
 
     if (xml_filename.isNull()) {
         QString xml_text = main_win->saveToXML(bt_name);
-        _tree = factory.createTreeFromText(xml_text.toStdString());
+        _tree = factory.maybeCreateLayeredTreeFromText(xml_text.toStdString());
     }
     else {
-        _tree = factory.createTreeFromFile(xml_filename.toStdString());
+        _tree = factory.maybeCreateLayeredTreeFromFile(xml_filename.toStdString());
     }
 
     _logger_cout.reset();
@@ -387,7 +387,7 @@ expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
 
 void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
 {
-    if (_tree.nodes.size() <= 1) {
+    if (_tree->nodes.size() <= 1) {
         return;
     }
 
@@ -402,7 +402,7 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
     emit changeNodeStyle(_tree_name, node_status, true);
     translateNodeIndex(node_status, false);
     for (auto it: node_status) {
-        auto tree_node = _tree.nodes.at(it.first - 1);  // skip root
+        auto tree_node = _tree->nodes.at(it.first - 1);  // skip root
         changeTreeNodeStatus(tree_node, it.second);
     }
     _updated = true;
@@ -410,13 +410,13 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
 
 void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
 {
-    if (_tree.nodes.size() <= 1) {
+    if (_tree->nodes.size() <= 1) {
         return;
     }
     std::vector<std::pair<int, NodeStatus>> node_status;
 
     int i = 1;  // skip root
-    for (auto& tree_node: _tree.nodes) {
+    for (auto& tree_node: _tree->nodes) {
         if (tree_node->status() == NodeStatus::RUNNING &&
             std::find(_background_nodes.begin(), _background_nodes.end(),
                       tree_node) == _background_nodes.end()) {
@@ -538,14 +538,14 @@ void SidepanelInterpreter::executeNode(const int tree_node_id)
     emit changeNodeStyle(_tree_name, node_status, true);
     translateNodeIndex(node_status, false);
     for (auto it: node_status) {
-        auto tree_node = _tree.nodes.at(it.first - 1);  // skip root
+        auto tree_node = _tree->nodes.at(it.first - 1);  // skip root
         changeTreeNodeStatus(tree_node, it.second);
     }
 }
 
 void SidepanelInterpreter::tickRoot()
 {
-    if (_tree.nodes.size() <= 1) {
+    if (_tree->nodes.size() <= 1) {
         return;
     }
 
@@ -558,7 +558,7 @@ void SidepanelInterpreter::tickRoot()
     bool conditionRunning = false;
     // tick tree
     try {
-        _root_status = _tree.tickRoot();
+        _root_status = _tree->tickRoot();
     }
     catch (Interpreter::ConditionEvaluation c_eval) {
         conditionRunning = true;
@@ -572,7 +572,7 @@ void SidepanelInterpreter::tickRoot()
         }
     }
 
-    if (_tree.nodes.size() == 1 && _tree.rootNode()->name() == "Root") {
+    if (_tree->nodes.size() == 1 && _tree->rootNode()->name() == "Root") {
         return;
     }
 
@@ -582,7 +582,7 @@ void SidepanelInterpreter::tickRoot()
     }
 
     int i = 1;
-    for (auto& node: _tree.nodes) {
+    for (auto& node: _tree->nodes) {
         NodeStatus new_status = node->status();
         NodeStatus prev_status = node->previousStatus();
 
@@ -820,7 +820,7 @@ void SidepanelInterpreter::on_buttonExecSelection_clicked()
 {
     qDebug() << "buttonExecSelection";
 
-    if (_tree.nodes.size() <= 1) {
+    if (_tree->nodes.size() <= 1) {
         return;
     }
     std::vector<std::pair<int, NodeStatus>> node_status;
@@ -849,13 +849,13 @@ void SidepanelInterpreter::on_buttonExecRunning_clicked()
 {
     qDebug() << "buttonExecRunning";
 
-    if (_tree.nodes.size() <= 1) {
+    if (_tree->nodes.size() <= 1) {
         return;
     }
     std::vector<std::pair<int, NodeStatus>> node_status;
 
     int i = 1;  // skip root
-    for (auto& tree_node: _tree.nodes) {
+    for (auto& tree_node: _tree->nodes) {
         if (tree_node->status() == NodeStatus::RUNNING &&
             std::find(_background_nodes.begin(), _background_nodes.end(),
                       tree_node) == _background_nodes.end()) {
