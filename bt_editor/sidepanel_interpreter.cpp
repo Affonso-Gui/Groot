@@ -275,9 +275,9 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     std::string topic_type("");
     std::string topic_name = server_name + "/goal";
 
-    RosbridgeServiceClient service_client_(ui->lineEdit->text().toStdString(),
-                                           ui->lineEdit_port->text().toInt(),
-                                           "/rosapi/topic_type");
+    roseus_bt::RosbridgeServiceClient service_client_(ui->lineEdit->text().toStdString(),
+                                                      ui->lineEdit_port->text().toInt(),
+                                                      "/rosapi/topic_type");
     rapidjson::Document request;
     request.SetObject();
     rapidjson::Value topic;
@@ -373,7 +373,7 @@ BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode
         dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
     auto port_mapping = bt_node->getCurrentPortMapping();
 
-    RosbridgeServiceClient
+    roseus_bt::RosbridgeServiceClient
         service_client_(ui->lineEdit->text().toStdString(),
                         ui->lineEdit_port->text().toInt(),
                         node.model.ports.find("service_name")->second.default_value.toStdString());
@@ -399,10 +399,10 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
     std::string server_name = server_name_port.default_value.toStdString();
     std::string topic_type = getActionType(server_name);
 
-    RosbridgeActionClient action_client_(ui->lineEdit->text().toStdString(),
-                                         ui->lineEdit_port->text().toInt(),
-                                         server_name,
-                                         topic_type);
+    roseus_bt::RosbridgeActionClient action_client_(ui->lineEdit->text().toStdString(),
+                                                    ui->lineEdit_port->text().toInt(),
+                                                    server_name,
+                                                    topic_type);
 
     auto cb = [this, node, port_mapping](std::shared_ptr<WsClient::Connection> connection,
                                          std::shared_ptr<WsClient::InMessage> in_message) {
