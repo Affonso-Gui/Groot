@@ -72,6 +72,9 @@ void SidepanelInterpreter::on_Connect()
                     this, &SidepanelInterpreter::on_connectionError);
         _rbc_thread->stop();
     }
+    for (auto exec_thread: _running_threads) {
+        exec_thread->stop();
+    }
     _connected = false;
     toggleButtonConnect();
 }
@@ -354,6 +357,9 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
 
     connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
              this, &SidepanelInterpreter::on_actionReportResult);
+    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
+             this, &SidepanelInterpreter::on_actionFinished);
+    _running_threads.push_back(exec_thread);
     exec_thread->start();
     return NodeStatus::RUNNING;
 }
@@ -511,6 +517,18 @@ void SidepanelInterpreter::on_actionReportResult(int tree_node_id, const QString
     auto tree_node = _tree.nodes.at(tree_node_id - 1);
     changeTreeNodeStatus(tree_node, bt_status);
     _updated = true;
+}
+
+void SidepanelInterpreter::on_actionFinished()
+{
+    auto is_finished = [](const Interpreter::ExecuteActionThread* thr) {
+        return thr->isFinished();
+    };
+
+    _running_threads.erase(std::remove_if(_running_threads.begin(),
+                                          _running_threads.end(),
+                                          is_finished),
+                           _running_threads.end());
 }
 
 void SidepanelInterpreter::on_buttonResetTree_clicked()

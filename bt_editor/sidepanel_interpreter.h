@@ -68,6 +68,8 @@ private slots:
 
     void on_actionReportResult(int tree_node_id, const QString& status);
 
+    void on_actionFinished();
+
     void on_buttonResetTree_clicked();
 
     void on_buttonSetSuccess_clicked();
@@ -111,6 +113,7 @@ private:
 
     bool _connected;
     Interpreter::RosBridgeConnectionThread* _rbc_thread;
+    std::vector<Interpreter::ExecuteActionThread*> _running_threads;
 
     QWidget *_parent;
 

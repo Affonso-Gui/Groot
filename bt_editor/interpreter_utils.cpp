@@ -9,11 +9,17 @@ using WsClient = SimpleWeb::SocketClient<SimpleWeb::WS>;
 
 Interpreter::InterpreterNode::
 InterpreterNode(const std::string& name, const BT::NodeConfiguration& config) :
-    BT::AsyncActionNode(name,config)
+    BT::AsyncActionNode(name,config),
+    _exec_thread(nullptr)
 {}
 
 void Interpreter::InterpreterNode::halt()
-{}
+{
+    if (_exec_thread && _exec_thread->isRunning()) {
+        _exec_thread->stop();
+        _exec_thread = nullptr;
+    }
+}
 
 BT::NodeStatus Interpreter::InterpreterNode::tick()
 {
@@ -23,6 +29,11 @@ BT::NodeStatus Interpreter::InterpreterNode::tick()
 void Interpreter::InterpreterNode::set_status(const BT::NodeStatus& status)
 {
     setStatus(status);
+}
+
+void Interpreter::InterpreterNode::set_exec_thread(ExecuteActionThread* exec_thread)
+{
+    _exec_thread = exec_thread;
 }
 
 
@@ -133,6 +144,8 @@ void Interpreter::ExecuteActionThread::run()
         setOutputValue(_tree_node, name, type, document);
     };
     _action_client.registerFeedbackCallback(cb);
+    auto node_ref = std::static_pointer_cast<InterpreterNode>(_tree_node);
+    node_ref->set_exec_thread(this);
 
     rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
     _action_client.sendGoal(goal);
@@ -151,7 +164,7 @@ void Interpreter::ExecuteActionThread::run()
 
 void Interpreter::ExecuteActionThread::stop()
 {
-    _tree_node->halt();
+    _action_client.cancelGoal();
 }
 
 

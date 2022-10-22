@@ -13,6 +13,8 @@
 namespace Interpreter
 {
 
+class ExecuteActionThread;
+
 class ConditionEvaluation : public std::exception
 {
 public:
@@ -32,6 +34,11 @@ public:
     BT::NodeStatus tick() override;
 
     void set_status(const BT::NodeStatus& status);
+
+    void set_exec_thread(ExecuteActionThread* exec_thread);
+
+private:
+    ExecuteActionThread* _exec_thread;
 };
 
 
