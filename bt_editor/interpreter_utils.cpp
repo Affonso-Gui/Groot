@@ -96,3 +96,137 @@ void Interpreter::RosBridgeConnectionThread::stop()
 {
     _rbc.stopClient(_client_name);
 }
+
+
+//////
+// Port Variables
+//////
+
+rapidjson::Value Interpreter::getInputValue(const BT::TreeNode::Ptr& tree_node,
+                                            const std::string name,
+                                            const std::string type,
+                                            rapidjson::MemoryPoolAllocator<>& allocator)
+{
+    rapidjson::Value jval;
+
+    if (type.find('/') != std::string::npos) {
+        // ros messages are represented as json documents
+        rapidjson::CopyDocument value;
+        tree_node->getInput(name, value);
+        jval.SetObject();
+        jval.CopyFrom(value, allocator);
+        return jval;
+    }
+    // all ros types defined in: http://wiki.ros.org/msg
+    if (type == "bool") {
+        bool value;
+        tree_node->getInput(name, value);
+        jval.SetBool(value);
+        return jval;
+    }
+    if (type == "int8" || type == "int16" || type == "int32") {
+        int value;
+        tree_node->getInput(name, value);
+        jval.SetInt(value);
+        return jval;
+    }
+    if (type == "uint8" || type == "uint16" || type == "uint32") {
+        unsigned int value;
+        tree_node->getInput(name, value);
+        jval.SetUint(value);
+        return jval;
+    }
+    if (type == "int64") {
+        int64_t value;
+        tree_node->getInput(name, value);
+        jval.SetInt64(value);
+        return jval;
+    }
+    if (type == "uint64") {
+        uint64_t value;
+        tree_node->getInput(name, value);
+        jval.SetUint64(value);
+        return jval;
+    }
+    if (type == "float32" || type == "float64") {
+        double value;
+        tree_node->getInput(name, value);
+        jval.SetDouble(value);
+        return jval;
+    }
+    if (type == "string") {
+        std::string value;
+        tree_node->getInput(name, value);
+        jval.SetString(value.c_str(), value.size(), allocator);
+        return jval;
+    }
+    throw std::runtime_error(fmt::format("Invalid port type: {} for {} at {}({})",
+                                         type, name,
+                                         tree_node->registrationName(),
+                                         tree_node->name()));
+}
+
+void Interpreter::setOutputValue(const BT::TreeNode::Ptr& tree_node,
+                                 const std::string name,
+                                 const std::string type,
+                                 const rapidjson::CopyDocument& document)
+{
+    if (type.find('/') != std::string::npos) {
+        // ros messages are represented as json documents
+        tree_node->setOutput<rapidjson::CopyDocument>(name, std::move(document));
+        return;
+    }
+    // all ros types defined in: http://wiki.ros.org/msg
+    if (type == "bool") {
+        tree_node->setOutput<uint8_t>(name, document.GetBool());
+        return;
+    }
+    if (type == "int8") {
+        tree_node->setOutput<int8_t>(name, document.GetInt());
+        return;
+    }
+    if (type == "int16") {
+        tree_node->setOutput<int16_t>(name, document.GetInt());
+        return;
+    }
+    if (type == "int32") {
+        tree_node->setOutput<int32_t>(name, document.GetInt());
+        return;
+    }
+    if (type == "int64") {
+        tree_node->setOutput<int64_t>(name, document.GetInt64());
+        return;
+    }
+    if (type == "uint8") {
+        tree_node->setOutput<uint8_t>(name, document.GetUint());
+        return;
+    }
+    if (type == "uint16") {
+        tree_node->setOutput<uint16_t>(name, document.GetUint());
+        return;
+    }
+    if (type == "uint32") {
+        tree_node->setOutput<uint32_t>(name, document.GetUint());
+        return;
+    }
+    if (type == "uint64") {
+        tree_node->setOutput<uint64_t>(name, document.GetUint64());
+        return;
+    }
+    if (type == "float32") {
+        tree_node->setOutput<float>(name, document.GetDouble());
+        return;
+    }
+    if (type == "float64") {
+        tree_node->setOutput<double>(name, document.GetDouble());
+        return;
+    }
+    if (type == "string") {
+        tree_node->setOutput<std::string>(name, document.GetString());
+        return;
+    }
+    throw std::runtime_error(fmt::format("Invalid port type: {} for {} at {}({})",
+                                         type, name,
+                                         tree_node->registrationName(),
+                                         tree_node->name()));
+}

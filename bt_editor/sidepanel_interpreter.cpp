@@ -201,6 +201,18 @@ translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
     }
 }
 
+int SidepanelInterpreter::
+translateSingleNodeIndex(int node_index, bool tree_index)
+{
+    // translate a single _tree node index into _abstract_tree index
+    // if tree_index is false, translate a _abstract_tree into _tree index
+
+    std::vector<std::pair<int, NodeStatus>> node_status;
+    node_status.push_back( {node_index, NodeStatus::IDLE} );
+    translateNodeIndex(node_status, tree_index);
+    return node_status.front().first;
+}
+
 void SidepanelInterpreter::
 expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
                          bool reset_before_update)
@@ -296,38 +308,13 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     return topic_type;
 }
 
-std::pair<std::string, bool> SidepanelInterpreter::getPortValue(const PortModel& port_model,
-                                                                const QString& mapping_value)
-{
-    std::string value = port_model.default_value.toStdString();
-    bool refval = false;
-    if (!mapping_value.isEmpty()) {
-        value = mapping_value.toStdString();
-    }
-    if (value.front() == '$') {
-        refval = true;
-        value = value.substr(1, value.size());
-    }
-    if (value.front() == '{' && value.back() == '}') {
-        refval = true;
-        value = value.substr(1, value.size());
-        value.pop_back();
-    }
-    return std::pair<std::string, bool> (value, refval);
-}
-
-std::pair<std::string, bool> SidepanelInterpreter::getPortValue(const AbstractTreeNode& node,
-                                                                PortsMapping port_mapping,
-                                                                const QString& port_name)
-{
-    auto port_model = node.model.ports.find(port_name)->second;
-    QString mapping_value = port_mapping[port_name];
-    return getPortValue(port_model, mapping_value);
-}
-
 rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTreeNode& node,
-                                                              const PortsMapping& port_mapping)
+                                                              const BT::TreeNode::Ptr& tree_node)
 {
+    const auto* bt_node =
+        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
+    auto port_mapping = bt_node->getCurrentPortMapping();
+
     rapidjson::Document goal;
     goal.SetObject();
     for(const auto& port_it: port_mapping) {
@@ -337,48 +324,23 @@ rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTree
         if (port_model.direction == PortDirection::OUTPUT) {
             continue;
         }
-        std::pair<std::string, bool> value_pair = getPortValue(port_model, port_it.second);
         rapidjson::Value jname, jval;
         jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
-        if (value_pair.second) {
-            jval.SetObject();
-            jval.CopyFrom(_blackboard[value_pair.first], goal.GetAllocator());
-            goal.AddMember(jname, jval, goal.GetAllocator());
-            return goal;
-        }
-        const std::string& value = value_pair.first;
-        // all ros types defined in: http://wiki.ros.org/msg
-        if (type == "bool")
-            jval.SetBool(boost::lexical_cast<bool>(value));
-        if (type == "int8" || type == "int16" || type == "int32")
-            jval.SetInt(boost::lexical_cast<int>(value));
-        if (type == "uint8" || type == "uint16" || type == "uint32")
-            jval.SetUint(boost::lexical_cast<uint32_t>(value));
-        if (type == "int64")
-            jval.SetInt64(boost::lexical_cast<int64_t>(value));
-        if (type == "uint64")
-            jval.SetUint64(boost::lexical_cast<uint64_t>(value));
-        if (type == "float32" || type == "float64")
-            jval.SetDouble(boost::lexical_cast<double>(value));
-        if (type == "string")
-            jval.SetString(value.c_str(), value.size(), goal.GetAllocator());
+        jval = Interpreter::getInputValue(tree_node, name, type, goal.GetAllocator());
         goal.AddMember(jname, jval, goal.GetAllocator());
     }
     return goal;
 }
 
-BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node)
+BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node,
+                                                          const BT::TreeNode::Ptr& tree_node)
 {
-    const auto* bt_node =
-        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
-    auto port_mapping = bt_node->getCurrentPortMapping();
-
     roseus_bt::RosbridgeServiceClient
         service_client_(ui->lineEdit->text().toStdString(),
                         ui->lineEdit_port->text().toInt(),
                         node.model.ports.find("service_name")->second.default_value.toStdString());
 
-    rapidjson::Document request = getRequestFromPorts(node, port_mapping);
+    rapidjson::Document request = getRequestFromPorts(node, tree_node);
     service_client_.call(request);
     service_client_.waitForResult();
     auto result = service_client_.getResult();
@@ -390,11 +352,9 @@ BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode
     return NodeStatus::FAILURE;
 }
 
-BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node)
+BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node,
+                                                       const BT::TreeNode::Ptr& tree_node)
 {
-    const auto* bt_node =
-        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
-    auto port_mapping = bt_node->getCurrentPortMapping();
     auto server_name_port = node.model.ports.find("server_name")->second;
     std::string server_name = server_name_port.default_value.toStdString();
     std::string topic_type = getActionType(server_name);
@@ -404,21 +364,23 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
                                                     server_name,
                                                     topic_type);
 
-    auto cb = [this, node, port_mapping](std::shared_ptr<WsClient::Connection> connection,
-                                         std::shared_ptr<WsClient::InMessage> in_message) {
+    auto cb = [node, tree_node](std::shared_ptr<WsClient::Connection> connection,
+                                std::shared_ptr<WsClient::InMessage> in_message) {
         std::string message = in_message->string();
-        rapidjson::Document document, feedbackMessage;
+        rapidjson::CopyDocument document;
         document.Parse(message.c_str());
         document.Swap(document["msg"]["feedback"]);
 
-        std::string field_name = document["update_field_name"].GetString();
-        std::string key_name = getPortValue(node, port_mapping, QString(field_name.c_str())).first;
-        document.Swap(document[field_name.c_str()]);
-        _blackboard[key_name] = std::move(document);
+        std::string name = document["update_field_name"].GetString();
+        auto port_model = node.model.ports.find(QString(name.c_str()))->second;
+        std::string type = port_model.type_name.toStdString();
+
+        document.Swap(document[name.c_str()]);
+        Interpreter::setOutputValue(tree_node, name, type, document);
     };
     action_client_.registerFeedbackCallback(cb);
 
-    rapidjson::Document goal = getRequestFromPorts(node, port_mapping);
+    rapidjson::Document goal = getRequestFromPorts(node, tree_node);
     action_client_.sendGoal(goal);
 
     // if (action_client_.isActive()) {
@@ -437,13 +399,15 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
 
 void SidepanelInterpreter::executeNode(const int node_id)
 {
+    int bt_node_id = translateSingleNodeIndex(node_id, false);
     auto node = _abstract_tree.node(node_id);
+    auto bt_node = _tree.nodes.at(bt_node_id - 1);
     std::vector<std::pair<int, NodeStatus>> node_status;
     if (node->model.type == NodeType::CONDITION) {
-        node_status.push_back( {node_id, executeConditionNode(*node)} );
+        node_status.push_back( {node_id, executeConditionNode(*node, bt_node)} );
     }
     else if (node->model.type == NodeType::ACTION) {
-        node_status.push_back( {node_id, executeActionNode(*node)} );
+        node_status.push_back( {node_id, executeActionNode(*node, bt_node)} );
     }
     else {  /* decorators, control, subtrees */
         return;

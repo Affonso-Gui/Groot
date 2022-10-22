@@ -4,7 +4,6 @@
 #include <QFrame>
 
 #include "interpreter_utils.h"
-#include <boost/lexical_cast.hpp>
 
 namespace Ui {
 class SidepanelInterpreter;
@@ -33,6 +32,8 @@ private slots:
     void translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
                             bool tree_index);
 
+    int  translateSingleNodeIndex(int node_index, bool tree_index);
+
     void expandAndChangeNodeStyle(std::vector<std::pair<int, NodeStatus>> node_status,
                                   bool reset_before_update);
 
@@ -44,19 +45,14 @@ private slots:
 
     std::string getActionType(const std::string& server_name);
 
-    std::pair<std::string, bool> getPortValue(const PortModel& port_model,
-                                              const QString& mapping_value);
-
-    std::pair<std::string, bool> getPortValue(const AbstractTreeNode& node,
-                                              PortsMapping port_mapping,
-                                              const QString& port_name);
-
     rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
-                                            const PortsMapping& port_mapping);
+                                            const BT::TreeNode::Ptr& tree_node);
 
-    BT::NodeStatus executeConditionNode(const AbstractTreeNode& node);
+    BT::NodeStatus executeConditionNode(const AbstractTreeNode& node,
+                                        const BT::TreeNode::Ptr& tree_node);
 
-    BT::NodeStatus executeActionNode(const AbstractTreeNode& node);
+    BT::NodeStatus executeActionNode(const AbstractTreeNode& node,
+                                     const BT::TreeNode::Ptr& tree_node);
 
     void executeNode(const int node_id);
 
@@ -115,7 +111,6 @@ private:
 
     bool _connected;
     Interpreter::RosBridgeConnectionThread* _rbc_thread;
-    std::map<std::string, rapidjson::Document> _blackboard;
 
     QWidget *_parent;
 

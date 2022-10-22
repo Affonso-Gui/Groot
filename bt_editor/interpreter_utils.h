@@ -5,6 +5,7 @@
 #include <rosbridgecpp/rosbridge_ws_client.hpp>
 #include <roseus_bt/ws_service_client.h>
 #include <roseus_bt/ws_action_client.h>
+#include <roseus_bt/copy_document.h>
 #include <fmt/format.h>
 #include "bt_editor_base.h"
 
@@ -67,6 +68,16 @@ signals:
     void connectionCreated();
     void connectionError(const QString& message);
 };
+
+rapidjson::Value getInputValue(const BT::TreeNode::Ptr& tree_node,
+                               const std::string name,
+                               const std::string type,
+                               rapidjson::MemoryPoolAllocator<>& allocator);
+
+void setOutputValue(const BT::TreeNode::Ptr& tree_node,
+                    const std::string name,
+                    const std::string type,
+                    const rapidjson::CopyDocument& document);
 
 }  // namespace
 #endif  // INTERPRETER_UTILS_H
