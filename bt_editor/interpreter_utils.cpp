@@ -112,7 +112,8 @@ rapidjson::Value Interpreter::getInputValue(const BT::TreeNode::Ptr& tree_node,
     if (type.find('/') != std::string::npos) {
         // ros messages are represented as json documents
         rapidjson::CopyDocument value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetObject();
         jval.CopyFrom(value, allocator);
         return jval;
@@ -120,43 +121,50 @@ rapidjson::Value Interpreter::getInputValue(const BT::TreeNode::Ptr& tree_node,
     // all ros types defined in: http://wiki.ros.org/msg
     if (type == "bool") {
         bool value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetBool(value);
         return jval;
     }
     if (type == "int8" || type == "int16" || type == "int32") {
         int value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetInt(value);
         return jval;
     }
     if (type == "uint8" || type == "uint16" || type == "uint32") {
         unsigned int value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetUint(value);
         return jval;
     }
     if (type == "int64") {
         int64_t value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetInt64(value);
         return jval;
     }
     if (type == "uint64") {
         uint64_t value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetUint64(value);
         return jval;
     }
     if (type == "float32" || type == "float64") {
         double value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetDouble(value);
         return jval;
     }
     if (type == "string") {
         std::string value;
-        tree_node->getInput(name, value);
+        auto res = tree_node->getInput(name, value);
+        if (!res) throw std::runtime_error(res.error());
         jval.SetString(value.c_str(), value.size(), allocator);
         return jval;
     }

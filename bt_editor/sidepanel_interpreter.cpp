@@ -284,9 +284,7 @@ void SidepanelInterpreter::changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> no
 
 std::string SidepanelInterpreter::getActionType(const std::string& server_name)
 {
-    std::string topic_type("");
     std::string topic_name = server_name + "/goal";
-
     roseus_bt::RosbridgeServiceClient service_client_(ui->lineEdit->text().toStdString(),
                                                       ui->lineEdit_port->text().toInt(),
                                                       "/rosapi/topic_type");
@@ -300,12 +298,16 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     auto result = service_client_.getResult();
     if (result.HasMember("type") &&
         result["type"].IsString()) {
-        topic_type = result["type"].GetString();
+        std::string topic_type = result["type"].GetString();
+        if (topic_type.size() <= 4) {
+            // Invalid action type
+            return "";
+        }
         if (topic_type.substr(topic_type.size() - 4) == "Goal") {
-            topic_type = topic_type.substr(0, topic_type.size() - 4);
+            return topic_type.substr(0, topic_type.size() - 4);
         }
     }
-    return topic_type;
+    return "";
 }
 
 rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTreeNode& node,
@@ -359,6 +361,10 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
     std::string server_name = server_name_port.default_value.toStdString();
     std::string topic_type = getActionType(server_name);
 
+    if (topic_type.empty()) {
+        throw std::runtime_error(
+            std::string("Could not connect to action server at ") + server_name);
+    }
     roseus_bt::RosbridgeActionClient action_client_(ui->lineEdit->text().toStdString(),
                                                     ui->lineEdit_port->text().toInt(),
                                                     server_name,
