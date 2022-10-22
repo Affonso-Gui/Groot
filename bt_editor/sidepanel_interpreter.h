@@ -3,6 +3,7 @@
 
 #include <QFrame>
 
+#include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
 #include "interpreter_utils.h"
 
 namespace Ui {
@@ -105,6 +106,7 @@ private:
     BT::Tree _tree;
     AbsBehaviorTree _abstract_tree;
     QString _tree_name;
+    std::unique_ptr<BT::StdCoutLogger> _logger_cout;
 
     QTimer* _timer;
     NodeStatus _root_status;

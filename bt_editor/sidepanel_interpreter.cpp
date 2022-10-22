@@ -1,6 +1,5 @@
 #include "sidepanel_interpreter.h"
 #include "ui_sidepanel_interpreter.h"
-#include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
 #include <QPushButton>
 #include <QMessageBox>
 #include <QDebug>
@@ -18,6 +17,7 @@ SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     _updated(true),
     _connected(false),
     _rbc_thread(nullptr),
+    _logger_cout(nullptr),
     _parent(parent)
 {
     ui->setupUi(this);
@@ -125,6 +125,9 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     else {
         _tree = factory.createTreeFromFile(xml_filename.toStdString());
     }
+
+    _logger_cout.reset();
+    _logger_cout = std::make_unique<BT::StdCoutLogger>(_tree);
 
     _updated = true;
     if (_autorun) {
@@ -234,7 +237,6 @@ void SidepanelInterpreter::changeSelectedStyle(const NodeStatus& status)
         return;
     }
 
-    BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> node_status;
     int i = 0;
     for (auto& node: _abstract_tree.nodes()) {
@@ -257,8 +259,6 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
     if (_tree.nodes.size() <= 1) {
         return;
     }
-
-    BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> node_status;
 
     int i = 1;  // skip root
@@ -393,7 +393,6 @@ void SidepanelInterpreter::tickRoot()
         return;
     }
 
-    BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> prev_node_status;
     std::vector<std::pair<int, NodeStatus>> node_status;
     int i;
@@ -605,7 +604,6 @@ void SidepanelInterpreter::on_buttonExecSelection_clicked()
         return;
     }
 
-    BT::StdCoutLogger logger_cout(_tree);
     try {
         int i = 0;
         for (auto& node: _abstract_tree.nodes()) {
@@ -630,8 +628,6 @@ void SidepanelInterpreter::on_buttonExecRunning_clicked()
     if (_tree.nodes.size() <= 1) {
         return;
     }
-
-    BT::StdCoutLogger logger_cout(_tree);
     std::vector<std::pair<int, NodeStatus>> node_status;
 
     int i = 1;  // skip root
