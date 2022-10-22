@@ -615,12 +615,19 @@ void SidepanelInterpreter::on_buttonExecSelection_clicked()
     }
 
     BT::StdCoutLogger logger_cout(_tree);
-    int i = 0;
-    for (auto& node: _abstract_tree.nodes()) {
-        if (node.graphic_node->nodeGraphicsObject().isSelected()) {
-            executeNode(i);
+    try {
+        int i = 0;
+        for (auto& node: _abstract_tree.nodes()) {
+            if (node.graphic_node->nodeGraphicsObject().isSelected()) {
+                executeNode(i);
+            }
+            i++;
         }
-        i++;
+    }
+    catch (std::exception& err) {
+        QMessageBox messageBox;
+        messageBox.critical(this,"Error Executing Node", err.what() );
+        messageBox.show();
     }
     _updated = true;
 }
@@ -645,8 +652,15 @@ void SidepanelInterpreter::on_buttonExecRunning_clicked()
     }
 
     translateNodeIndex(node_status, true);
-    for (auto it: node_status) {
-        executeNode(it.first);
+    try {
+        for (auto it: node_status) {
+            executeNode(it.first);
+        }
+    }
+    catch (std::exception& err) {
+        QMessageBox messageBox;
+        messageBox.critical(this,"Error Executing Node", err.what() );
+        messageBox.show();
     }
     _updated = true;
 }
