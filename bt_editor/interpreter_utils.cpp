@@ -99,6 +99,63 @@ void Interpreter::RosBridgeConnectionThread::stop()
 
 
 //////
+// ExecuteActionThread
+//////
+
+
+Interpreter::ExecuteActionThread::
+ExecuteActionThread(const std::string& hostname, int port,
+                    const std::string& server_name,
+                    const std::string& action_type,
+                    const AbstractTreeNode& node,
+                    const BT::TreeNode::Ptr& tree_node,
+                    int tree_node_id) :
+    _action_client(hostname, port, server_name, action_type),
+    _node(node),
+    _tree_node(tree_node),
+    _tree_node_id(tree_node_id)
+{}
+
+void Interpreter::ExecuteActionThread::run()
+{
+    auto cb = [this](std::shared_ptr<WsClient::Connection> connection,
+                     std::shared_ptr<WsClient::InMessage> in_message) {
+        std::string message = in_message->string();
+        rapidjson::CopyDocument document;
+        document.Parse(message.c_str());
+        document.Swap(document["msg"]["feedback"]);
+
+        std::string name = document["update_field_name"].GetString();
+        auto port_model = _node.model.ports.find(QString(name.c_str()))->second;
+        std::string type = port_model.type_name.toStdString();
+
+        document.Swap(document[name.c_str()]);
+        setOutputValue(_tree_node, name, type, document);
+    };
+    _action_client.registerFeedbackCallback(cb);
+
+    rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
+    _action_client.sendGoal(goal);
+
+    _action_client.waitForResult();
+    auto result = _action_client.getResult();
+
+    if (result.HasMember("success") &&
+        result["success"].IsBool() &&
+        result["success"].GetBool()) {
+        emit actionReportResult(_tree_node_id, "SUCCESS");
+        return;
+    }
+    emit actionReportResult(_tree_node_id, "FAILURE");
+}
+
+void Interpreter::ExecuteActionThread::stop()
+{
+    _tree_node->halt();
+}
+
+
+//////
 // Port Variables
 //////
 
@@ -237,4 +294,28 @@ void Interpreter::setOutputValue(const BT::TreeNode::Ptr& tree_node,
                                          type, name,
                                          tree_node->registrationName(),
                                          tree_node->name()));
+}
+
+rapidjson::Document Interpreter::getRequestFromPorts(const AbstractTreeNode& node,
+                                                     const BT::TreeNode::Ptr& tree_node)
+{
+    const auto* bt_node =
+        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
+    auto port_mapping = bt_node->getCurrentPortMapping();
+
+    rapidjson::Document goal;
+    goal.SetObject();
+    for(const auto& port_it: port_mapping) {
+        auto port_model = node.model.ports.find(port_it.first)->second;
+        std::string name = port_it.first.toStdString();
+        std::string type = port_model.type_name.toStdString();
+        if (port_model.direction == PortDirection::OUTPUT) {
+            continue;
+        }
+        rapidjson::Value jname, jval;
+        jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
+        jval = getInputValue(tree_node, name, type, goal.GetAllocator());
+        goal.AddMember(jname, jval, goal.GetAllocator());
+    }
+    return goal;
 }

@@ -310,30 +310,6 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     return "";
 }
 
-rapidjson::Document SidepanelInterpreter::getRequestFromPorts(const AbstractTreeNode& node,
-                                                              const BT::TreeNode::Ptr& tree_node)
-{
-    const auto* bt_node =
-        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
-    auto port_mapping = bt_node->getCurrentPortMapping();
-
-    rapidjson::Document goal;
-    goal.SetObject();
-    for(const auto& port_it: port_mapping) {
-        auto port_model = node.model.ports.find(port_it.first)->second;
-        std::string name = port_it.first.toStdString();
-        std::string type = port_model.type_name.toStdString();
-        if (port_model.direction == PortDirection::OUTPUT) {
-            continue;
-        }
-        rapidjson::Value jname, jval;
-        jname.SetString(name.c_str(), name.size(),  goal.GetAllocator());
-        jval = Interpreter::getInputValue(tree_node, name, type, goal.GetAllocator());
-        goal.AddMember(jname, jval, goal.GetAllocator());
-    }
-    return goal;
-}
-
 BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node,
                                                           const BT::TreeNode::Ptr& tree_node)
 {
@@ -342,7 +318,7 @@ BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode
                         ui->lineEdit_port->text().toInt(),
                         node.model.ports.find("service_name")->second.default_value.toStdString());
 
-    rapidjson::Document request = getRequestFromPorts(node, tree_node);
+    rapidjson::Document request = Interpreter::getRequestFromPorts(node, tree_node);
     service_client_.call(request);
     service_client_.waitForResult();
     auto result = service_client_.getResult();
@@ -355,7 +331,8 @@ BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode
 }
 
 BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node,
-                                                       const BT::TreeNode::Ptr& tree_node)
+                                                       const BT::TreeNode::Ptr& tree_node,
+                                                       int tree_node_id)
 {
     auto server_name_port = node.model.ports.find("server_name")->second;
     std::string server_name = server_name_port.default_value.toStdString();
@@ -365,42 +342,20 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
         throw std::runtime_error(
             std::string("Could not connect to action server at ") + server_name);
     }
-    roseus_bt::RosbridgeActionClient action_client_(ui->lineEdit->text().toStdString(),
-                                                    ui->lineEdit_port->text().toInt(),
-                                                    server_name,
-                                                    topic_type);
 
-    auto cb = [node, tree_node](std::shared_ptr<WsClient::Connection> connection,
-                                std::shared_ptr<WsClient::InMessage> in_message) {
-        std::string message = in_message->string();
-        rapidjson::CopyDocument document;
-        document.Parse(message.c_str());
-        document.Swap(document["msg"]["feedback"]);
+    std::string hostname = ui->lineEdit->text().toStdString();
+    int port_number = ui->lineEdit_port->text().toInt();
+    auto exec_thread = new Interpreter::ExecuteActionThread(hostname, port_number,
+                                                            server_name,
+                                                            topic_type,
+                                                            node,
+                                                            tree_node,
+                                                            tree_node_id);
 
-        std::string name = document["update_field_name"].GetString();
-        auto port_model = node.model.ports.find(QString(name.c_str()))->second;
-        std::string type = port_model.type_name.toStdString();
-
-        document.Swap(document[name.c_str()]);
-        Interpreter::setOutputValue(tree_node, name, type, document);
-    };
-    action_client_.registerFeedbackCallback(cb);
-
-    rapidjson::Document goal = getRequestFromPorts(node, tree_node);
-    action_client_.sendGoal(goal);
-
-    // if (action_client_.isActive()) {
-    //     return NodeStatus::RUNNING;
-    // }
-    action_client_.waitForResult();
-
-    auto result = action_client_.getResult();
-    if (result.HasMember("success") &&
-        result["success"].IsBool() &&
-        result["success"].GetBool()) {
-        return NodeStatus::SUCCESS;
-    }
-    return NodeStatus::FAILURE;
+    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
+             this, &SidepanelInterpreter::on_actionReportResult);
+    exec_thread->start();
+    return NodeStatus::RUNNING;
 }
 
 void SidepanelInterpreter::executeNode(const int node_id)
@@ -413,7 +368,7 @@ void SidepanelInterpreter::executeNode(const int node_id)
         node_status.push_back( {node_id, executeConditionNode(*node, bt_node)} );
     }
     else if (node->model.type == NodeType::ACTION) {
-        node_status.push_back( {node_id, executeActionNode(*node, bt_node)} );
+        node_status.push_back( {node_id, executeActionNode(*node, bt_node, bt_node_id)} );
     }
     else {  /* decorators, control, subtrees */
         return;
@@ -544,6 +499,18 @@ void SidepanelInterpreter::on_connectionError(const QString& message)
     QMessageBox messageBox;
     messageBox.critical(this, "Connection Error", message);
     messageBox.show();
+}
+
+void SidepanelInterpreter::on_actionReportResult(int tree_node_id, const QString& status)
+{
+    qDebug() << "actionReportResult: " << status;
+    NodeStatus bt_status = BT::convertFromString<NodeStatus>(status.toStdString());
+    std::vector<std::pair<int, NodeStatus>> node_status;
+    node_status.push_back( {tree_node_id, bt_status} );
+    expandAndChangeNodeStyle(node_status, false);
+    auto tree_node = _tree.nodes.at(tree_node_id - 1);
+    changeTreeNodeStatus(tree_node, bt_status);
+    _updated = true;
 }
 
 void SidepanelInterpreter::on_buttonResetTree_clicked()

@@ -45,14 +45,12 @@ private slots:
 
     std::string getActionType(const std::string& server_name);
 
-    rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
-                                            const BT::TreeNode::Ptr& tree_node);
-
     BT::NodeStatus executeConditionNode(const AbstractTreeNode& node,
                                         const BT::TreeNode::Ptr& tree_node);
 
     BT::NodeStatus executeActionNode(const AbstractTreeNode& node,
-                                     const BT::TreeNode::Ptr& tree_node);
+                                     const BT::TreeNode::Ptr& tree_node,
+                                     int tree_node_id);
 
     void executeNode(const int node_id);
 
@@ -67,6 +65,8 @@ private slots:
     void on_connectionCreated();
 
     void on_connectionError(const QString& message);
+
+    void on_actionReportResult(int tree_node_id, const QString& status);
 
     void on_buttonResetTree_clicked();
 
