@@ -332,9 +332,7 @@ void CustomNodeDialog::checkValid()
             }
         }
         // SUBSCRIBER or REMOTE_SUBSCRIBER
-        if( !(ui->comboBox->currentIndex() == 4 && param_name == "message_field") &&
-            !(ui->comboBox->currentIndex() == 5 && param_name == "message_field") &&
-            !(param_name_item->flags() & Qt::ItemIsEditable) &&
+        if( !(param_name_item->flags() & Qt::ItemIsEditable) &&
             (!param_value_item || param_value_item->text().isEmpty()) )
         {
             setError(param_name.toStdString() + " default value cannot be empty");
@@ -427,7 +425,6 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
                                              "host_name",
                                              "host_port",
                                              "message_type",
-                                             "message_field",
                                              "topic_name",
                                              "output_port",
                                              "received_port",
@@ -475,15 +472,10 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
                               true);
     };
 
-    auto addSubscriberNodes = [maybeRegisterPortNode] (bool register_message_field) {
+    auto addSubscriberNodes = [maybeRegisterPortNode] () {
         maybeRegisterPortNode("message_type", BT::PortDirection::INPUT, "std_msgs/String", "",
                               "ROS message type",
                               true);
-        if (register_message_field) {
-            maybeRegisterPortNode("message_field", BT::PortDirection::INPUT, "", "",
-                                  "(optional) field to extract from the message",
-                                  true);
-        }
         maybeRegisterPortNode("topic_name", BT::PortDirection::INPUT, "", "",
                               "name of the subscribed topic",
                               false);
@@ -537,13 +529,13 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
     }
     if (node_type == "Subscriber") {
         ui->pushButtonAdd->setEnabled(false);
-        unregister_every_other(std::vector<std::string>{"message_type", "message_field", "topic_name", "output_port", "received_port"});
-        addSubscriberNodes(true);
+        unregister_every_other(std::vector<std::string>{"message_type", "topic_name", "output_port", "received_port"});
+        addSubscriberNodes();
     }
     if (node_type == "RemoteSubscriber") {
         ui->pushButtonAdd->setEnabled(false);
         unregister_every_other(std::vector<std::string>{"message_type", "topic_name", "output_port", "received_port"});
-        addSubscriberNodes(false);
+        addSubscriberNodes();
         addRemoteNodes();
     }
 
