@@ -53,6 +53,9 @@ private slots:
                                      const BT::TreeNode::Ptr& tree_node,
                                      int tree_node_id);
 
+    BT::NodeStatus executeSubscriberNode(const AbstractTreeNode& node,
+                                         const BT::TreeNode::Ptr& tree_node);
+
     void executeNode(const int node_id);
 
     void tickRoot();

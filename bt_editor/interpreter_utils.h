@@ -31,7 +31,7 @@ public:
 
     virtual void halt() override;
 
-    BT::NodeStatus tick() override;
+    virtual BT::NodeStatus tick() override;
 
     void set_status(const BT::NodeStatus& status);
 
@@ -39,6 +39,27 @@ public:
 
 private:
     ExecuteActionThread* _exec_thread;
+};
+
+
+class InterpreterActionNode : public InterpreterNode
+{
+public:
+    InterpreterActionNode(const std::string& name, const BT::NodeConfiguration& config);
+
+    virtual void halt() override;
+
+    void set_exec_thread(ExecuteActionThread* exec_thread);
+
+private:
+    ExecuteActionThread* _exec_thread;
+};
+
+
+class InterpreterSubscriberNode : public InterpreterNode
+{
+public:
+    InterpreterSubscriberNode(const std::string& name, const BT::NodeConfiguration& config);
 };
 
 
@@ -66,11 +87,14 @@ public:
 
     void run();
     void stop();
+    void clearSubscribers();
+    void registerSubscriber(const AbstractTreeNode& node, const BT::TreeNode::Ptr& tree_node);
 
 private:
     RosbridgeWsClient _rbc;
     std::string _address;
     const std::string _client_name = std::string("base_connection");
+    std::vector<std::string> _subscribers;
 
 signals:
     void connectionCreated();

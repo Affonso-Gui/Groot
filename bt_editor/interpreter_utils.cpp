@@ -9,17 +9,11 @@ using WsClient = SimpleWeb::SocketClient<SimpleWeb::WS>;
 
 Interpreter::InterpreterNode::
 InterpreterNode(const std::string& name, const BT::NodeConfiguration& config) :
-    BT::AsyncActionNode(name,config),
-    _exec_thread(nullptr)
+    BT::AsyncActionNode(name,config)
 {}
 
 void Interpreter::InterpreterNode::halt()
-{
-    if (_exec_thread && _exec_thread->isRunning()) {
-        _exec_thread->stop();
-        _exec_thread = nullptr;
-    }
-}
+{}
 
 BT::NodeStatus Interpreter::InterpreterNode::tick()
 {
@@ -31,10 +25,39 @@ void Interpreter::InterpreterNode::set_status(const BT::NodeStatus& status)
     setStatus(status);
 }
 
-void Interpreter::InterpreterNode::set_exec_thread(ExecuteActionThread* exec_thread)
+
+//////
+// InterpreterActionNode
+//////
+
+Interpreter::InterpreterActionNode::
+InterpreterActionNode(const std::string& name, const BT::NodeConfiguration& config) :
+    InterpreterNode(name,config),
+    _exec_thread(nullptr)
+{}
+
+void Interpreter::InterpreterActionNode::halt()
+{
+    if (_exec_thread && _exec_thread->isRunning()) {
+        _exec_thread->stop();
+        _exec_thread = nullptr;
+    }
+}
+
+void Interpreter::InterpreterActionNode::set_exec_thread(ExecuteActionThread* exec_thread)
 {
     _exec_thread = exec_thread;
 }
+
+
+//////
+// InterpreterSubscriberNode
+//////
+
+Interpreter::InterpreterSubscriberNode::
+InterpreterSubscriberNode(const std::string& name, const BT::NodeConfiguration& config) :
+    InterpreterNode(name,config)
+{}
 
 
 //////
@@ -105,7 +128,42 @@ void Interpreter::RosBridgeConnectionThread::run()
 
 void Interpreter::RosBridgeConnectionThread::stop()
 {
+    clearSubscribers();
     _rbc.stopClient(_client_name);
+}
+
+void Interpreter::RosBridgeConnectionThread::clearSubscribers()
+{
+    for (auto sub : _subscribers) {
+        _rbc.stopClient(sub);
+    }
+}
+
+void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTreeNode& node,
+                                                                const BT::TreeNode::Ptr& tree_node)
+{
+    auto port_model = node.model.ports.find("message_type")->second;
+    std::string topic_type = port_model.default_value.toStdString();
+    std::string topic_name;
+    auto res = tree_node->getInput("topic_name", topic_name);
+    if (!res) throw std::runtime_error(res.error());
+
+    tree_node->setOutput<uint8_t>("received_port", false);
+    tree_node->setOutput<rapidjson::CopyDocument>("output_port",
+                                                  rapidjson::CopyDocument(rapidjson::kObjectType));
+    auto cb = [tree_node, topic_type](std::shared_ptr<WsClient::Connection> connection,
+                                      std::shared_ptr<WsClient::InMessage> in_message) {
+        std::string message = in_message->string();
+        rapidjson::CopyDocument document;
+        document.Parse(message.c_str());
+        document.Swap(document["msg"]);
+
+        setOutputValue(tree_node, "output_port", topic_type, document);
+        tree_node->setOutput<uint8_t>("received_port", true);
+    };
+    _subscribers.push_back(topic_name);
+    _rbc.addClient(topic_name);
+    _rbc.subscribe(topic_name, topic_name, cb,  "", topic_type);
 }
 
 
@@ -144,7 +202,7 @@ void Interpreter::ExecuteActionThread::run()
         setOutputValue(_tree_node, name, type, document);
     };
     _action_client.registerFeedbackCallback(cb);
-    auto node_ref = std::static_pointer_cast<InterpreterNode>(_tree_node);
+    auto node_ref = std::static_pointer_cast<InterpreterActionNode>(_tree_node);
     node_ref->set_exec_thread(this);
 
     rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);

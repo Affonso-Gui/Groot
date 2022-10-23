@@ -84,6 +84,11 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     qDebug() << "Updating interpreter_widget tree model";
     _tree_name = bt_name;
 
+    // disconnect subscribers
+    if (_connected && _rbc_thread) {
+        _rbc_thread->clearSubscribers();
+    }
+
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     updateTree();
     if (!_abstract_tree.rootNode()) {
@@ -104,8 +109,20 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
                 ports.insert( {it.first.toStdString(), BT::PortInfo(it.second.direction)} );
             }
             try {
-                if (node.model.type == NodeType::CONDITION) {
-                    factory.registerNodeType<Interpreter::InterpreterConditionNode>(registration_ID, ports);
+                if (node.model.type == roseus_bt::NodeType::CONDITION ||
+                    node.model.type == roseus_bt::NodeType::REMOTE_CONDITION) {
+                    factory.registerNodeType<Interpreter::InterpreterConditionNode>
+                        (registration_ID, ports);
+                }
+                else if (node.model.type == roseus_bt::NodeType::ACTION ||
+                         node.model.type == roseus_bt::NodeType::REMOTE_ACTION) {
+                    factory.registerNodeType<Interpreter::InterpreterActionNode>
+                        (registration_ID, ports);
+                }
+                else if (node.model.type == roseus_bt::NodeType::SUBSCRIBER ||
+                         node.model.type == roseus_bt::NodeType::REMOTE_SUBSCRIBER) {
+                    factory.registerNodeType<Interpreter::InterpreterSubscriberNode>
+                        (registration_ID, ports);
                 }
                 else {
                     factory.registerNodeType<Interpreter::InterpreterNode>(registration_ID, ports);
@@ -364,17 +381,33 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
     return NodeStatus::RUNNING;
 }
 
+BT::NodeStatus SidepanelInterpreter::executeSubscriberNode(const AbstractTreeNode& node,
+                                                           const BT::TreeNode::Ptr& tree_node)
+{
+    if (!(_connected && _rbc_thread)) {
+        throw std::runtime_error(std::string("Not connected"));
+    }
+    _rbc_thread->registerSubscriber(node, tree_node);
+    return NodeStatus::SUCCESS;
+}
+
 void SidepanelInterpreter::executeNode(const int node_id)
 {
     int bt_node_id = translateSingleNodeIndex(node_id, false);
     auto node = _abstract_tree.node(node_id);
     auto bt_node = _tree.nodes.at(bt_node_id - 1);
     std::vector<std::pair<int, NodeStatus>> node_status;
-    if (node->model.type == NodeType::CONDITION) {
+    if (node->model.type == roseus_bt::NodeType::CONDITION ||
+        node->model.type == roseus_bt::NodeType::REMOTE_CONDITION) {
         node_status.push_back( {node_id, executeConditionNode(*node, bt_node)} );
     }
-    else if (node->model.type == NodeType::ACTION) {
+    else if (node->model.type == roseus_bt::NodeType::ACTION ||
+             node->model.type == roseus_bt::NodeType::REMOTE_ACTION) {
         node_status.push_back( {node_id, executeActionNode(*node, bt_node, bt_node_id)} );
+    }
+    else if (node->model.type == roseus_bt::NodeType::SUBSCRIBER ||
+             node->model.type == roseus_bt::NodeType::REMOTE_SUBSCRIBER) {
+        node_status.push_back( {node_id, executeSubscriberNode(*node, bt_node)} );
     }
     else {  /* decorators, control, subtrees */
         return;
