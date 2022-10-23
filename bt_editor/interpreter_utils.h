@@ -84,6 +84,7 @@ class RosBridgeConnectionThread : public QThread
 Q_OBJECT
 public:
     explicit RosBridgeConnectionThread(const std::string& hostname, const std::string& port);
+    ~RosBridgeConnectionThread();
 
     void run();
     void stop();
@@ -112,6 +113,7 @@ public:
                                  const AbstractTreeNode& node,
                                  const BT::TreeNode::Ptr& tree_node,
                                  int tree_node_id);
+    ~ExecuteActionThread();
 
     void run();
     void stop();

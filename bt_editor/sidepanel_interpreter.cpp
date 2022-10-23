@@ -30,6 +30,9 @@ SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
 SidepanelInterpreter::~SidepanelInterpreter()
 {
     delete ui;
+    if (_rbc_thread) {
+        delete _rbc_thread;
+    }
 }
 
 void SidepanelInterpreter::clear()
@@ -376,6 +379,9 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
              this, &SidepanelInterpreter::on_actionReportResult);
     connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
              this, &SidepanelInterpreter::on_actionFinished);
+    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
+             exec_thread, &QObject::deleteLater);
+
     _running_threads.push_back(exec_thread);
     exec_thread->start();
     return NodeStatus::RUNNING;

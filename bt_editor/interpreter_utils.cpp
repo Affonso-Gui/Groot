@@ -103,6 +103,9 @@ RosBridgeConnectionThread(const std::string& hostname, const std::string& port) 
     _address(fmt::format("{}:{}", hostname, port))
 {}
 
+Interpreter::RosBridgeConnectionThread::
+~RosBridgeConnectionThread() {}
+
 void Interpreter::RosBridgeConnectionThread::run()
 {
     _rbc.addClient(_client_name);
@@ -129,13 +132,13 @@ void Interpreter::RosBridgeConnectionThread::run()
 void Interpreter::RosBridgeConnectionThread::stop()
 {
     clearSubscribers();
-    _rbc.stopClient(_client_name);
+    _rbc.removeClient(_client_name);
 }
 
 void Interpreter::RosBridgeConnectionThread::clearSubscribers()
 {
     for (auto sub : _subscribers) {
-        _rbc.stopClient(sub);
+        _rbc.removeClient(sub);
     }
 }
 
@@ -184,6 +187,9 @@ ExecuteActionThread(const std::string& hostname, int port,
     _tree_node(tree_node),
     _tree_node_id(tree_node_id)
 {}
+
+Interpreter::ExecuteActionThread::
+~ExecuteActionThread() {}
 
 void Interpreter::ExecuteActionThread::run()
 {
