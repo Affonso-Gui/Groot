@@ -38,10 +38,15 @@ InterpreterActionNode(const std::string& name, const BT::NodeConfiguration& conf
 
 void Interpreter::InterpreterActionNode::halt()
 {
-    if (_exec_thread && _exec_thread->isRunning()) {
+    if (isRunning()) {
         _exec_thread->stop();
         _exec_thread = nullptr;
     }
+}
+
+bool Interpreter::InterpreterActionNode::isRunning()
+{
+    return (_exec_thread && _exec_thread->isRunning());
 }
 
 void Interpreter::InterpreterActionNode::set_exec_thread(ExecuteActionThread* exec_thread)

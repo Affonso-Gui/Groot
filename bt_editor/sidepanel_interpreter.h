@@ -117,6 +117,7 @@ private:
     NodeStatus _root_status;
     bool _autorun;
     bool _updated;
+    std::vector<BT::TreeNode::Ptr> _background_nodes;
 
     bool _connected;
     Interpreter::RosBridgeConnectionThread* _rbc_thread;

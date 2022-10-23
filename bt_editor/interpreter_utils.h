@@ -49,6 +49,8 @@ public:
 
     virtual void halt() override;
 
+    bool isRunning();
+
     void set_exec_thread(ExecuteActionThread* exec_thread);
 
 private:

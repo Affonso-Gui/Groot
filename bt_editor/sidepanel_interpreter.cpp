@@ -92,6 +92,9 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
         _rbc_thread->clearSubscribers();
     }
 
+    // clear background nodes
+    _background_nodes.clear();
+
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     updateTree();
     if (!_abstract_tree.rootNode()) {
@@ -283,7 +286,9 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
 
     int i = 1;  // skip root
     for (auto& tree_node: _tree.nodes) {
-        if (tree_node->status() == NodeStatus::RUNNING) {
+        if (tree_node->status() == NodeStatus::RUNNING &&
+            std::find(_background_nodes.begin(), _background_nodes.end(),
+                      tree_node) == _background_nodes.end()) {
             changeTreeNodeStatus(tree_node, status);
             node_status.push_back( {i, status} );
         }
@@ -366,6 +371,11 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
             std::string("Could not connect to action server at ") + server_name);
     }
 
+    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(tree_node);
+    if (node_ref->isRunning()) {
+        return NodeStatus::RUNNING;
+    }
+
     std::string hostname = ui->lineEdit->text().toStdString();
     int port_number = ui->lineEdit_port->text().toInt();
     auto exec_thread = new Interpreter::ExecuteActionThread(hostname, port_number,
@@ -436,6 +446,9 @@ void SidepanelInterpreter::tickRoot()
     std::vector<std::pair<int, NodeStatus>> node_status;
     int i;
 
+    // clear background nodes
+    _background_nodes.clear();
+
     // set previous status
     prev_node_status.push_back( {0, _root_status} );
     i = 1;
@@ -487,6 +500,7 @@ void SidepanelInterpreter::tickRoot()
                 node_status.push_back( {i, node->status()} );
                 // artificially gray-out running nodes
                 if (conditionRunning) {
+                    _background_nodes.push_back(node);
                     node_status.push_back( {i, NodeStatus::IDLE} );
                 }
             }
@@ -671,7 +685,9 @@ void SidepanelInterpreter::on_buttonExecRunning_clicked()
 
     int i = 1;  // skip root
     for (auto& tree_node: _tree.nodes) {
-        if (tree_node->status() == NodeStatus::RUNNING) {
+        if (tree_node->status() == NodeStatus::RUNNING &&
+            std::find(_background_nodes.begin(), _background_nodes.end(),
+                      tree_node) == _background_nodes.end()) {
             node_status.push_back( {i, NodeStatus::RUNNING} );
         }
         i++;
