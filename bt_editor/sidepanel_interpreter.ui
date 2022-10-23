@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>271</width>
-    <height>516</height>
+    <height>536</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -229,6 +229,29 @@
        </property>
        <property name="text">
         <string>Tick Tree</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonShowBlackboard">
+       <property name="text">
+        <string>Display Blackboard Variables</string>
        </property>
       </widget>
      </item>

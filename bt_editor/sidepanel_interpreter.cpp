@@ -684,3 +684,33 @@ void SidepanelInterpreter::on_buttonExecRunning_clicked()
     }
     _updated = true;
 }
+
+void SidepanelInterpreter::on_buttonShowBlackboard_clicked()
+{
+    qDebug() << "buttonShowBlackboard";
+
+    std::stringstream ss;
+    if (_tree.nodes.size() > 1) {
+        auto blackboard = _tree.rootBlackboard();
+        std::vector<BT::StringView> keys = blackboard->getKeys();
+        std::sort(keys.begin(), keys.end(),
+                  [](BT::StringView a, BT::StringView b) { return a<b; });
+
+        for (const auto key: keys) {
+            std::string key_str(key);
+            const BT::Any value = *blackboard->getAny(key_str);
+            if (!value.empty() && !value.isNumber() && !value.isString()) {
+                // json document
+                ss << key_str << ":\n" << value << "\n";
+            }
+            else {
+                ss << key_str << ": " << value << "\n";
+            }
+        }
+    }
+
+    QMessageBox messageBox;
+    messageBox.information(this,"Blackboard Variables",
+                           ss.str().empty()? "No variables yet" : ss.str().c_str());
+    messageBox.show();
+}

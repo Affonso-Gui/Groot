@@ -105,3 +105,30 @@ bool operator==(const roseus_bt::NodeType& node_type_1, const BT::NodeType& node
 bool operator!=(const roseus_bt::NodeType& node_type_1, const BT::NodeType& node_type_2) {
     return !(node_type_1 == node_type_2);
 }
+
+std::ostream& operator<<(std::ostream& os, const rapidjson::CopyDocument& document)
+{
+    rapidjson::StringBuffer strbuf;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(strbuf);
+    document.Accept(writer);
+    os << strbuf.GetString();
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const BT::Any& value)
+{
+    if (value.empty()) {
+        os << "(empty)";
+        return os;
+    }
+    if (value.isNumber()) {
+        os << value.cast<double>();
+        return os;
+    }
+    if (value.isString()) {
+        os << "\"" << value.cast<std::string>() << "\"";
+        return os;
+    }
+    os << value.cast<rapidjson::CopyDocument>();
+    return os;
+}

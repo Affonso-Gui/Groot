@@ -96,6 +96,8 @@ private slots:
 
     void on_buttonExecRunning_clicked();
 
+    void on_buttonShowBlackboard_clicked();
+
 signals:
     void connectionUpdate(bool connected);
 
