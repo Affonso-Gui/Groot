@@ -194,7 +194,12 @@ ExecuteActionThread(const std::string& hostname, int port,
 {}
 
 Interpreter::ExecuteActionThread::
-~ExecuteActionThread() {}
+
+~ExecuteActionThread()
+{
+  auto node_ref = std::static_pointer_cast<InterpreterActionNode>(_tree_node);
+  node_ref->set_exec_thread(nullptr);
+}
 
 void Interpreter::ExecuteActionThread::run()
 {
