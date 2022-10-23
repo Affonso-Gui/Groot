@@ -280,7 +280,7 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     }
 
     _logger_cout.reset();
-    _logger_cout = std::make_unique<BT::StdCoutLogger>(_tree);
+    _logger_cout = std::make_unique<BT::StdCoutLogger>(*_tree);
 
     _updated = true;
     _timer->start();
@@ -518,7 +518,7 @@ void SidepanelInterpreter::connectNode(const BT::TreeNode* node)
 void SidepanelInterpreter::executeNode(const int tree_node_id)
 {
     int node_id = translateSingleNodeIndex(tree_node_id, true);
-    auto bt_node = _tree.nodes.at(tree_node_id - 1);
+    auto bt_node = _tree->nodes.at(tree_node_id - 1);
     std::vector<std::pair<int, NodeStatus>> node_status;
 
     if (bt_node->type() != BT::NodeType::ACTION &&
@@ -694,7 +694,7 @@ void SidepanelInterpreter::on_actionReportResult(int tree_node_id, const QString
     std::vector<std::pair<int, NodeStatus>> node_status;
     node_status.push_back( {tree_node_id, bt_status} );
     expandAndChangeNodeStyle(node_status, false);
-    auto tree_node = _tree.nodes.at(tree_node_id - 1);
+    auto tree_node = _tree->nodes.at(tree_node_id - 1);
     changeTreeNodeStatus(tree_node, bt_status);
     _updated = true;
 }
@@ -880,8 +880,8 @@ void SidepanelInterpreter::on_buttonShowBlackboard_clicked()
     qDebug() << "buttonShowBlackboard";
 
     std::stringstream ss;
-    if (_tree.nodes.size() > 1) {
-        auto blackboard = _tree.rootBlackboard();
+    if (_tree->nodes.size() > 1) {
+        auto blackboard = _tree->rootBlackboard();
         std::vector<BT::StringView> keys = blackboard->getKeys();
         std::sort(keys.begin(), keys.end(),
                   [](BT::StringView a, BT::StringView b) { return a<b; });
