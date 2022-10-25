@@ -364,6 +364,9 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
 {
     auto server_name_port = node.model.ports.find("server_name")->second;
     std::string server_name = server_name_port.default_value.toStdString();
+    if (server_name.front() != '/') {
+      server_name = '/' + server_name;
+    }
     std::string topic_type = getActionType(server_name);
 
     if (topic_type.empty()) {
