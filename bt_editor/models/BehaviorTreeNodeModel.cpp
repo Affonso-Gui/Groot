@@ -509,12 +509,26 @@ void BehaviorTreeDataModel::setInstanceName(const QString &name)
 
 void BehaviorTreeDataModel::onHighlightPortValue(QString value)
 {
+    // highlight both port names and value references
+    // e.g. {var} ${var} $var var
+    auto strip_port = [](const QString& string_value) {
+        QStringRef str(&string_value);
+        if (str.startsWith('$')) {
+            str = str.mid(1);
+        }
+        if (str.startsWith('{') && str.endsWith('}')) {
+            str = str.mid(1, str.size()-2);
+        }
+        return str;
+    };
+
+    auto ref_value = strip_port(value);
     for( const auto& it:  _ports_widgets)
     {
         if( auto line_edit = dynamic_cast<QLineEdit*>(it.second) )
         {
             QString line_str = line_edit->text();
-            if( !value.isEmpty() && line_str == value )
+            if( !ref_value.isEmpty() && strip_port(line_str) == ref_value )
             {
                 line_edit->setStyleSheet("color: rgb(30,30,30); "
                                          "background-color: #ffef0b; "
