@@ -390,6 +390,8 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
 
     connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
              this, &SidepanelInterpreter::on_actionReportResult);
+    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportError,
+             this, [this] (const QString& message) { reportError("Error Executing Node", message); });
     connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
              this, &SidepanelInterpreter::on_actionFinished);
     connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
@@ -528,6 +530,13 @@ void SidepanelInterpreter::runStep()
     }
 }
 
+void SidepanelInterpreter::reportError(const QString& title, const QString& message)
+{
+    QMessageBox messageBox;
+    messageBox.critical(this, title, message);
+    messageBox.show();
+}
+
 void SidepanelInterpreter::toggleButtonAutoExecution()
 {
     ui->buttonDisableAutoExecution->setEnabled(_autorun);
@@ -557,9 +566,7 @@ void SidepanelInterpreter::on_connectionError(const QString& message)
     toggleButtonConnect();
 
     // display error message
-    QMessageBox messageBox;
-    messageBox.critical(this, "Connection Error", message);
-    messageBox.show();
+    reportError("Connection Error", message);
 }
 
 void SidepanelInterpreter::on_actionReportResult(int tree_node_id, const QString& status)
@@ -646,9 +653,7 @@ void SidepanelInterpreter::on_buttonRunTree_clicked()
         tickRoot();
     }
     catch (std::exception& err) {
-        QMessageBox messageBox;
-        messageBox.critical(this,"Error Running Tree", err.what() );
-        messageBox.show();
+        reportError("Error Running Tree", err.what() );
     }
 }
 
@@ -670,9 +675,7 @@ void SidepanelInterpreter::on_buttonExecSelection_clicked()
         }
     }
     catch (std::exception& err) {
-        QMessageBox messageBox;
-        messageBox.critical(this,"Error Executing Node", err.what() );
-        messageBox.show();
+        reportError("Error Executing Node", err.what() );
     }
     _updated = true;
 }
@@ -703,9 +706,7 @@ void SidepanelInterpreter::on_buttonExecRunning_clicked()
         }
     }
     catch (std::exception& err) {
-        QMessageBox messageBox;
-        messageBox.critical(this,"Error Executing Node", err.what() );
-        messageBox.show();
+        reportError("Error Executing Node", err.what() );
     }
     _updated = true;
 }

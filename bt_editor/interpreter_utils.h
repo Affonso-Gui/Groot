@@ -128,6 +128,7 @@ private:
 
 signals:
     void actionReportResult(int tree_node_id, QString status);
+    void actionReportError(const QString& message);
 };
 
 

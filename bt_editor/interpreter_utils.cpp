@@ -226,13 +226,18 @@ void Interpreter::ExecuteActionThread::run()
     // maybe subscribe at initialization as in the remote_action node?
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
-    // send goal
-    rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
-    _action_client.sendGoal(goal);
+    try {
+      rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
+      _action_client.sendGoal(goal);
+      _action_client.waitForResult();
+    }
+    catch (std::exception& err) {
+      emit actionReportError(err.what());
+      emit actionReportResult(_tree_node_id, "IDLE");
+      return;
+    }
 
-    _action_client.waitForResult();
     auto result = _action_client.getResult();
-
     if (result.HasMember("success") &&
         result["success"].IsBool() &&
         result["success"].GetBool()) {

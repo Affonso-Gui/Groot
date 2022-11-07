@@ -62,6 +62,8 @@ private slots:
 
     void runStep();
 
+    void reportError(const QString& title, const QString& message);
+
     void toggleButtonAutoExecution();
 
     void toggleButtonConnect();
