@@ -221,6 +221,12 @@ void Interpreter::ExecuteActionThread::run()
     auto node_ref = std::static_pointer_cast<InterpreterActionNode>(_tree_node);
     node_ref->set_exec_thread(this);
 
+    // sleep to ensure that the topic has been successfully subscribed
+    // this is required to avoid dropping messages at the beginning of the execution
+    // maybe subscribe at initialization as in the remote_action node?
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+    // send goal
     rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
     _action_client.sendGoal(goal);
 
