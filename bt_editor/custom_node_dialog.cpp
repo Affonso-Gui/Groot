@@ -317,7 +317,12 @@ void CustomNodeDialog::checkValid()
                 return;
             }
         }
-        else {  // NOT SUBSCRIBER
+        // SUBTREE
+        else if(ui->comboBox->currentIndex() == 7 && param_name == "__shared_blackboard")
+        {
+          // pass
+        }
+        else {  // NOT SUBSCRIBER or SUBTREE
             if( !param_type_item || (param_type_item->text().isEmpty() &&
                                      param_type_item->flags() & Qt::ItemIsEditable ) )
             {
@@ -507,7 +512,7 @@ void CustomNodeDialog::on_comboBox_currentIndexChanged(const QString &node_type)
         unregister_all_but(std::vector<std::string>{"__shared_blackboard"});
         maybeRegisterPortNode("__shared_blackboard", BT::PortDirection::INPUT, "false", "",
             "If false (default), the Subtree has an isolated blackboard and needs port remapping",
-            true);
+            false);
     }
     if (node_type == "Action") {
         unregister_all_but(std::vector<std::string>{"server_name"});
