@@ -103,7 +103,7 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
     }
 
     BT::BehaviorTreeFactory factory;
-    factory.registerNodeType<Interpreter::InterpreterNode>("Root", {});
+    Interpreter::RegisterInterpreterNode<Interpreter::InterpreterNode>(factory, "Root", {}, this);
 
     // register nodes
     for (auto& tab: main_win->getTabInfo()) {
@@ -122,16 +122,17 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
                 }
                 else if (node.model.type == roseus_bt::NodeType::ACTION ||
                          node.model.type == roseus_bt::NodeType::REMOTE_ACTION) {
-                    factory.registerNodeType<Interpreter::InterpreterActionNode>
-                        (registration_ID, ports);
+                    Interpreter::RegisterInterpreterNode<Interpreter::InterpreterActionNode>
+                        (factory, registration_ID, ports, this);
                 }
                 else if (node.model.type == roseus_bt::NodeType::SUBSCRIBER ||
                          node.model.type == roseus_bt::NodeType::REMOTE_SUBSCRIBER) {
-                    factory.registerNodeType<Interpreter::InterpreterSubscriberNode>
-                        (registration_ID, ports);
+                    Interpreter::RegisterInterpreterNode<Interpreter::InterpreterSubscriberNode>
+                        (factory, registration_ID, ports, this);
                 }
                 else {
-                    factory.registerNodeType<Interpreter::InterpreterNode>(registration_ID, ports);
+                    Interpreter::RegisterInterpreterNode<Interpreter::InterpreterNode>
+                        (factory, registration_ID, ports, this);
                 }
             }
             catch(BT::BehaviorTreeException err) {

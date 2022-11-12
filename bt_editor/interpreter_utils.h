@@ -10,6 +10,8 @@
 #include "models/BehaviorTreeNodeModel.hpp"
 #include "bt_editor_base.h"
 
+class SidepanelInterpreter;
+
 namespace Interpreter
 {
 
@@ -27,7 +29,9 @@ public:
 class InterpreterNode : public BT::AsyncActionNode
 {
 public:
-    InterpreterNode(const std::string& name, const BT::NodeConfiguration& config);
+    InterpreterNode(SidepanelInterpreter* parent,
+                    const std::string& name,
+                    const BT::NodeConfiguration& config);
 
     virtual void halt() override;
 
@@ -38,6 +42,7 @@ public:
     void set_exec_thread(ExecuteActionThread* exec_thread);
 
 private:
+    SidepanelInterpreter* _parent;
     ExecuteActionThread* _exec_thread;
 };
 
@@ -45,7 +50,9 @@ private:
 class InterpreterActionNode : public InterpreterNode
 {
 public:
-    InterpreterActionNode(const std::string& name, const BT::NodeConfiguration& config);
+    InterpreterActionNode(SidepanelInterpreter* parent,
+                          const std::string& name,
+                          const BT::NodeConfiguration& config);
 
     virtual void halt() override;
 
@@ -61,7 +68,9 @@ private:
 class InterpreterSubscriberNode : public InterpreterNode
 {
 public:
-    InterpreterSubscriberNode(const std::string& name, const BT::NodeConfiguration& config);
+    InterpreterSubscriberNode(SidepanelInterpreter* parent,
+                              const std::string& name,
+                              const BT::NodeConfiguration& config);
 };
 
 
@@ -138,7 +147,6 @@ signals:
     void actionReportError(const QString& message);
 };
 
-
 rapidjson::Value getInputValue(const BT::TreeNode* tree_node,
                                const std::string name,
                                const std::string type,
@@ -151,6 +159,25 @@ void setOutputValue(BT::TreeNode* tree_node,
 
 rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
                                         const BT::TreeNode* tree_node);
+
+
+template <class NodeType>
+void RegisterInterpreterNode(BT::BehaviorTreeFactory& factory,
+                             const std::string& registration_ID,
+                             const BT::PortsList& ports,
+                             SidepanelInterpreter* parent)
+{
+    BT::NodeBuilder builder = [parent](const std::string& name,
+                                       const BT::NodeConfiguration& config) {
+        return std::make_unique<NodeType>(parent, name, config);
+    };
+
+    BT::TreeNodeManifest manifest;
+    manifest.type = BT::getType<NodeType>();
+    manifest.registration_ID = registration_ID;
+    manifest.ports.insert(ports.begin(), ports.end());
+    factory.registerBuilder(manifest, builder);
+}
 
 }  // namespace
 #endif  // INTERPRETER_UTILS_H

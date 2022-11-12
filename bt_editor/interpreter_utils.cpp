@@ -8,8 +8,10 @@ using WsClient = SimpleWeb::SocketClient<SimpleWeb::WS>;
 //////
 
 Interpreter::InterpreterNode::
-InterpreterNode(const std::string& name, const BT::NodeConfiguration& config) :
-    BT::AsyncActionNode(name,config)
+InterpreterNode(SidepanelInterpreter* parent,
+                const std::string& name,
+                const BT::NodeConfiguration& config) :
+    BT::AsyncActionNode(name,config), _parent(parent)
 {}
 
 void Interpreter::InterpreterNode::halt()
@@ -31,8 +33,10 @@ void Interpreter::InterpreterNode::set_status(const BT::NodeStatus& status)
 //////
 
 Interpreter::InterpreterActionNode::
-InterpreterActionNode(const std::string& name, const BT::NodeConfiguration& config) :
-    InterpreterNode(name,config),
+InterpreterActionNode(SidepanelInterpreter* parent,
+                      const std::string& name,
+                      const BT::NodeConfiguration& config) :
+    InterpreterNode(parent,name,config),
     _exec_thread(nullptr)
 {}
 
@@ -60,8 +64,10 @@ void Interpreter::InterpreterActionNode::set_exec_thread(ExecuteActionThread* ex
 //////
 
 Interpreter::InterpreterSubscriberNode::
-InterpreterSubscriberNode(const std::string& name, const BT::NodeConfiguration& config) :
-    InterpreterNode(name,config)
+InterpreterSubscriberNode(SidepanelInterpreter* parent,
+                          const std::string& name,
+                          const BT::NodeConfiguration& config) :
+    InterpreterNode(parent,name,config)
 {}
 
 
