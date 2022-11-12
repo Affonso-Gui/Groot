@@ -41,11 +41,8 @@ public:
 
     void set_status(const BT::NodeStatus& status);
 
-    void set_exec_thread(ExecuteActionThread* exec_thread);
-
 protected:
     SidepanelInterpreter* _parent;
-    ExecuteActionThread* _exec_thread;
     AbstractTreeNode _node;
     bool _connected;
 };
