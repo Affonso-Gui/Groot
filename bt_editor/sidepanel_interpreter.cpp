@@ -298,7 +298,7 @@ void SidepanelInterpreter::changeRunningStyle(const NodeStatus& status)
     _updated = true;
 }
 
-void SidepanelInterpreter::changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> node,
+void SidepanelInterpreter::changeTreeNodeStatus(BT::TreeNode::Ptr node,
                                                 const NodeStatus& status)
 {
     if (node->type() == NodeType::CONDITION) {

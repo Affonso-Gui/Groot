@@ -42,7 +42,7 @@ private slots:
 
     void changeRunningStyle(const NodeStatus& status);
 
-    void changeTreeNodeStatus(std::shared_ptr<BT::TreeNode> node, const NodeStatus& status);
+    void changeTreeNodeStatus(BT::TreeNode::Ptr node, const NodeStatus& status);
 
     std::string getActionType(const std::string& server_name);
 
