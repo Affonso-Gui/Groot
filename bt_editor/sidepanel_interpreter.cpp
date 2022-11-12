@@ -341,21 +341,12 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
 BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node,
                                                           const BT::TreeNode::Ptr& tree_node)
 {
-    roseus_bt::RosbridgeServiceClient
-        service_client_(ui->lineEdit->text().toStdString(),
-                        ui->lineEdit_port->text().toInt(),
-                        node.model.ports.find("service_name")->second.default_value.toStdString());
+    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterConditionNode>(tree_node);
+    node_ref->connect(node,
+                      ui->lineEdit->text().toStdString(),
+                      ui->lineEdit_port->text().toInt());
 
-    rapidjson::Document request = Interpreter::getRequestFromPorts(node, tree_node);
-    service_client_.call(request);
-    service_client_.waitForResult();
-    auto result = service_client_.getResult();
-    if (result.HasMember("success") &&
-        result["success"].IsBool() &&
-        result["success"].GetBool()) {
-        return NodeStatus::SUCCESS;
-    }
-    return NodeStatus::FAILURE;
+    return node_ref->executeNode();
 }
 
 BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node,

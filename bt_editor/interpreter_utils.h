@@ -74,10 +74,17 @@ public:
 
     BT::NodeStatus executeTick() override;
 
+    BT::NodeStatus executeNode();
+
     void set_status(const BT::NodeStatus& status);
+
+    void connect(const AbstractTreeNode& node, const std::string& host, int port);
 
 private:
     BT::NodeStatus return_status_;
+    std::unique_ptr<roseus_bt::RosbridgeServiceClient> service_client_;
+    AbstractTreeNode _node;
+    bool _connected;
 };
 
 
@@ -132,18 +139,18 @@ signals:
 };
 
 
-rapidjson::Value getInputValue(const BT::TreeNode::Ptr& tree_node,
+rapidjson::Value getInputValue(const BT::TreeNode* tree_node,
                                const std::string name,
                                const std::string type,
                                rapidjson::MemoryPoolAllocator<>& allocator);
 
-void setOutputValue(const BT::TreeNode::Ptr& tree_node,
+void setOutputValue(BT::TreeNode* tree_node,
                     const std::string name,
                     const std::string type,
                     const rapidjson::CopyDocument& document);
 
 rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
-                                        const BT::TreeNode::Ptr& tree_node);
+                                        const BT::TreeNode* tree_node);
 
 }  // namespace
 #endif  // INTERPRETER_UTILS_H

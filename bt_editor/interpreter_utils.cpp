@@ -71,7 +71,7 @@ InterpreterSubscriberNode(const std::string& name, const BT::NodeConfiguration& 
 
 Interpreter::InterpreterConditionNode::
 InterpreterConditionNode(const std::string& name, const BT::NodeConfiguration& config) :
-    BT::ConditionNode(name,config), return_status_(BT::NodeStatus::IDLE)
+    BT::ConditionNode(name,config), return_status_(BT::NodeStatus::IDLE), _connected(false)
 {}
 
 BT::NodeStatus Interpreter::InterpreterConditionNode::tick()
@@ -91,12 +91,37 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeTick()
     return status;
 }
 
+BT::NodeStatus Interpreter::InterpreterConditionNode::executeNode()
+{
+    rapidjson::Document request = getRequestFromPorts(_node, this);
+    service_client_->call(request);
+    service_client_->waitForResult();
+    auto result = service_client_->getResult();
+    if (result.HasMember("success") &&
+        result["success"].IsBool() &&
+        result["success"].GetBool()) {
+        return NodeStatus::SUCCESS;
+    }
+    return NodeStatus::FAILURE;
+}
+
 void Interpreter::InterpreterConditionNode::set_status(const BT::NodeStatus& status)
 {
     return_status_ = status;
     setStatus(status);
 }
 
+void Interpreter::InterpreterConditionNode::
+connect(const AbstractTreeNode& node, const std::string& host, int port)
+{
+    if (_connected) {
+        return;
+    }
+    _node = node;
+    std::string name = node.model.ports.find("service_name")->second.default_value.toStdString();
+    service_client_ = std::make_unique<roseus_bt::RosbridgeServiceClient>(host, port, name);
+    _connected = true;
+}
 
 //////
 // RosBridgeConnectionThread
@@ -166,7 +191,7 @@ void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTr
         document.Parse(message.c_str());
         document.Swap(document["msg"]);
 
-        setOutputValue(tree_node, "output_port", topic_type, document);
+        setOutputValue(tree_node.get(), "output_port", topic_type, document);
         tree_node->setOutput<uint8_t>("received_port", true);
     };
     _subscribers.push_back(topic_name);
@@ -215,7 +240,7 @@ void Interpreter::ExecuteActionThread::run()
         std::string type = port_model.type_name.toStdString();
 
         document.Swap(document[name.c_str()]);
-        setOutputValue(_tree_node, name, type, document);
+        setOutputValue(_tree_node.get(), name, type, document);
     };
     _action_client.registerFeedbackCallback(cb);
     auto node_ref = std::static_pointer_cast<InterpreterActionNode>(_tree_node);
@@ -227,7 +252,7 @@ void Interpreter::ExecuteActionThread::run()
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
     try {
-      rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
+      rapidjson::Document goal = getRequestFromPorts(_node, _tree_node.get());
       _action_client.sendGoal(goal);
       _action_client.waitForResult();
     }
@@ -257,7 +282,7 @@ void Interpreter::ExecuteActionThread::stop()
 // Port Variables
 //////
 
-rapidjson::Value Interpreter::getInputValue(const BT::TreeNode::Ptr& tree_node,
+rapidjson::Value Interpreter::getInputValue(const BT::TreeNode* tree_node,
                                             const std::string name,
                                             const std::string type,
                                             rapidjson::MemoryPoolAllocator<>& allocator)
@@ -329,7 +354,7 @@ rapidjson::Value Interpreter::getInputValue(const BT::TreeNode::Ptr& tree_node,
                                          tree_node->name()));
 }
 
-void Interpreter::setOutputValue(const BT::TreeNode::Ptr& tree_node,
+void Interpreter::setOutputValue(BT::TreeNode* tree_node,
                                  const std::string name,
                                  const std::string type,
                                  const rapidjson::CopyDocument& document)
@@ -395,7 +420,7 @@ void Interpreter::setOutputValue(const BT::TreeNode::Ptr& tree_node,
 }
 
 rapidjson::Document Interpreter::getRequestFromPorts(const AbstractTreeNode& node,
-                                                     const BT::TreeNode::Ptr& tree_node)
+                                                     const BT::TreeNode* tree_node)
 {
     const auto* bt_node =
         dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
