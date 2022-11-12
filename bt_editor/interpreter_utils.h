@@ -37,13 +37,17 @@ public:
 
     virtual BT::NodeStatus tick() override;
 
+    virtual BT::NodeStatus executeNode();
+
     void set_status(const BT::NodeStatus& status);
 
     void set_exec_thread(ExecuteActionThread* exec_thread);
 
-private:
+protected:
     SidepanelInterpreter* _parent;
     ExecuteActionThread* _exec_thread;
+    AbstractTreeNode _node;
+    bool _connected;
 };
 
 
@@ -71,6 +75,10 @@ public:
     InterpreterSubscriberNode(SidepanelInterpreter* parent,
                               const std::string& name,
                               const BT::NodeConfiguration& config);
+
+    virtual BT::NodeStatus executeNode() override;
+
+    void connect(const AbstractTreeNode& node);
 };
 
 
@@ -107,7 +115,7 @@ public:
     void run();
     void stop();
     void clearSubscribers();
-    void registerSubscriber(const AbstractTreeNode& node, const BT::TreeNode::Ptr& tree_node);
+    void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode* tree_node);
 
 private:
     RosbridgeWsClient _rbc;

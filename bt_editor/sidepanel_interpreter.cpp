@@ -82,6 +82,15 @@ void SidepanelInterpreter::on_Connect()
     toggleButtonConnect();
 }
 
+void SidepanelInterpreter::registerSubscriber(const AbstractTreeNode& node,
+                                             BT::TreeNode* tree_node)
+{
+    if (!(_connected && _rbc_thread)) {
+        throw std::runtime_error(std::string("Not connected"));
+    }
+    _rbc_thread->registerSubscriber(node, tree_node);
+}
+
 void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename)
 {
     qDebug() << "Updating interpreter_widget tree model";
@@ -397,11 +406,9 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
 BT::NodeStatus SidepanelInterpreter::executeSubscriberNode(const AbstractTreeNode& node,
                                                            const BT::TreeNode::Ptr& tree_node)
 {
-    if (!(_connected && _rbc_thread)) {
-        throw std::runtime_error(std::string("Not connected"));
-    }
-    _rbc_thread->registerSubscriber(node, tree_node);
-    return NodeStatus::SUCCESS;
+    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterSubscriberNode>(tree_node);
+    node_ref->connect(node);
+    return node_ref->executeNode();
 }
 
 void SidepanelInterpreter::executeNode(const int node_id)

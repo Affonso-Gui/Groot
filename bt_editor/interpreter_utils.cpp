@@ -1,7 +1,7 @@
 #include "interpreter_utils.h"
+#include "sidepanel_interpreter.h"
 
 using WsClient = SimpleWeb::SocketClient<SimpleWeb::WS>;
-
 
 //////
 // InterpreterNode
@@ -18,6 +18,11 @@ void Interpreter::InterpreterNode::halt()
 {}
 
 BT::NodeStatus Interpreter::InterpreterNode::tick()
+{
+    return BT::NodeStatus::RUNNING;
+}
+
+BT::NodeStatus Interpreter::InterpreterNode::executeNode()
 {
     return BT::NodeStatus::RUNNING;
 }
@@ -69,6 +74,22 @@ InterpreterSubscriberNode(SidepanelInterpreter* parent,
                           const BT::NodeConfiguration& config) :
     InterpreterNode(parent,name,config)
 {}
+
+void Interpreter::InterpreterSubscriberNode::
+connect(const AbstractTreeNode& node)
+{
+    if (_connected) {
+        return;
+    }
+    _node = node;
+    _connected = true;
+}
+
+BT::NodeStatus Interpreter::InterpreterSubscriberNode::executeNode()
+{
+    _parent->registerSubscriber(_node, this);
+    return NodeStatus::SUCCESS;
+}
 
 
 //////
@@ -179,7 +200,7 @@ void Interpreter::RosBridgeConnectionThread::clearSubscribers()
 }
 
 void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTreeNode& node,
-                                                                const BT::TreeNode::Ptr& tree_node)
+                                                                BT::TreeNode* tree_node)
 {
     auto port_model = node.model.ports.find("message_type")->second;
     std::string topic_type = port_model.default_value.toStdString();
@@ -197,7 +218,7 @@ void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTr
         document.Parse(message.c_str());
         document.Swap(document["msg"]);
 
-        setOutputValue(tree_node.get(), "output_port", topic_type, document);
+        setOutputValue(tree_node, "output_port", topic_type, document);
         tree_node->setOutput<uint8_t>("received_port", true);
     };
     _subscribers.push_back(topic_name);

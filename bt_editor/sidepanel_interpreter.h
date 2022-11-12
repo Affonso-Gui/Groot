@@ -22,6 +22,8 @@ public:
 
     void on_Connect();
 
+    void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode* tree_node);
+
     void setTree(const QString& bt_name, const QString& xml_filename);
 
     void setTree(const QString& bt_name);
