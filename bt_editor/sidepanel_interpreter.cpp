@@ -78,6 +78,12 @@ void SidepanelInterpreter::on_Connect()
     for (auto exec_thread: _running_threads) {
         exec_thread->stop();
     }
+    for (auto tree_node: _tree.nodes) {
+        auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(tree_node);
+        if (node_ref) {
+            node_ref->disconnect();
+        }
+    }
     _connected = false;
     toggleButtonConnect();
 }

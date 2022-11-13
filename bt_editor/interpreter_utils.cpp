@@ -47,6 +47,11 @@ connect(const AbstractTreeNode& node, const std::string& host, int port, int tre
     _connected = true;
 }
 
+void Interpreter::InterpreterNode::disconnect()
+{
+    _connected = false;
+}
+
 void Interpreter::InterpreterNode::set_status(const BT::NodeStatus& status)
 {
     setStatus(status);
@@ -103,6 +108,12 @@ connect(const AbstractTreeNode& node, const std::string& host, int port, int tre
     _tree_node_id = tree_node_id;
     _node = node;
     _connected = true;
+}
+
+void Interpreter::InterpreterActionNode::disconnect()
+{
+    _connected = false;
+    _action_client = nullptr;
 }
 
 bool Interpreter::InterpreterActionNode::isRunning()
@@ -185,6 +196,12 @@ connect(const AbstractTreeNode& node, const std::string& host, int port, int tre
     _service_client = std::make_unique<roseus_bt::RosbridgeServiceClient>(host, port, name);
     _node = node;
     _connected = true;
+}
+
+void Interpreter::InterpreterConditionNode::disconnect()
+{
+    _connected = false;
+    _service_client = nullptr;
 }
 
 void Interpreter::InterpreterConditionNode::set_status(const BT::NodeStatus& status)

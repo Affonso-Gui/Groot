@@ -38,6 +38,8 @@ public:
                          int port,
                          int tree_node_id) = 0;
 
+    virtual void disconnect() = 0;
+
 protected:
     SidepanelInterpreter* _parent;
     AbstractTreeNode _node;
@@ -64,6 +66,8 @@ public:
                          int port,
                          int tree_node_id) override;
 
+    virtual void disconnect() override;
+
     void set_status(const BT::NodeStatus& status);
 };
 
@@ -80,6 +84,8 @@ public:
     virtual BT::NodeStatus executeNode() override;
 
     virtual void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id) override;
+
+    virtual void disconnect() override;
 
     bool isRunning();
 
@@ -116,6 +122,8 @@ public:
     virtual BT::NodeStatus executeNode() override;
 
     virtual void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id) override;
+
+    virtual void disconnect() override;
 
     void set_status(const BT::NodeStatus& status);
 
