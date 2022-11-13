@@ -53,16 +53,41 @@ void Interpreter::InterpreterActionNode::halt()
     }
 }
 
+BT::NodeStatus Interpreter::InterpreterActionNode::executeNode()
+{
+    _exec_thread = new ExecuteActionThread(_action_client, _node, this, _tree_node_id);
+    _parent->registerActionThread(_exec_thread);
+    return NodeStatus::RUNNING;
+}
+
 bool Interpreter::InterpreterActionNode::isRunning()
 {
     return (_exec_thread && _exec_thread->isRunning());
 }
 
-void Interpreter::InterpreterActionNode::set_exec_thread(ExecuteActionThread* exec_thread)
+void Interpreter::InterpreterActionNode::
+connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id)
 {
-    _exec_thread = exec_thread;
-}
+    if (_connected) {
+        return;
+    }
+    auto server_name_port = node.model.ports.find("server_name")->second;
+    std::string server_name = server_name_port.default_value.toStdString();
+    if (server_name.front() != '/') {
+      server_name = '/' + server_name;
+    }
+    std::string topic_type = _parent->getActionType(server_name);
 
+    if (topic_type.empty()) {
+        throw std::runtime_error(
+            std::string("Could not connect to action server at ") + server_name);
+    }
+
+    _action_client = std::make_shared<roseus_bt::RosbridgeActionClient>(host, port, server_name, topic_type);
+    _tree_node_id = tree_node_id;
+    _node = node;
+    _connected = true;
+}
 
 //////
 // InterpreterSubscriberNode
@@ -233,25 +258,15 @@ void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTr
 
 
 Interpreter::ExecuteActionThread::
-ExecuteActionThread(const std::string& hostname, int port,
-                    const std::string& server_name,
-                    const std::string& action_type,
+ExecuteActionThread(std::shared_ptr<roseus_bt::RosbridgeActionClient> action_client,
                     const AbstractTreeNode& node,
-                    const BT::TreeNode::Ptr& tree_node,
+                    BT::TreeNode* tree_node,
                     int tree_node_id) :
-    _action_client(hostname, port, server_name, action_type),
+    _action_client(action_client),
     _node(node),
     _tree_node(tree_node),
     _tree_node_id(tree_node_id)
 {}
-
-Interpreter::ExecuteActionThread::
-
-~ExecuteActionThread()
-{
-  auto node_ref = std::static_pointer_cast<InterpreterActionNode>(_tree_node);
-  node_ref->set_exec_thread(nullptr);
-}
 
 void Interpreter::ExecuteActionThread::run()
 {
@@ -267,11 +282,9 @@ void Interpreter::ExecuteActionThread::run()
         std::string type = port_model.type_name.toStdString();
 
         document.Swap(document[name.c_str()]);
-        setOutputValue(_tree_node.get(), name, type, document);
+        setOutputValue(_tree_node, name, type, document);
     };
-    _action_client.registerFeedbackCallback(cb);
-    auto node_ref = std::static_pointer_cast<InterpreterActionNode>(_tree_node);
-    node_ref->set_exec_thread(this);
+    _action_client->registerFeedbackCallback(cb);
 
     // sleep to ensure that the topic has been successfully subscribed
     // this is required to avoid dropping messages at the beginning of the execution
@@ -279,9 +292,9 @@ void Interpreter::ExecuteActionThread::run()
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
     try {
-      rapidjson::Document goal = getRequestFromPorts(_node, _tree_node.get());
-      _action_client.sendGoal(goal);
-      _action_client.waitForResult();
+      rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
+      _action_client->sendGoal(goal);
+      _action_client->waitForResult();
     }
     catch (std::exception& err) {
       emit actionReportError(err.what());
@@ -289,7 +302,7 @@ void Interpreter::ExecuteActionThread::run()
       return;
     }
 
-    auto result = _action_client.getResult();
+    auto result = _action_client->getResult();
     if (result.HasMember("success") &&
         result["success"].IsBool() &&
         result["success"].GetBool()) {
@@ -301,7 +314,7 @@ void Interpreter::ExecuteActionThread::run()
 
 void Interpreter::ExecuteActionThread::stop()
 {
-    _action_client.cancelGoal();
+    _action_client->cancelGoal();
 }
 
 

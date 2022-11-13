@@ -91,6 +91,22 @@ void SidepanelInterpreter::registerSubscriber(const AbstractTreeNode& node,
     _rbc_thread->registerSubscriber(node, tree_node);
 }
 
+void SidepanelInterpreter::
+registerActionThread(Interpreter::ExecuteActionThread* exec_thread)
+{
+    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
+             this, &SidepanelInterpreter::on_actionReportResult);
+    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportError,
+             this, [this] (const QString& message) { reportError("Error Executing Node", message); });
+    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
+             this, &SidepanelInterpreter::on_actionFinished);
+    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
+             exec_thread, &QObject::deleteLater);
+
+    _running_threads.push_back(exec_thread);
+    exec_thread->start();
+}
+
 void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename)
 {
     qDebug() << "Updating interpreter_widget tree model";
@@ -363,44 +379,17 @@ BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& n
                                                        const BT::TreeNode::Ptr& tree_node,
                                                        int tree_node_id)
 {
-    auto server_name_port = node.model.ports.find("server_name")->second;
-    std::string server_name = server_name_port.default_value.toStdString();
-    if (server_name.front() != '/') {
-      server_name = '/' + server_name;
-    }
-    std::string topic_type = getActionType(server_name);
-
-    if (topic_type.empty()) {
-        throw std::runtime_error(
-            std::string("Could not connect to action server at ") + server_name);
-    }
-
     auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(tree_node);
     if (node_ref->isRunning()) {
         return NodeStatus::RUNNING;
     }
 
-    std::string hostname = ui->lineEdit->text().toStdString();
-    int port_number = ui->lineEdit_port->text().toInt();
-    auto exec_thread = new Interpreter::ExecuteActionThread(hostname, port_number,
-                                                            server_name,
-                                                            topic_type,
-                                                            node,
-                                                            tree_node,
-                                                            tree_node_id);
+    node_ref->connect(node,
+                      ui->lineEdit->text().toStdString(),
+                      ui->lineEdit_port->text().toInt(),
+                      tree_node_id);
 
-    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
-             this, &SidepanelInterpreter::on_actionReportResult);
-    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportError,
-             this, [this] (const QString& message) { reportError("Error Executing Node", message); });
-    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
-             this, &SidepanelInterpreter::on_actionFinished);
-    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
-             exec_thread, &QObject::deleteLater);
-
-    _running_threads.push_back(exec_thread);
-    exec_thread->start();
-    return NodeStatus::RUNNING;
+    return node_ref->executeNode();
 }
 
 BT::NodeStatus SidepanelInterpreter::executeSubscriberNode(const AbstractTreeNode& node,

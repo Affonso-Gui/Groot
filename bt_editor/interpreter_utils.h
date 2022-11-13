@@ -57,12 +57,16 @@ public:
 
     virtual void halt() override;
 
+    virtual BT::NodeStatus executeNode() override;
+
     bool isRunning();
 
-    void set_exec_thread(ExecuteActionThread* exec_thread);
+    void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id);
 
 private:
     ExecuteActionThread* _exec_thread;
+    std::shared_ptr<roseus_bt::RosbridgeActionClient> _action_client;
+    int _tree_node_id;
 };
 
 
@@ -130,21 +134,17 @@ class ExecuteActionThread : public QThread
 {
 Q_OBJECT
 public:
-    explicit ExecuteActionThread(const std::string& hostname, int port,
-                                 const std::string& server_name,
-                                 const std::string& action_type,
+    explicit ExecuteActionThread(std::shared_ptr<roseus_bt::RosbridgeActionClient> action_client,
                                  const AbstractTreeNode& node,
-                                 const BT::TreeNode::Ptr& tree_node,
+                                 BT::TreeNode* tree_node,
                                  int tree_node_id);
-    ~ExecuteActionThread();
-
     void run();
     void stop();
 
 private:
-    roseus_bt::RosbridgeActionClient _action_client;
+    std::shared_ptr<roseus_bt::RosbridgeActionClient> _action_client;
     AbstractTreeNode _node;
-    BT::TreeNode::Ptr _tree_node;
+    BT::TreeNode* _tree_node;
     int _tree_node_id;
 
 signals:

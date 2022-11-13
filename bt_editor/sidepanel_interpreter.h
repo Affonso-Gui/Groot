@@ -24,6 +24,10 @@ public:
 
     void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode* tree_node);
 
+    void registerActionThread(Interpreter::ExecuteActionThread* exec_thread);
+
+    std::string getActionType(const std::string& server_name);
+
     void setTree(const QString& bt_name, const QString& xml_filename);
 
     void setTree(const QString& bt_name);
@@ -45,8 +49,6 @@ private slots:
     void changeRunningStyle(const NodeStatus& status);
 
     void changeTreeNodeStatus(BT::TreeNode::Ptr node, const NodeStatus& status);
-
-    std::string getActionType(const std::string& server_name);
 
     BT::NodeStatus executeConditionNode(const AbstractTreeNode& node,
                                         const BT::TreeNode::Ptr& tree_node);
