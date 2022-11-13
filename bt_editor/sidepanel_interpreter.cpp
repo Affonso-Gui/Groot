@@ -83,7 +83,7 @@ void SidepanelInterpreter::on_Connect()
 }
 
 void SidepanelInterpreter::registerSubscriber(const AbstractTreeNode& node,
-                                             BT::TreeNode* tree_node)
+                                              BT::TreeNode::Ptr tree_node)
 {
     if (!(_connected && _rbc_thread)) {
         throw std::runtime_error(std::string("Not connected"));
@@ -142,8 +142,8 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
             try {
                 if (node.model.type == roseus_bt::NodeType::CONDITION ||
                     node.model.type == roseus_bt::NodeType::REMOTE_CONDITION) {
-                    factory.registerNodeType<Interpreter::InterpreterConditionNode>
-                        (registration_ID, ports);
+                    Interpreter::RegisterInterpreterNode<Interpreter::InterpreterConditionNode>
+                        (factory, registration_ID, ports, this);
                 }
                 else if (node.model.type == roseus_bt::NodeType::ACTION ||
                          node.model.type == roseus_bt::NodeType::REMOTE_ACTION) {
@@ -364,40 +364,14 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     return "";
 }
 
-BT::NodeStatus SidepanelInterpreter::executeConditionNode(const AbstractTreeNode& node,
-                                                          const BT::TreeNode::Ptr& tree_node)
+BT::TreeNode::Ptr SidepanelInterpreter::getSharedNode(BT::TreeNode* node)
 {
-    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterConditionNode>(tree_node);
-    node_ref->connect(node,
-                      ui->lineEdit->text().toStdString(),
-                      ui->lineEdit_port->text().toInt());
-
-    return node_ref->executeNode();
-}
-
-BT::NodeStatus SidepanelInterpreter::executeActionNode(const AbstractTreeNode& node,
-                                                       const BT::TreeNode::Ptr& tree_node,
-                                                       int tree_node_id)
-{
-    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(tree_node);
-    if (node_ref->isRunning()) {
-        return NodeStatus::RUNNING;
+    for (auto tree_node : _tree.nodes) {
+        if (tree_node.get() == node) {
+            return(tree_node);
+        }
     }
-
-    node_ref->connect(node,
-                      ui->lineEdit->text().toStdString(),
-                      ui->lineEdit_port->text().toInt(),
-                      tree_node_id);
-
-    return node_ref->executeNode();
-}
-
-BT::NodeStatus SidepanelInterpreter::executeSubscriberNode(const AbstractTreeNode& node,
-                                                           const BT::TreeNode::Ptr& tree_node)
-{
-    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterSubscriberNode>(tree_node);
-    node_ref->connect(node);
-    return node_ref->executeNode();
+    return nullptr;
 }
 
 void SidepanelInterpreter::executeNode(const int node_id)
@@ -406,17 +380,29 @@ void SidepanelInterpreter::executeNode(const int node_id)
     auto node = _abstract_tree.node(node_id);
     auto bt_node = _tree.nodes.at(bt_node_id - 1);
     std::vector<std::pair<int, NodeStatus>> node_status;
+
+    // connectNode(bt_node_id);
+
     if (node->model.type == roseus_bt::NodeType::CONDITION ||
         node->model.type == roseus_bt::NodeType::REMOTE_CONDITION) {
-        node_status.push_back( {node_id, executeConditionNode(*node, bt_node)} );
+        auto node_ref = std::static_pointer_cast<Interpreter::InterpreterConditionNode>(bt_node);
+        node_ref->connect(*node, ui->lineEdit->text().toStdString(),
+                          ui->lineEdit_port->text().toInt(), bt_node_id);
+        node_status.push_back( {node_id, node_ref->executeNode()} );
     }
     else if (node->model.type == roseus_bt::NodeType::ACTION ||
              node->model.type == roseus_bt::NodeType::REMOTE_ACTION) {
-        node_status.push_back( {node_id, executeActionNode(*node, bt_node, bt_node_id)} );
+        auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(bt_node);
+        node_ref->connect(*node, ui->lineEdit->text().toStdString(),
+                          ui->lineEdit_port->text().toInt(), bt_node_id);
+        node_status.push_back( {node_id, node_ref->executeNode()} );
     }
     else if (node->model.type == roseus_bt::NodeType::SUBSCRIBER ||
              node->model.type == roseus_bt::NodeType::REMOTE_SUBSCRIBER) {
-        node_status.push_back( {node_id, executeSubscriberNode(*node, bt_node)} );
+        auto node_ref = std::static_pointer_cast<Interpreter::InterpreterSubscriberNode>(bt_node);
+        node_ref->connect(*node, ui->lineEdit->text().toStdString(),
+                          ui->lineEdit_port->text().toInt(), bt_node_id);
+        node_status.push_back( {node_id, node_ref->executeNode()} );
     }
     else {  /* decorators, control, subtrees */
         return;

@@ -26,7 +26,27 @@ public:
 };
 
 
-class InterpreterNode : public BT::AsyncActionNode
+class InterpreterNodeBase
+{
+public:
+    InterpreterNodeBase(SidepanelInterpreter* parent);
+
+    virtual BT::NodeStatus executeNode() = 0;
+
+    virtual void connect(const AbstractTreeNode& node,
+                         const std::string& host,
+                         int port,
+                         int tree_node_id) = 0;
+
+protected:
+    SidepanelInterpreter* _parent;
+    AbstractTreeNode _node;
+    bool _connected;
+};
+
+
+class InterpreterNode : public BT::AsyncActionNode,
+                        public InterpreterNodeBase
 {
 public:
     InterpreterNode(SidepanelInterpreter* parent,
@@ -37,14 +57,14 @@ public:
 
     virtual BT::NodeStatus tick() override;
 
-    virtual BT::NodeStatus executeNode();
+    virtual BT::NodeStatus executeNode() override;
+
+    virtual void connect(const AbstractTreeNode& node,
+                         const std::string& host,
+                         int port,
+                         int tree_node_id) override;
 
     void set_status(const BT::NodeStatus& status);
-
-protected:
-    SidepanelInterpreter* _parent;
-    AbstractTreeNode _node;
-    bool _connected;
 };
 
 
@@ -59,9 +79,9 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    bool isRunning();
+    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id) override;
 
-    void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id);
+    bool isRunning();
 
 private:
     ExecuteActionThread* _exec_thread;
@@ -78,31 +98,30 @@ public:
                               const BT::NodeConfiguration& config);
 
     virtual BT::NodeStatus executeNode() override;
-
-    void connect(const AbstractTreeNode& node);
 };
 
 
-class InterpreterConditionNode : public BT::ConditionNode
+class InterpreterConditionNode : public BT::ConditionNode,
+                                 public InterpreterNodeBase
 {
 public:
-    InterpreterConditionNode(const std::string& name, const BT::NodeConfiguration& config);
+    InterpreterConditionNode(SidepanelInterpreter* parent,
+                             const std::string& name,
+                             const BT::NodeConfiguration& config);
 
-    BT::NodeStatus tick() override;
+    virtual BT::NodeStatus tick() override;
 
-    BT::NodeStatus executeTick() override;
+    virtual BT::NodeStatus executeTick() override;
 
-    BT::NodeStatus executeNode();
+    virtual BT::NodeStatus executeNode() override;
+
+    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id) override;
 
     void set_status(const BT::NodeStatus& status);
 
-    void connect(const AbstractTreeNode& node, const std::string& host, int port);
-
 private:
-    BT::NodeStatus return_status_;
-    std::unique_ptr<roseus_bt::RosbridgeServiceClient> service_client_;
-    AbstractTreeNode _node;
-    bool _connected;
+    std::unique_ptr<roseus_bt::RosbridgeServiceClient> _service_client;
+    BT::NodeStatus _return_status;
 };
 
 
@@ -116,7 +135,7 @@ public:
     void run();
     void stop();
     void clearSubscribers();
-    void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode* tree_node);
+    void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode::Ptr tree_node);
 
 private:
     RosbridgeWsClient _rbc;
@@ -136,7 +155,7 @@ Q_OBJECT
 public:
     explicit ExecuteActionThread(std::shared_ptr<roseus_bt::RosbridgeActionClient> action_client,
                                  const AbstractTreeNode& node,
-                                 BT::TreeNode* tree_node,
+                                 BT::TreeNode::Ptr tree_node,
                                  int tree_node_id);
     void run();
     void stop();
@@ -144,7 +163,7 @@ public:
 private:
     std::shared_ptr<roseus_bt::RosbridgeActionClient> _action_client;
     AbstractTreeNode _node;
-    BT::TreeNode* _tree_node;
+    BT::TreeNode::Ptr _tree_node;
     int _tree_node_id;
 
 signals:
@@ -152,18 +171,18 @@ signals:
     void actionReportError(const QString& message);
 };
 
-rapidjson::Value getInputValue(const BT::TreeNode* tree_node,
+rapidjson::Value getInputValue(BT::TreeNode::Ptr tree_node,
                                const std::string name,
                                const std::string type,
                                rapidjson::MemoryPoolAllocator<>& allocator);
 
-void setOutputValue(BT::TreeNode* tree_node,
+void setOutputValue(BT::TreeNode::Ptr tree_node,
                     const std::string name,
                     const std::string type,
                     const rapidjson::CopyDocument& document);
 
 rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
-                                        const BT::TreeNode* tree_node);
+                                        BT::TreeNode::Ptr tree_node);
 
 
 template <class NodeType>
