@@ -11,7 +11,7 @@ Interpreter::InterpreterNode::
 InterpreterNode(SidepanelInterpreter* parent,
                 const std::string& name,
                 const BT::NodeConfiguration& config) :
-    BT::AsyncActionNode(name,config), _parent(parent)
+    BT::AsyncActionNode(name,config), _parent(parent), _connected(false)
 {}
 
 void Interpreter::InterpreterNode::halt()
