@@ -38,6 +38,9 @@ SidepanelInterpreter::~SidepanelInterpreter()
 
 void SidepanelInterpreter::clear()
 {
+  if (_timer) {
+    _timer->stop();
+  }
 }
 
 void SidepanelInterpreter::on_Connect()
