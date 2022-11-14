@@ -195,6 +195,11 @@ void SidepanelInterpreter::setTree(const QString& bt_name)
 
 void SidepanelInterpreter::updateTree()
 {
+    for (auto exec_thread: _running_threads) {
+        disconnect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
+                 this, &SidepanelInterpreter::on_actionReportResult);
+        exec_thread->stop();
+    }
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     auto container = main_win->getTabByName(_tree_name);
     _abstract_tree = BuildTreeFromScene( container->scene() );
@@ -546,8 +551,8 @@ void SidepanelInterpreter::reportError(const QString& title, const QString& mess
 
 void SidepanelInterpreter::toggleButtonAutoExecution()
 {
-    ui->buttonDisableAutoExecution->setEnabled(_autorun);
-    ui->buttonEnableAutoExecution->setEnabled(!_autorun);
+    ui->buttonDisableAutoExecution->setEnabled(_connected && _autorun);
+    ui->buttonEnableAutoExecution->setEnabled(_connected && !_autorun);
 }
 
 void SidepanelInterpreter::toggleButtonConnect()
@@ -557,8 +562,7 @@ void SidepanelInterpreter::toggleButtonConnect()
     ui->lineEdit_port->setDisabled(_connected);
     ui->buttonExecSelection->setEnabled(_connected);
     ui->buttonExecRunning->setEnabled(_connected);
-    ui->buttonEnableAutoExecution->setEnabled(_connected);
-    ui->buttonDisableAutoExecution->setEnabled(_connected && _autorun);
+    toggleButtonAutoExecution();
 }
 
 void SidepanelInterpreter::on_connectionCreated()
@@ -623,6 +627,7 @@ void SidepanelInterpreter::on_actionFinished()
 
 void SidepanelInterpreter::on_buttonResetTree_clicked()
 {
+    on_buttonDisableAutoExecution_clicked();
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     setTree(_tree_name);
     main_win->resetTreeStyle(_abstract_tree);
@@ -704,6 +709,17 @@ void SidepanelInterpreter::on_buttonRunTree_clicked()
     catch (std::exception& err) {
         reportError("Error Running Tree", err.what() );
     }
+}
+
+void SidepanelInterpreter::on_buttonHaltTree_clicked()
+{
+    qDebug() << "buttonHaltTree";
+
+    on_buttonDisableAutoExecution_clicked();
+    if (_tree.nodes.size() > 1) {
+        _tree.haltTree();
+    }
+    _updated = true;
 }
 
 void SidepanelInterpreter::on_buttonExecSelection_clicked()

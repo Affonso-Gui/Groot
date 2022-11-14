@@ -98,6 +98,8 @@ private slots:
 
     void on_buttonRunTree_clicked();
 
+    void on_buttonHaltTree_clicked();
+
     void on_buttonExecSelection_clicked();
 
     void on_buttonExecRunning_clicked();
