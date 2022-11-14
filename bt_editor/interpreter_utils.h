@@ -79,6 +79,8 @@ public:
                           const std::string& name,
                           const BT::NodeConfiguration& config);
 
+    ~InterpreterActionNode();
+
     virtual void halt() override;
 
     virtual BT::NodeStatus executeNode() override;
@@ -114,6 +116,8 @@ public:
     InterpreterConditionNode(SidepanelInterpreter* parent,
                              const std::string& name,
                              const BT::NodeConfiguration& config);
+
+    ~InterpreterConditionNode();
 
     virtual BT::NodeStatus tick() override;
 

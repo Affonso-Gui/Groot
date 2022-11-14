@@ -70,6 +70,12 @@ InterpreterActionNode(SidepanelInterpreter* parent,
     _exec_thread(nullptr)
 {}
 
+Interpreter::InterpreterActionNode::
+~InterpreterActionNode()
+{
+    disconnect();
+}
+
 void Interpreter::InterpreterActionNode::halt()
 {
     if (isRunning()) {
@@ -153,6 +159,12 @@ InterpreterConditionNode(SidepanelInterpreter* parent,
     InterpreterNodeBase(parent),
     _return_status(BT::NodeStatus::IDLE)
 {}
+
+Interpreter::InterpreterConditionNode::
+~InterpreterConditionNode()
+{
+    disconnect();
+}
 
 BT::NodeStatus Interpreter::InterpreterConditionNode::tick()
 {
