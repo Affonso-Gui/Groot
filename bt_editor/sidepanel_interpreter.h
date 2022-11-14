@@ -26,9 +26,13 @@ public:
 
     void registerActionThread(Interpreter::ExecuteActionThread* exec_thread);
 
+    void connectNode(const BT::TreeNode* node);
+
     std::string getActionType(const std::string& server_name);
 
-    BT::TreeNode::Ptr getSharedNode(BT::TreeNode* node);
+    BT::TreeNode::Ptr getSharedNode(const BT::TreeNode* node);
+
+    int getNodeId(const BT::TreeNode* node);
 
     void setTree(const QString& bt_name, const QString& xml_filename);
 
@@ -51,6 +55,8 @@ private slots:
     void changeRunningStyle(const NodeStatus& status);
 
     void changeTreeNodeStatus(BT::TreeNode::Ptr node, const NodeStatus& status);
+
+    void connectNode(const int tree_node_id);
 
     void executeNode(const int node_id);
 

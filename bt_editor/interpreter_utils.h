@@ -33,17 +33,17 @@ public:
 
     virtual BT::NodeStatus executeNode() = 0;
 
-    virtual void connect(const AbstractTreeNode& node,
-                         const std::string& host,
-                         int port,
-                         int tree_node_id) = 0;
+    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) = 0;
 
     virtual void disconnect() = 0;
+
+    void set_execution_mode(bool execution_mode);
 
 protected:
     SidepanelInterpreter* _parent;
     AbstractTreeNode _node;
     bool _connected;
+    bool _execution_mode;
 };
 
 
@@ -61,10 +61,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(const AbstractTreeNode& node,
-                         const std::string& host,
-                         int port,
-                         int tree_node_id) override;
+    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) override;
 
     virtual void disconnect() override;
 
@@ -85,7 +82,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id) override;
+    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) override;
 
     virtual void disconnect() override;
 
@@ -94,7 +91,6 @@ public:
 private:
     ExecuteActionThread* _exec_thread;
     std::shared_ptr<roseus_bt::RosbridgeActionClient> _action_client;
-    int _tree_node_id;
 };
 
 
@@ -125,7 +121,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id) override;
+    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) override;
 
     virtual void disconnect() override;
 

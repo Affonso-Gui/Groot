@@ -9,8 +9,13 @@ using WsClient = SimpleWeb::SocketClient<SimpleWeb::WS>;
 
 Interpreter::InterpreterNodeBase::
 InterpreterNodeBase(SidepanelInterpreter* parent) :
-    _parent(parent), _connected(false)
+    _parent(parent), _connected(false), _execution_mode(false)
 {}
+
+void Interpreter::InterpreterNodeBase::set_execution_mode(bool execution_mode)
+{
+    _execution_mode = execution_mode;
+}
 
 
 //////
@@ -29,16 +34,22 @@ void Interpreter::InterpreterNode::halt()
 
 BT::NodeStatus Interpreter::InterpreterNode::tick()
 {
+    if (_execution_mode) {
+        return executeNode();
+    }
     return BT::NodeStatus::RUNNING;
 }
 
 BT::NodeStatus Interpreter::InterpreterNode::executeNode()
 {
+    if (!_connected) {
+        _parent->connectNode(this);
+    }
     return BT::NodeStatus::RUNNING;
 }
 
 void Interpreter::InterpreterNode::
-connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id)
+connect(const AbstractTreeNode& node, const std::string& host, int port)
 {
     if (_connected) {
         return;
@@ -50,6 +61,7 @@ connect(const AbstractTreeNode& node, const std::string& host, int port, int tre
 void Interpreter::InterpreterNode::disconnect()
 {
     _connected = false;
+    _execution_mode = false;
 }
 
 void Interpreter::InterpreterNode::set_status(const BT::NodeStatus& status)
@@ -86,14 +98,18 @@ void Interpreter::InterpreterActionNode::halt()
 
 BT::NodeStatus Interpreter::InterpreterActionNode::executeNode()
 {
+    if (!_connected) {
+        _parent->connectNode(this);
+    }
     BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
-    _exec_thread = new ExecuteActionThread(_action_client, _node, shared_node, _tree_node_id);
+    int tree_node_id = _parent->getNodeId(this);
+    _exec_thread = new ExecuteActionThread(_action_client, _node, shared_node, tree_node_id);
     _parent->registerActionThread(_exec_thread);
     return NodeStatus::RUNNING;
 }
 
 void Interpreter::InterpreterActionNode::
-connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id)
+connect(const AbstractTreeNode& node, const std::string& host, int port)
 {
     if (_connected) {
         return;
@@ -111,7 +127,6 @@ connect(const AbstractTreeNode& node, const std::string& host, int port, int tre
     }
 
     _action_client = std::make_shared<roseus_bt::RosbridgeActionClient>(host, port, server_name, topic_type);
-    _tree_node_id = tree_node_id;
     _node = node;
     _connected = true;
 }
@@ -119,6 +134,7 @@ connect(const AbstractTreeNode& node, const std::string& host, int port, int tre
 void Interpreter::InterpreterActionNode::disconnect()
 {
     _connected = false;
+    _execution_mode = false;
     _action_client = nullptr;
 }
 
@@ -141,6 +157,9 @@ InterpreterSubscriberNode(SidepanelInterpreter* parent,
 
 BT::NodeStatus Interpreter::InterpreterSubscriberNode::executeNode()
 {
+    if (!_connected) {
+        _parent->connectNode(this);
+    }
     BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
     _parent->registerSubscriber(_node, shared_node);
     return NodeStatus::SUCCESS;
@@ -168,13 +187,16 @@ Interpreter::InterpreterConditionNode::
 
 BT::NodeStatus Interpreter::InterpreterConditionNode::tick()
 {
+    if (_execution_mode) {
+      return executeNode();
+    }
     return _return_status;
 }
 
 BT::NodeStatus Interpreter::InterpreterConditionNode::executeTick()
 {
     const NodeStatus status = tick();
-    if (status == NodeStatus::IDLE) {
+    if (status == NodeStatus::IDLE && !_execution_mode) {
         setStatus(NodeStatus::RUNNING);
         throw ConditionEvaluation();
     }
@@ -185,6 +207,9 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeTick()
 
 BT::NodeStatus Interpreter::InterpreterConditionNode::executeNode()
 {
+    if (!_connected) {
+        _parent->connectNode(this);
+    }
     BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
     rapidjson::Document request = getRequestFromPorts(_node, shared_node);
     _service_client->call(request);
@@ -199,7 +224,7 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeNode()
 }
 
 void Interpreter::InterpreterConditionNode::
-connect(const AbstractTreeNode& node, const std::string& host, int port, int tree_node_id)
+connect(const AbstractTreeNode& node, const std::string& host, int port)
 {
     if (_connected) {
         return;
@@ -213,6 +238,7 @@ connect(const AbstractTreeNode& node, const std::string& host, int port, int tre
 void Interpreter::InterpreterConditionNode::disconnect()
 {
     _connected = false;
+    _execution_mode = false;
     _service_client = nullptr;
 }
 
