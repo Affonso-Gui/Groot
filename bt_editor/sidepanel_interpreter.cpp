@@ -424,24 +424,20 @@ void SidepanelInterpreter::executeNode(const int node_id)
     auto bt_node = _tree.nodes.at(bt_node_id - 1);
     std::vector<std::pair<int, NodeStatus>> node_status;
 
-    if (node->model.type == roseus_bt::NodeType::CONDITION ||
-        node->model.type == roseus_bt::NodeType::REMOTE_CONDITION) {
-        auto node_ref = std::static_pointer_cast<Interpreter::InterpreterConditionNode>(bt_node);
-        node_status.push_back( {node_id, node_ref->executeNode()} );
-    }
-    else if (node->model.type == roseus_bt::NodeType::ACTION ||
-             node->model.type == roseus_bt::NodeType::REMOTE_ACTION) {
-        auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(bt_node);
-        node_status.push_back( {node_id, node_ref->executeNode()} );
-    }
-    else if (node->model.type == roseus_bt::NodeType::SUBSCRIBER ||
-             node->model.type == roseus_bt::NodeType::REMOTE_SUBSCRIBER) {
-        auto node_ref = std::static_pointer_cast<Interpreter::InterpreterSubscriberNode>(bt_node);
-        node_status.push_back( {node_id, node_ref->executeNode()} );
-    }
-    else {  /* decorators, control, subtrees */
+    if (node->model.type != BT::NodeType::ACTION &&
+        node->model.type != BT::NodeType::CONDITION) {
+        /* decorators, control, subtrees */
         return;
     }
+
+    if (auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(bt_node)) {
+        node_status.push_back( {node_id, node_ref->executeNode()} );
+    }
+    else {
+        // builtin action nodes, such as SetBlackboard
+        node_status.push_back( {node_id, bt_node->executeTick()} );
+    }
+
     emit changeNodeStyle(_tree_name, node_status, true);
     translateNodeIndex(node_status, false);
     for (auto it: node_status) {
