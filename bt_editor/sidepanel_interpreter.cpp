@@ -271,12 +271,18 @@ void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_fi
         }
     }
 
-    if (xml_filename.isNull()) {
-        QString xml_text = main_win->saveToXML(bt_name);
-        _tree = factory.maybeCreateLayeredTreeFromText(xml_text.toStdString());
+    try {
+        if (xml_filename.isNull()) {
+            QString xml_text = main_win->saveToXML(bt_name);
+            _tree = factory.maybeCreateLayeredTreeFromText(xml_text.toStdString());
+        }
+        else {
+            _tree = factory.maybeCreateLayeredTreeFromFile(xml_filename.toStdString());
+        }
     }
-    else {
-        _tree = factory.maybeCreateLayeredTreeFromFile(xml_filename.toStdString());
+    catch(BT::RuntimeError& err) {
+        reportError("Error registering Tree", err.what() );
+        return;
     }
 
     _logger_cout.reset();
