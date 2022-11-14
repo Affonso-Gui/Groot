@@ -65,6 +65,9 @@ void SidepanelInterpreter::on_Connect()
                  this, &SidepanelInterpreter::on_connectionCreated);
         connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
                  this, &SidepanelInterpreter::on_connectionError);
+        connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::actionThreadCreated,
+                 this, &SidepanelInterpreter::on_actionThreadCreated);
+
         _rbc_thread->start();
         return;
     }
@@ -99,20 +102,12 @@ void SidepanelInterpreter::registerSubscriber(const AbstractTreeNode& node,
     _rbc_thread->registerSubscriber(node, tree_node);
 }
 
-void SidepanelInterpreter::
-registerActionThread(Interpreter::ExecuteActionThread* exec_thread)
+void SidepanelInterpreter::registerActionThread(int tree_node_id)
 {
-    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
-             this, &SidepanelInterpreter::on_actionReportResult);
-    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportError,
-             this, [this] (const QString& message) { reportError("Error Executing Node", message); });
-    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
-             this, &SidepanelInterpreter::on_actionFinished);
-    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
-             exec_thread, &QObject::deleteLater);
-
-    _running_threads.push_back(exec_thread);
-    exec_thread->start();
+    if (!(_connected && _rbc_thread)) {
+        throw std::runtime_error(std::string("Not connected"));
+    }
+    _rbc_thread->registerActionThread(tree_node_id);
 }
 
 void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename)
@@ -577,6 +572,26 @@ void SidepanelInterpreter::on_connectionError(const QString& message)
 
     // display error message
     reportError("Connection Error", message);
+}
+
+void SidepanelInterpreter::on_actionThreadCreated(int tree_node_id)
+{
+    BT::TreeNode::Ptr tree_node = _tree.nodes.at(tree_node_id - 1);
+    auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(tree_node);
+
+    auto exec_thread = new Interpreter::ExecuteActionThread(node_ref, tree_node_id);
+
+    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
+             this, &SidepanelInterpreter::on_actionReportResult);
+    connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportError,
+             this, [this] (const QString& message) { reportError("Error Executing Node", message); });
+    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
+             this, &SidepanelInterpreter::on_actionFinished);
+    connect( exec_thread, &Interpreter::ExecuteActionThread::finished,
+             exec_thread, &QObject::deleteLater);
+
+    _running_threads.push_back(exec_thread);
+    exec_thread->start();
 }
 
 void SidepanelInterpreter::on_actionReportResult(int tree_node_id, const QString& status)

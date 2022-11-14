@@ -24,7 +24,7 @@ public:
 
     void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode::Ptr tree_node);
 
-    void registerActionThread(Interpreter::ExecuteActionThread* exec_thread);
+    void registerActionThread(int tree_node_id);
 
     void connectNode(const BT::TreeNode* node);
 
@@ -73,6 +73,8 @@ private slots:
     void on_connectionCreated();
 
     void on_connectionError(const QString& message);
+
+    void on_actionThreadCreated(int tree_node_id);
 
     void on_actionReportResult(int tree_node_id, const QString& status);
 

@@ -92,8 +92,8 @@ void Interpreter::InterpreterActionNode::halt()
 {
     if (isRunning()) {
         _exec_thread->stop();
-        _exec_thread = nullptr;
     }
+    _exec_thread = nullptr;
 }
 
 BT::NodeStatus Interpreter::InterpreterActionNode::executeNode()
@@ -101,10 +101,8 @@ BT::NodeStatus Interpreter::InterpreterActionNode::executeNode()
     if (!_connected) {
         _parent->connectNode(this);
     }
-    BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
     int tree_node_id = _parent->getNodeId(this);
-    _exec_thread = new ExecuteActionThread(_action_client, _node, shared_node, tree_node_id);
-    _parent->registerActionThread(_exec_thread);
+    _parent->registerActionThread(tree_node_id);
     return NodeStatus::RUNNING;
 }
 
@@ -325,6 +323,11 @@ void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTr
     _rbc.subscribe(topic_name, topic_name, cb,  "", topic_type);
 }
 
+void Interpreter::RosBridgeConnectionThread::registerActionThread(int tree_node_id)
+{
+    emit actionThreadCreated(tree_node_id);
+}
+
 
 //////
 // ExecuteActionThread
@@ -332,12 +335,7 @@ void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTr
 
 
 Interpreter::ExecuteActionThread::
-ExecuteActionThread(std::shared_ptr<roseus_bt::RosbridgeActionClient> action_client,
-                    const AbstractTreeNode& node,
-                    BT::TreeNode::Ptr tree_node,
-                    int tree_node_id) :
-    _action_client(action_client),
-    _node(node),
+ExecuteActionThread(std::shared_ptr<InterpreterActionNode> tree_node, int tree_node_id) :
     _tree_node(tree_node),
     _tree_node_id(tree_node_id)
 {}
@@ -352,13 +350,14 @@ void Interpreter::ExecuteActionThread::run()
         document.Swap(document["msg"]["feedback"]);
 
         std::string name = document["update_field_name"].GetString();
-        auto port_model = _node.model.ports.find(QString(name.c_str()))->second;
+        auto port_model = _tree_node->_node.model.ports.find(QString(name.c_str()))->second;
         std::string type = port_model.type_name.toStdString();
 
         document.Swap(document[name.c_str()]);
         setOutputValue(_tree_node, name, type, document);
     };
-    _action_client->registerFeedbackCallback(cb);
+    _tree_node->_exec_thread = this;
+    _tree_node->_action_client->registerFeedbackCallback(cb);
 
     // sleep to ensure that the topic has been successfully subscribed
     // this is required to avoid dropping messages at the beginning of the execution
@@ -366,29 +365,34 @@ void Interpreter::ExecuteActionThread::run()
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
     try {
-        rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
-      _action_client->sendGoal(goal);
-      _action_client->waitForResult();
+        rapidjson::Document goal = getRequestFromPorts(_tree_node->_node, _tree_node);
+      _tree_node->_action_client->sendGoal(goal);
+      _tree_node->_action_client->waitForResult();
     }
     catch (std::exception& err) {
       emit actionReportError(err.what());
       emit actionReportResult(_tree_node_id, "IDLE");
+      _tree_node->_exec_thread = nullptr;
       return;
     }
 
-    auto result = _action_client->getResult();
+    auto result = _tree_node->_action_client->getResult();
     if (result.HasMember("success") &&
         result["success"].IsBool() &&
         result["success"].GetBool()) {
         emit actionReportResult(_tree_node_id, "SUCCESS");
+        _tree_node->_exec_thread = nullptr;
         return;
     }
     emit actionReportResult(_tree_node_id, "FAILURE");
+
+    // TODO: administer _exec_thread by shared pointer instead
+    _tree_node->_exec_thread = nullptr;
 }
 
 void Interpreter::ExecuteActionThread::stop()
 {
-    _action_client->cancelGoal();
+    _tree_node->_action_client->cancelGoal();
 }
 
 

@@ -89,6 +89,7 @@ public:
     bool isRunning();
 
 private:
+    friend class ExecuteActionThread;
     ExecuteActionThread* _exec_thread;
     std::shared_ptr<roseus_bt::RosbridgeActionClient> _action_client;
 };
@@ -144,6 +145,7 @@ public:
     void stop();
     void clearSubscribers();
     void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode::Ptr tree_node);
+    void registerActionThread(int tree_node_id);
 
 private:
     RosbridgeWsClient _rbc;
@@ -154,6 +156,7 @@ private:
 signals:
     void connectionCreated();
     void connectionError(const QString& message);
+    void actionThreadCreated(int tree_node_id);
 };
 
 
@@ -161,17 +164,14 @@ class ExecuteActionThread : public QThread
 {
 Q_OBJECT
 public:
-    explicit ExecuteActionThread(std::shared_ptr<roseus_bt::RosbridgeActionClient> action_client,
-                                 const AbstractTreeNode& node,
-                                 BT::TreeNode::Ptr tree_node,
+    explicit ExecuteActionThread(std::shared_ptr<InterpreterActionNode> tree_node,
                                  int tree_node_id);
+
     void run();
     void stop();
 
 private:
-    std::shared_ptr<roseus_bt::RosbridgeActionClient> _action_client;
-    AbstractTreeNode _node;
-    BT::TreeNode::Ptr _tree_node;
+    std::shared_ptr<InterpreterActionNode> _tree_node;
     int _tree_node_id;
 
 signals:
