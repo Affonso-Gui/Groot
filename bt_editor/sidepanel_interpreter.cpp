@@ -212,6 +212,9 @@ translateNodeIndex(std::vector<std::pair<int, NodeStatus>>& node_status,
     // translate _tree node indexes into _abstract_tree indexes
     // if tree_index is false, translate _abstract_tree into _tree indexes
 
+    // CAREFUL! this can recycle the _abstract_tree,
+    // nullifying ongoing iterators and node pointers
+
     if (node_status.size() == 0) {
         return;
     }
@@ -417,15 +420,14 @@ void SidepanelInterpreter::connectNode(const BT::TreeNode* node)
     connectNode(tree_node_id);
 }
 
-void SidepanelInterpreter::executeNode(const int node_id)
+void SidepanelInterpreter::executeNode(const int tree_node_id)
 {
-    int bt_node_id = translateSingleNodeIndex(node_id, false);
-    auto node = _abstract_tree.node(node_id);
-    auto bt_node = _tree.nodes.at(bt_node_id - 1);
+    int node_id = translateSingleNodeIndex(tree_node_id, true);
+    auto bt_node = _tree.nodes.at(tree_node_id - 1);
     std::vector<std::pair<int, NodeStatus>> node_status;
 
-    if (node->model.type != BT::NodeType::ACTION &&
-        node->model.type != BT::NodeType::CONDITION) {
+    if (bt_node->type() != BT::NodeType::ACTION &&
+        bt_node->type() != BT::NodeType::CONDITION) {
         /* decorators, control, subtrees */
         return;
     }
@@ -726,14 +728,19 @@ void SidepanelInterpreter::on_buttonExecSelection_clicked()
     if (_tree.nodes.size() <= 1) {
         return;
     }
+    std::vector<std::pair<int, NodeStatus>> node_status;
+
+    int i = 0;
+    for (auto& node: _abstract_tree.nodes()) {
+      if (node.graphic_node->nodeGraphicsObject().isSelected()) {
+          node_status.push_back( {i, NodeStatus::RUNNING} );
+      }
+      i++;
+    }
 
     try {
-        int i = 0;
-        for (auto& node: _abstract_tree.nodes()) {
-            if (node.graphic_node->nodeGraphicsObject().isSelected()) {
-                executeNode(i);
-            }
-            i++;
+        for (auto it: node_status) {
+            executeNode(it.first);
         }
     }
     catch (std::exception& err) {
@@ -761,7 +768,6 @@ void SidepanelInterpreter::on_buttonExecRunning_clicked()
         i++;
     }
 
-    translateNodeIndex(node_status, true);
     try {
         for (auto it: node_status) {
             executeNode(it.first);
