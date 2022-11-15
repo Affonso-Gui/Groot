@@ -348,17 +348,17 @@ void SidepanelInterpreter::changeTreeNodeStatus(BT::TreeNode::Ptr node,
 std::string SidepanelInterpreter::getActionType(const std::string& server_name)
 {
     std::string topic_name = server_name + "/goal";
-    roseus_bt::RosbridgeServiceClient service_client_(ui->lineEdit->text().toStdString(),
-                                                      ui->lineEdit_port->text().toInt(),
-                                                      "/rosapi/topic_type");
+    roseus_bt::RosbridgeServiceClient service_client(ui->lineEdit->text().toStdString(),
+                                                     ui->lineEdit_port->text().toInt(),
+                                                     "/rosapi/topic_type");
     rapidjson::Document request;
     request.SetObject();
     rapidjson::Value topic;
     topic.SetString(topic_name.c_str(), topic_name.size(), request.GetAllocator());
     request.AddMember("topic", topic, request.GetAllocator());
-    service_client_.call(request);
-    service_client_.waitForResult();
-    auto result = service_client_.getResult();
+    service_client.call(request);
+    service_client.waitForResult();
+    auto result = service_client.getResult();
     if (result.HasMember("type") &&
         result["type"].IsString()) {
         std::string topic_type = result["type"].GetString();
