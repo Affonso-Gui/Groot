@@ -532,8 +532,9 @@ void SidepanelInterpreter::runStep()
             _updated = false;
         }
         catch (std::exception& err) {
+            _timer->stop();
             on_buttonDisableAutoExecution_clicked();
-            qWarning() << "Error during auto callback: " << err.what();
+            reportError("Error during auto callback", err.what());
         }
     }
 }
