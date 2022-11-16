@@ -738,6 +738,7 @@ void SidepanelInterpreter::on_buttonExecSelection_clicked()
       i++;
     }
 
+    translateNodeIndex(node_status, false);
     try {
         for (auto it: node_status) {
             executeNode(it.first);
