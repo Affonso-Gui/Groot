@@ -26,6 +26,14 @@ public:
 };
 
 
+struct RosbridgeActionClientCapture
+{
+    std::shared_ptr<roseus_bt::RosbridgeActionClient> action_client;
+    BT::TreeNode::Ptr tree_node;
+    PortModels ports;
+};
+
+
 class InterpreterNodeBase
 {
 public:
@@ -33,7 +41,7 @@ public:
 
     virtual BT::NodeStatus executeNode() = 0;
 
-    virtual void connect(int tree_node_id, const std::string& host, int port) = 0;
+    virtual void connect(int tree_node_id) = 0;
 
     virtual void disconnect() = 0;
 
@@ -41,8 +49,8 @@ public:
 
 protected:
     SidepanelInterpreter* _parent;
+    std::string _server_name;
     int _tree_node_id;
-    bool _connected;
     bool _execution_mode;
 };
 
@@ -61,7 +69,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(int tree_node_id, const std::string& host, int port) override;
+    virtual void connect(int tree_node_id) override;
 
     virtual void disconnect() override;
 
@@ -82,7 +90,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(int tree_node_id, const std::string& host, int port) override;
+    virtual void connect(int tree_node_id) override;
 
     virtual void disconnect() override;
 
@@ -92,6 +100,8 @@ private:
     friend class ExecuteActionThread;
     ExecuteActionThread* _exec_thread;
     std::shared_ptr<roseus_bt::RosbridgeActionClient> _action_client;
+    PortsMapping _port_mapping;
+    PortModels _ports;
 };
 
 
@@ -122,14 +132,14 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(int tree_node_id, const std::string& host, int port) override;
+    virtual void connect(int tree_node_id) override;
 
     virtual void disconnect() override;
 
     void set_status(const BT::NodeStatus& status);
 
 private:
-    std::unique_ptr<roseus_bt::RosbridgeServiceClient> _service_client;
+    std::shared_ptr<roseus_bt::RosbridgeServiceClient> _service_client;
     BT::NodeStatus _return_status;
 };
 
@@ -144,7 +154,7 @@ public:
     void run();
     void stop();
     void clearSubscribers();
-    void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode::Ptr tree_node);
+    void registerSubscriber(std::string message_type, BT::TreeNode::Ptr tree_node);
     void registerActionThread(int tree_node_id);
 
 private:
@@ -164,23 +174,19 @@ class ExecuteActionThread : public QThread
 {
 Q_OBJECT
 public:
-    explicit ExecuteActionThread(AbstractTreeNode _node,
-                                 std::shared_ptr<InterpreterActionNode> tree_node,
-                                 int tree_node_id);
-
+    explicit ExecuteActionThread(std::shared_ptr<InterpreterActionNode> tree_node);
     void run();
     void stop();
 
 private:
     std::shared_ptr<InterpreterActionNode> _tree_node;
-    // freeze copies of both AbstractTreeNodes and node_id
-    AbstractTreeNode _node;
-    int _tree_node_id;
 
 signals:
     void actionReportResult(int tree_node_id, QString status);
     void actionReportError(const QString& message);
 };
+
+std::pair<PortsMapping, PortModels> getPorts(AbstractTreeNode node);
 
 rapidjson::Value getInputValue(BT::TreeNode::Ptr tree_node,
                                const std::string name,
@@ -191,6 +197,10 @@ void setOutputValue(BT::TreeNode::Ptr tree_node,
                     const std::string name,
                     const std::string type,
                     const rapidjson::CopyDocument& document);
+
+rapidjson::Document getRequestFromPorts(BT::TreeNode::Ptr tree_node,
+                                        PortsMapping port_mapping,
+                                        PortModels ports);
 
 rapidjson::Document getRequestFromPorts(const AbstractTreeNode& node,
                                         BT::TreeNode::Ptr tree_node);

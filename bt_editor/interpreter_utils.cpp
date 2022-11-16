@@ -9,7 +9,7 @@ using WsClient = SimpleWeb::SocketClient<SimpleWeb::WS>;
 
 Interpreter::InterpreterNodeBase::
 InterpreterNodeBase(SidepanelInterpreter* parent) :
-    _parent(parent), _connected(false), _execution_mode(false)
+    _parent(parent), _server_name(""), _execution_mode(false)
 {}
 
 void Interpreter::InterpreterNodeBase::set_execution_mode(bool execution_mode)
@@ -42,25 +42,18 @@ BT::NodeStatus Interpreter::InterpreterNode::tick()
 
 BT::NodeStatus Interpreter::InterpreterNode::executeNode()
 {
-    if (!_connected) {
-        _parent->connectNode(this);
-    }
+    _parent->connectNode(this);
     return BT::NodeStatus::RUNNING;
 }
 
 void Interpreter::InterpreterNode::
-connect(int tree_node_id, const std::string& host, int port)
+connect(int tree_node_id)
 {
-    if (_connected) {
-        return;
-    }
     _tree_node_id = tree_node_id;
-    _connected = true;
 }
 
 void Interpreter::InterpreterNode::disconnect()
 {
-    _connected = false;
     _execution_mode = false;
 }
 
@@ -98,41 +91,38 @@ void Interpreter::InterpreterActionNode::halt()
 
 BT::NodeStatus Interpreter::InterpreterActionNode::executeNode()
 {
-    if (!_connected) {
-        _parent->connectNode(this);
-    }
+    _parent->connectNode(this);
     int tree_node_id = _parent->getNodeId(this);
     _parent->registerActionThread(tree_node_id);
     return NodeStatus::RUNNING;
 }
 
 void Interpreter::InterpreterActionNode::
-connect(int tree_node_id, const std::string& host, int port)
+connect(int tree_node_id)
 {
-    if (_connected) {
-        return;
-    }
-    AbstractTreeNode node = _parent->getAbstractNode(tree_node_id);
-    auto server_name_port = node.model.ports.find("server_name")->second;
-    std::string server_name = server_name_port.default_value.toStdString();
-    if (server_name.front() != '/') {
-      server_name = '/' + server_name;
-    }
-    std::string topic_type = _parent->getActionType(server_name);
-
-    if (topic_type.empty()) {
-        throw std::runtime_error(
-            std::string("Could not connect to action server at ") + server_name);
-    }
-
-    _action_client = std::make_shared<roseus_bt::RosbridgeActionClient>(host, port, server_name, topic_type);
     _tree_node_id = tree_node_id;
-    _connected = true;
+
+    AbstractTreeNode node = _parent->getAbstractNode(tree_node_id);
+    PortModels ports = node.model.ports;
+
+    if (_server_name.empty()) {
+        std::pair<PortsMapping, PortModels> ports = getPorts(node);
+        std::string name = node.model.ports.find("server_name")->second.default_value.toStdString();
+        if (name.front() != '/') {
+            name = '/' + name;
+        }
+        _server_name = name;
+        _port_mapping = ports.first;
+        _ports = ports.second;
+
+    }
+
+    BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
+    _action_client = _parent->registerAction(_server_name, ports, shared_node);
 }
 
 void Interpreter::InterpreterActionNode::disconnect()
 {
-    _connected = false;
     _execution_mode = false;
     _action_client = nullptr;
 }
@@ -156,12 +146,11 @@ InterpreterSubscriberNode(SidepanelInterpreter* parent,
 
 BT::NodeStatus Interpreter::InterpreterSubscriberNode::executeNode()
 {
-    if (!_connected) {
-        _parent->connectNode(this);
-    }
+    _parent->connectNode(this);
     AbstractTreeNode node = _parent->getAbstractNode(_tree_node_id);
     BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
-    _parent->registerSubscriber(node, shared_node);
+    std::string message_type = node.model.ports.find("message_type")->second.default_value.toStdString();
+    _parent->registerSubscriber(message_type, shared_node);
     return NodeStatus::SUCCESS;
 }
 
@@ -207,9 +196,7 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeTick()
 
 BT::NodeStatus Interpreter::InterpreterConditionNode::executeNode()
 {
-    if (!_connected) {
-        _parent->connectNode(this);
-    }
+    _parent->connectNode(this);
     AbstractTreeNode node = _parent->getAbstractNode(_tree_node_id);
     BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
     rapidjson::Document request = getRequestFromPorts(node, shared_node);
@@ -225,21 +212,24 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeNode()
 }
 
 void Interpreter::InterpreterConditionNode::
-connect(int tree_node_id, const std::string& host, int port)
+connect(int tree_node_id)
 {
-    if (_connected) {
-        return;
-    }
-    AbstractTreeNode node = _parent->getAbstractNode(tree_node_id);
-    std::string name = node.model.ports.find("service_name")->second.default_value.toStdString();
-    _service_client = std::make_unique<roseus_bt::RosbridgeServiceClient>(host, port, name);
     _tree_node_id = tree_node_id;
-    _connected = true;
+
+    if (_server_name.empty()) {
+        AbstractTreeNode node = _parent->getAbstractNode(tree_node_id);
+        std::string name = node.model.ports.find("service_name")->second.default_value.toStdString();
+        if (name.front() != '/') {
+            name = '/' + name;
+        }
+        _server_name = name;
+    }
+
+    _service_client = _parent->registerService(_server_name);
 }
 
 void Interpreter::InterpreterConditionNode::disconnect()
 {
-    _connected = false;
     _execution_mode = false;
     _service_client = nullptr;
 }
@@ -300,11 +290,9 @@ void Interpreter::RosBridgeConnectionThread::clearSubscribers()
     }
 }
 
-void Interpreter::RosBridgeConnectionThread::registerSubscriber(const AbstractTreeNode& node,
+void Interpreter::RosBridgeConnectionThread::registerSubscriber(std::string topic_type,
                                                                 BT::TreeNode::Ptr tree_node)
 {
-    auto port_model = node.model.ports.find("message_type")->second;
-    std::string topic_type = port_model.default_value.toStdString();
     std::string topic_name;
     auto res = tree_node->getInput("topic_name", topic_name);
     if (!res) throw std::runtime_error(res.error());
@@ -339,46 +327,25 @@ void Interpreter::RosBridgeConnectionThread::registerActionThread(int tree_node_
 
 
 Interpreter::ExecuteActionThread::
-ExecuteActionThread(AbstractTreeNode node,
-                    std::shared_ptr<InterpreterActionNode> tree_node,
-                    int tree_node_id) :
-    _node(node),
-    _tree_node(tree_node),
-    _tree_node_id(tree_node_id)
+ExecuteActionThread(std::shared_ptr<InterpreterActionNode> tree_node) :
+    _tree_node(tree_node)
 {}
 
 void Interpreter::ExecuteActionThread::run()
 {
-    auto cb = [this](std::shared_ptr<WsClient::Connection> connection,
-                     std::shared_ptr<WsClient::InMessage> in_message) {
-        std::string message = in_message->string();
-        rapidjson::CopyDocument document;
-        document.Parse(message.c_str());
-        document.Swap(document["msg"]["feedback"]);
-
-        std::string name = document["update_field_name"].GetString();
-        auto port_model = _node.model.ports.find(QString(name.c_str()))->second;
-        std::string type = port_model.type_name.toStdString();
-
-        document.Swap(document[name.c_str()]);
-        setOutputValue(_tree_node, name, type, document);
-    };
     _tree_node->_exec_thread = this;
-    _tree_node->_action_client->registerFeedbackCallback(cb);
-
-    // sleep to ensure that the topic has been successfully subscribed
-    // this is required to avoid dropping messages at the beginning of the execution
-    // maybe subscribe at initialization as in the remote_action node?
-    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    int tree_node_id = _tree_node->_tree_node_id;
 
     try {
-      rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
+      rapidjson::Document goal = getRequestFromPorts(_tree_node,
+                                                     _tree_node->_port_mapping,
+                                                     _tree_node->_ports);
       _tree_node->_action_client->sendGoal(goal);
       _tree_node->_action_client->waitForResult();
     }
     catch (std::exception& err) {
       emit actionReportError(err.what());
-      emit actionReportResult(_tree_node_id, "IDLE");
+      emit actionReportResult(tree_node_id, "IDLE");
       _tree_node->_exec_thread = nullptr;
       return;
     }
@@ -387,11 +354,11 @@ void Interpreter::ExecuteActionThread::run()
     if (result.HasMember("success") &&
         result["success"].IsBool() &&
         result["success"].GetBool()) {
-        emit actionReportResult(_tree_node_id, "SUCCESS");
+        emit actionReportResult(tree_node_id, "SUCCESS");
         _tree_node->_exec_thread = nullptr;
         return;
     }
-    emit actionReportResult(_tree_node_id, "FAILURE");
+    emit actionReportResult(tree_node_id, "FAILURE");
 
     // TODO: administer _exec_thread by shared pointer instead
     _tree_node->_exec_thread = nullptr;
@@ -406,6 +373,15 @@ void Interpreter::ExecuteActionThread::stop()
 //////
 // Port Variables
 //////
+
+std::pair<PortsMapping, PortModels> Interpreter::getPorts(AbstractTreeNode node)
+{
+    const auto* bt_node =
+        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
+    auto port_mapping = bt_node->getCurrentPortMapping();
+    auto ports = node.model.ports;
+    return {port_mapping, ports};
+}
 
 rapidjson::Value Interpreter::getInputValue(BT::TreeNode::Ptr tree_node,
                                             const std::string name,
@@ -544,17 +520,14 @@ void Interpreter::setOutputValue(BT::TreeNode::Ptr tree_node,
                                          tree_node->name()));
 }
 
-rapidjson::Document Interpreter::getRequestFromPorts(const AbstractTreeNode& node,
-                                                     BT::TreeNode::Ptr tree_node)
+rapidjson::Document Interpreter::getRequestFromPorts(BT::TreeNode::Ptr tree_node,
+                                                     PortsMapping port_mapping,
+                                                     PortModels ports)
 {
-    const auto* bt_node =
-        dynamic_cast<const BehaviorTreeDataModel*>(node.graphic_node->nodeDataModel());
-    auto port_mapping = bt_node->getCurrentPortMapping();
-
     rapidjson::Document goal;
     goal.SetObject();
     for(const auto& port_it: port_mapping) {
-        auto port_model = node.model.ports.find(port_it.first)->second;
+        auto port_model = ports.find(port_it.first)->second;
         std::string name = port_it.first.toStdString();
         std::string type = port_model.type_name.toStdString();
         if (port_model.direction == PortDirection::OUTPUT) {
@@ -566,4 +539,11 @@ rapidjson::Document Interpreter::getRequestFromPorts(const AbstractTreeNode& nod
         goal.AddMember(jname, jval, goal.GetAllocator());
     }
     return goal;
+}
+
+rapidjson::Document Interpreter::getRequestFromPorts(const AbstractTreeNode& node,
+                                                     BT::TreeNode::Ptr tree_node)
+{
+    auto ports = getPorts(node);
+    return getRequestFromPorts(tree_node, ports.first, ports.second);
 }

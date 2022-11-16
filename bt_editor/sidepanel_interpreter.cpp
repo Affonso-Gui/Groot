@@ -61,28 +61,55 @@ void SidepanelInterpreter::on_Connect()
             port = ui->lineEdit_port->placeholderText();
             ui->lineEdit_port->setText(port);
         }
-
-        _rbc_thread = new Interpreter::RosBridgeConnectionThread(hostname.toStdString(),
-                                                                 port.toStdString());
-        connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
-                 this, &SidepanelInterpreter::on_connectionCreated);
-        connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
-                 this, &SidepanelInterpreter::on_connectionError);
-        connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::actionThreadCreated,
-                 this, &SidepanelInterpreter::on_actionThreadCreated);
-
-        _rbc_thread->start();
+        ConnectBridge();
         return;
     }
 
+    DisconnectBridge();
+    DisconnectNodes(true);
+    _connected = false;
+    toggleButtonConnect();
+}
+
+void SidepanelInterpreter::ConnectBridge()
+{
+    std::string host = ui->lineEdit->text().toStdString();
+    std::string port = ui->lineEdit_port->text().toStdString();
+
+    _rbc_thread = new Interpreter::RosBridgeConnectionThread(host, port);
+    connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
+             this, &SidepanelInterpreter::on_connectionCreated);
+    connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
+             this, &SidepanelInterpreter::on_connectionError);
+    connect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::actionThreadCreated,
+             this, &SidepanelInterpreter::on_actionThreadCreated);
+
+    _rbc_thread->start();
+}
+
+void SidepanelInterpreter::DisconnectBridge()
+{
+    if (!_rbc_thread) {
+        return;
+    }
+
+    disconnect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
+                this, &SidepanelInterpreter::on_connectionCreated);
+    disconnect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
+                this, &SidepanelInterpreter::on_connectionError);
+    _rbc_thread->stop();
+}
+
+void SidepanelInterpreter::DisconnectNodes(bool report_result)
+{
     if (_rbc_thread) {
-        disconnect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionCreated,
-                    this, &SidepanelInterpreter::on_connectionCreated);
-        disconnect( _rbc_thread, &Interpreter::RosBridgeConnectionThread::connectionError,
-                    this, &SidepanelInterpreter::on_connectionError);
-        _rbc_thread->stop();
+        _rbc_thread->clearSubscribers();
     }
     for (auto exec_thread: _running_threads) {
+        if (!report_result) {
+            disconnect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
+                        this, &SidepanelInterpreter::on_actionReportResult);
+        }
         exec_thread->stop();
     }
     for (auto tree_node: _tree.nodes) {
@@ -91,18 +118,90 @@ void SidepanelInterpreter::on_Connect()
             node_ref->disconnect();
         }
     }
+    for (auto action_capture: _connected_actions) {
+        action_capture.second->action_client = nullptr;
+    }
+    _connected_actions.clear();
+    _connected_services.clear();
     _autorun = false;
-    _connected = false;
-    toggleButtonConnect();
+    toggleButtonAutoExecution();
 }
 
-void SidepanelInterpreter::registerSubscriber(const AbstractTreeNode& node,
+std::shared_ptr<roseus_bt::RosbridgeActionClient> SidepanelInterpreter::
+registerAction(std::string server_name, PortModels ports, BT::TreeNode::Ptr tree_node)
+{
+    if (!_connected) {
+        throw std::runtime_error(std::string("Not connected"));
+    }
+    if (_connected_actions.count(server_name)) {
+        // update tree_node capture
+        _connected_actions[server_name]->tree_node = tree_node;
+        return _connected_actions[server_name]->action_client;
+    }
+
+    std::string topic_type = getActionType(server_name);
+    if (topic_type.empty()) {
+        throw std::runtime_error(std::string("Could not connect to action server at ") + server_name);
+    }
+
+    std::string host = ui->lineEdit->text().toStdString();
+    int port = ui->lineEdit_port->text().toInt();
+    auto action_client = std::make_shared<roseus_bt::RosbridgeActionClient>(host, port, server_name, topic_type);
+    auto action_capture = std::make_shared<Interpreter::RosbridgeActionClientCapture>();
+    action_capture->action_client = action_client;
+    action_capture->tree_node = tree_node;
+    action_capture->ports = ports;
+
+    auto cb = [action_capture](std::shared_ptr<WsClient::Connection> connection,
+                               std::shared_ptr<WsClient::InMessage> in_message) {
+        std::string message = in_message->string();
+        rapidjson::CopyDocument document;
+        document.Parse(message.c_str());
+        document.Swap(document["msg"]["feedback"]);
+
+        std::string name = document["update_field_name"].GetString();
+        auto port_model = action_capture->ports.find(QString(name.c_str()))->second;
+        std::string type = port_model.type_name.toStdString();
+
+        document.Swap(document[name.c_str()]);
+        Interpreter::setOutputValue(action_capture->tree_node, name, type, document);
+    };
+
+    action_client->registerFeedbackCallback(cb);
+
+    // sleep to ensure that the topic has been successfully subscribed
+    // this is required to avoid dropping messages at the beginning of the execution
+    // maybe subscribe at initialization as in the remote_action node?
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+    _connected_actions[server_name] = action_capture;
+    return action_client;
+}
+
+std::shared_ptr<roseus_bt::RosbridgeServiceClient> SidepanelInterpreter::
+registerService(std::string service_name)
+{
+    if (!_connected) {
+        throw std::runtime_error(std::string("Not connected"));
+    }
+    if (_connected_services.count(service_name)) {
+        return _connected_services[service_name];
+    }
+
+    std::string host = ui->lineEdit->text().toStdString();
+    int port = ui->lineEdit_port->text().toInt();
+    auto service_client = std::make_shared<roseus_bt::RosbridgeServiceClient>(host, port, service_name);
+    _connected_services[service_name] = service_client;
+    return service_client;
+}
+
+void SidepanelInterpreter::registerSubscriber(std::string message_type,
                                               BT::TreeNode::Ptr tree_node)
 {
     if (!(_connected && _rbc_thread)) {
         throw std::runtime_error(std::string("Not connected"));
     }
-    _rbc_thread->registerSubscriber(node, tree_node);
+    _rbc_thread->registerSubscriber(message_type, tree_node);
 }
 
 void SidepanelInterpreter::registerActionThread(int tree_node_id)
@@ -116,12 +215,11 @@ void SidepanelInterpreter::registerActionThread(int tree_node_id)
 void SidepanelInterpreter::setTree(const QString& bt_name, const QString& xml_filename)
 {
     qDebug() << "Updating interpreter_widget tree model";
+
     _tree_name = bt_name;
 
-    // disconnect subscribers
-    if (_connected && _rbc_thread) {
-        _rbc_thread->clearSubscribers();
-    }
+    // cleanup connections
+    DisconnectNodes(false);
 
     // clear background nodes
     _background_nodes.clear();
@@ -195,11 +293,6 @@ void SidepanelInterpreter::setTree(const QString& bt_name)
 
 void SidepanelInterpreter::updateTree()
 {
-    for (auto exec_thread: _running_threads) {
-        disconnect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
-                 this, &SidepanelInterpreter::on_actionReportResult);
-        exec_thread->stop();
-    }
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     auto container = main_win->getTabByName(_tree_name);
     _abstract_tree = BuildTreeFromScene( container->scene() );
@@ -412,9 +505,7 @@ void SidepanelInterpreter::connectNode(const int tree_node_id)
     auto bt_node = _tree.nodes.at(tree_node_id - 1);
     auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(bt_node);
     if (node_ref) {
-        node_ref->connect(tree_node_id,
-                          ui->lineEdit->text().toStdString(),
-                          ui->lineEdit_port->text().toInt());
+        node_ref->connect(tree_node_id);
     }
 }
 
@@ -577,6 +668,7 @@ void SidepanelInterpreter::on_connectionCreated()
 void SidepanelInterpreter::on_connectionError(const QString& message)
 {
     // close connection
+    DisconnectNodes(true);
     _connected = false;
     toggleButtonConnect();
 
@@ -586,11 +678,10 @@ void SidepanelInterpreter::on_connectionError(const QString& message)
 
 void SidepanelInterpreter::on_actionThreadCreated(int tree_node_id)
 {
-    AbstractTreeNode node = getAbstractNode(tree_node_id);
     BT::TreeNode::Ptr tree_node = _tree.nodes.at(tree_node_id - 1);
     auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(tree_node);
 
-    auto exec_thread = new Interpreter::ExecuteActionThread(node, node_ref, tree_node_id);
+    auto exec_thread = new Interpreter::ExecuteActionThread(node_ref);
 
     connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
              this, &SidepanelInterpreter::on_actionReportResult);

@@ -22,7 +22,13 @@ public:
 
     void on_Connect();
 
-    void registerSubscriber(const AbstractTreeNode& node, BT::TreeNode::Ptr tree_node);
+    std::shared_ptr<roseus_bt::RosbridgeActionClient> registerAction(std::string server_name,
+                                                                     PortModels ports,
+                                                                     BT::TreeNode::Ptr tree_node);
+
+    std::shared_ptr<roseus_bt::RosbridgeServiceClient> registerService(std::string service_name);
+
+    void registerSubscriber(std::string message_type, BT::TreeNode::Ptr tree_node);
 
     void registerActionThread(int tree_node_id);
 
@@ -57,6 +63,12 @@ private slots:
     void changeRunningStyle(const NodeStatus& status);
 
     void changeTreeNodeStatus(BT::TreeNode::Ptr node, const NodeStatus& status);
+
+    void ConnectBridge();
+
+    void DisconnectBridge();
+
+    void DisconnectNodes(bool report_result);
 
     void connectNode(const int tree_node_id);
 
@@ -132,6 +144,8 @@ private:
     bool _connected;
     Interpreter::RosBridgeConnectionThread* _rbc_thread;
     std::vector<Interpreter::ExecuteActionThread*> _running_threads;
+    std::map<std::string, std::shared_ptr<Interpreter::RosbridgeActionClientCapture>> _connected_actions;
+    std::map<std::string, std::shared_ptr<roseus_bt::RosbridgeServiceClient>> _connected_services;
 
     QWidget *_parent;
 
