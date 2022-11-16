@@ -714,9 +714,15 @@ void SidepanelInterpreter::on_buttonHaltTree_clicked()
 {
     qDebug() << "buttonHaltTree";
 
+    if (_tree.nodes.size() <= 1) {
+        return;
+    }
+
     on_buttonDisableAutoExecution_clicked();
-    if (_tree.nodes.size() > 1) {
-        _tree.haltTree();
+    // directly stop running actions instead of halting the root
+    // to avoid setting the state of other nodes to IDLE
+    for (auto exec_thread: _running_threads) {
+        exec_thread->stop();
     }
     _updated = true;
 }
