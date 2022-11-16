@@ -49,12 +49,12 @@ BT::NodeStatus Interpreter::InterpreterNode::executeNode()
 }
 
 void Interpreter::InterpreterNode::
-connect(const AbstractTreeNode& node, const std::string& host, int port)
+connect(int tree_node_id, const std::string& host, int port)
 {
     if (_connected) {
         return;
     }
-    _node = node;
+    _tree_node_id = tree_node_id;
     _connected = true;
 }
 
@@ -107,11 +107,12 @@ BT::NodeStatus Interpreter::InterpreterActionNode::executeNode()
 }
 
 void Interpreter::InterpreterActionNode::
-connect(const AbstractTreeNode& node, const std::string& host, int port)
+connect(int tree_node_id, const std::string& host, int port)
 {
     if (_connected) {
         return;
     }
+    AbstractTreeNode node = _parent->getAbstractNode(tree_node_id);
     auto server_name_port = node.model.ports.find("server_name")->second;
     std::string server_name = server_name_port.default_value.toStdString();
     if (server_name.front() != '/') {
@@ -125,7 +126,7 @@ connect(const AbstractTreeNode& node, const std::string& host, int port)
     }
 
     _action_client = std::make_shared<roseus_bt::RosbridgeActionClient>(host, port, server_name, topic_type);
-    _node = node;
+    _tree_node_id = tree_node_id;
     _connected = true;
 }
 
@@ -158,8 +159,9 @@ BT::NodeStatus Interpreter::InterpreterSubscriberNode::executeNode()
     if (!_connected) {
         _parent->connectNode(this);
     }
+    AbstractTreeNode node = _parent->getAbstractNode(_tree_node_id);
     BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
-    _parent->registerSubscriber(_node, shared_node);
+    _parent->registerSubscriber(node, shared_node);
     return NodeStatus::SUCCESS;
 }
 
@@ -208,8 +210,9 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeNode()
     if (!_connected) {
         _parent->connectNode(this);
     }
+    AbstractTreeNode node = _parent->getAbstractNode(_tree_node_id);
     BT::TreeNode::Ptr shared_node = _parent->getSharedNode(this);
-    rapidjson::Document request = getRequestFromPorts(_node, shared_node);
+    rapidjson::Document request = getRequestFromPorts(node, shared_node);
     _service_client->call(request);
     _service_client->waitForResult();
     auto result = _service_client->getResult();
@@ -222,14 +225,15 @@ BT::NodeStatus Interpreter::InterpreterConditionNode::executeNode()
 }
 
 void Interpreter::InterpreterConditionNode::
-connect(const AbstractTreeNode& node, const std::string& host, int port)
+connect(int tree_node_id, const std::string& host, int port)
 {
     if (_connected) {
         return;
     }
+    AbstractTreeNode node = _parent->getAbstractNode(tree_node_id);
     std::string name = node.model.ports.find("service_name")->second.default_value.toStdString();
     _service_client = std::make_unique<roseus_bt::RosbridgeServiceClient>(host, port, name);
-    _node = node;
+    _tree_node_id = tree_node_id;
     _connected = true;
 }
 
@@ -335,7 +339,10 @@ void Interpreter::RosBridgeConnectionThread::registerActionThread(int tree_node_
 
 
 Interpreter::ExecuteActionThread::
-ExecuteActionThread(std::shared_ptr<InterpreterActionNode> tree_node, int tree_node_id) :
+ExecuteActionThread(AbstractTreeNode node,
+                    std::shared_ptr<InterpreterActionNode> tree_node,
+                    int tree_node_id) :
+    _node(node),
     _tree_node(tree_node),
     _tree_node_id(tree_node_id)
 {}
@@ -350,7 +357,7 @@ void Interpreter::ExecuteActionThread::run()
         document.Swap(document["msg"]["feedback"]);
 
         std::string name = document["update_field_name"].GetString();
-        auto port_model = _tree_node->_node.model.ports.find(QString(name.c_str()))->second;
+        auto port_model = _node.model.ports.find(QString(name.c_str()))->second;
         std::string type = port_model.type_name.toStdString();
 
         document.Swap(document[name.c_str()]);
@@ -365,7 +372,7 @@ void Interpreter::ExecuteActionThread::run()
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
     try {
-        rapidjson::Document goal = getRequestFromPorts(_tree_node->_node, _tree_node);
+      rapidjson::Document goal = getRequestFromPorts(_node, _tree_node);
       _tree_node->_action_client->sendGoal(goal);
       _tree_node->_action_client->waitForResult();
     }

@@ -30,6 +30,8 @@ public:
 
     std::string getActionType(const std::string& server_name);
 
+    AbstractTreeNode getAbstractNode(int tree_node_id);
+
     BT::TreeNode::Ptr getSharedNode(const BT::TreeNode* node);
 
     int getNodeId(const BT::TreeNode* node);

@@ -376,6 +376,12 @@ std::string SidepanelInterpreter::getActionType(const std::string& server_name)
     return "";
 }
 
+AbstractTreeNode SidepanelInterpreter::getAbstractNode(int tree_node_id)
+{
+    int node_id = translateSingleNodeIndex(tree_node_id, true);
+    return _abstract_tree.nodes().at(node_id);
+}
+
 BT::TreeNode::Ptr SidepanelInterpreter::getSharedNode(const BT::TreeNode* node)
 {
     for (auto tree_node : _tree.nodes) {
@@ -403,12 +409,10 @@ void SidepanelInterpreter::connectNode(const int tree_node_id)
     if (tree_node_id <= 0) {
         return;
     }
-    int node_id = translateSingleNodeIndex(tree_node_id, true);
-    auto node = _abstract_tree.node(node_id);
     auto bt_node = _tree.nodes.at(tree_node_id - 1);
     auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(bt_node);
     if (node_ref) {
-        node_ref->connect(*node,
+        node_ref->connect(tree_node_id,
                           ui->lineEdit->text().toStdString(),
                           ui->lineEdit_port->text().toInt());
     }
@@ -582,10 +586,11 @@ void SidepanelInterpreter::on_connectionError(const QString& message)
 
 void SidepanelInterpreter::on_actionThreadCreated(int tree_node_id)
 {
+    AbstractTreeNode node = getAbstractNode(tree_node_id);
     BT::TreeNode::Ptr tree_node = _tree.nodes.at(tree_node_id - 1);
     auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(tree_node);
 
-    auto exec_thread = new Interpreter::ExecuteActionThread(node_ref, tree_node_id);
+    auto exec_thread = new Interpreter::ExecuteActionThread(node, node_ref, tree_node_id);
 
     connect( exec_thread, &Interpreter::ExecuteActionThread::actionReportResult,
              this, &SidepanelInterpreter::on_actionReportResult);

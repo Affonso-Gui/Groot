@@ -33,7 +33,7 @@ public:
 
     virtual BT::NodeStatus executeNode() = 0;
 
-    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) = 0;
+    virtual void connect(int tree_node_id, const std::string& host, int port) = 0;
 
     virtual void disconnect() = 0;
 
@@ -41,7 +41,7 @@ public:
 
 protected:
     SidepanelInterpreter* _parent;
-    AbstractTreeNode _node;
+    int _tree_node_id;
     bool _connected;
     bool _execution_mode;
 };
@@ -61,7 +61,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) override;
+    virtual void connect(int tree_node_id, const std::string& host, int port) override;
 
     virtual void disconnect() override;
 
@@ -82,7 +82,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) override;
+    virtual void connect(int tree_node_id, const std::string& host, int port) override;
 
     virtual void disconnect() override;
 
@@ -122,7 +122,7 @@ public:
 
     virtual BT::NodeStatus executeNode() override;
 
-    virtual void connect(const AbstractTreeNode& node, const std::string& host, int port) override;
+    virtual void connect(int tree_node_id, const std::string& host, int port) override;
 
     virtual void disconnect() override;
 
@@ -164,7 +164,8 @@ class ExecuteActionThread : public QThread
 {
 Q_OBJECT
 public:
-    explicit ExecuteActionThread(std::shared_ptr<InterpreterActionNode> tree_node,
+    explicit ExecuteActionThread(AbstractTreeNode _node,
+                                 std::shared_ptr<InterpreterActionNode> tree_node,
                                  int tree_node_id);
 
     void run();
@@ -172,6 +173,8 @@ public:
 
 private:
     std::shared_ptr<InterpreterActionNode> _tree_node;
+    // freeze copies of both AbstractTreeNodes and node_id
+    AbstractTreeNode _node;
     int _tree_node_id;
 
 signals:
