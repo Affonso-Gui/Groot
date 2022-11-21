@@ -112,7 +112,7 @@ void SidepanelInterpreter::DisconnectNodes(bool report_result)
         }
         exec_thread->stop();
     }
-    for (auto tree_node: _tree.nodes) {
+    for (auto tree_node: _tree->nodes) {
         auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(tree_node);
         if (node_ref) {
             node_ref->disconnect();
@@ -477,7 +477,7 @@ AbstractTreeNode SidepanelInterpreter::getAbstractNode(int tree_node_id)
 
 BT::TreeNode::Ptr SidepanelInterpreter::getSharedNode(const BT::TreeNode* node)
 {
-    for (auto tree_node : _tree.nodes) {
+    for (auto tree_node : _tree->nodes) {
         if (tree_node.get() == node) {
             return(tree_node);
         }
@@ -488,7 +488,7 @@ BT::TreeNode::Ptr SidepanelInterpreter::getSharedNode(const BT::TreeNode* node)
 int SidepanelInterpreter::getNodeId(const BT::TreeNode* node)
 {
     int i=1;  // skip root
-    for (auto tree_node : _tree.nodes) {
+    for (auto tree_node : _tree->nodes) {
         if (tree_node.get() == node) {
             return(i);
         }
@@ -502,7 +502,7 @@ void SidepanelInterpreter::connectNode(const int tree_node_id)
     if (tree_node_id <= 0) {
         return;
     }
-    auto bt_node = _tree.nodes.at(tree_node_id - 1);
+    auto bt_node = _tree->nodes.at(tree_node_id - 1);
     auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(bt_node);
     if (node_ref) {
         node_ref->connect(tree_node_id);
@@ -669,7 +669,7 @@ void SidepanelInterpreter::on_connectionError(const QString& message)
 
 void SidepanelInterpreter::on_actionThreadCreated(int tree_node_id)
 {
-    BT::TreeNode::Ptr tree_node = _tree.nodes.at(tree_node_id - 1);
+    BT::TreeNode::Ptr tree_node = _tree->nodes.at(tree_node_id - 1);
     auto node_ref = std::static_pointer_cast<Interpreter::InterpreterActionNode>(tree_node);
 
     auto exec_thread = new Interpreter::ExecuteActionThread(node_ref);
@@ -761,7 +761,7 @@ void SidepanelInterpreter::on_buttonEnableAutoExecution_clicked()
     toggleButtonAutoExecution();
 
     // set execution mode
-    for (auto tree_node: _tree.nodes) {
+    for (auto tree_node: _tree->nodes) {
         auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(tree_node);
         if (node_ref) {
             node_ref->set_execution_mode(true);
@@ -780,7 +780,7 @@ void SidepanelInterpreter::on_buttonDisableAutoExecution_clicked()
     toggleButtonAutoExecution();
 
     // set execution mode
-    for (auto tree_node: _tree.nodes) {
+    for (auto tree_node: _tree->nodes) {
         auto node_ref = std::dynamic_pointer_cast<Interpreter::InterpreterNodeBase>(tree_node);
         if (node_ref) {
             node_ref->set_execution_mode(false);
@@ -803,7 +803,7 @@ void SidepanelInterpreter::on_buttonHaltTree_clicked()
 {
     qDebug() << "buttonHaltTree";
 
-    if (_tree.nodes.size() <= 1) {
+    if (_tree->nodes.size() <= 1) {
         return;
     }
 
