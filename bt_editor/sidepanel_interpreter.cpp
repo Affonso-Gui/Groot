@@ -630,7 +630,6 @@ void SidepanelInterpreter::runStep()
         }
         catch (std::exception& err) {
             _timer->stop();
-            on_buttonDisableAutoExecution_clicked();
             reportError("Error during auto callback", err.what());
         }
     }
@@ -638,6 +637,7 @@ void SidepanelInterpreter::runStep()
 
 void SidepanelInterpreter::reportError(const QString& title, const QString& message)
 {
+    on_buttonDisableAutoExecution_clicked();
     QMessageBox messageBox;
     messageBox.critical(this, title, message);
     messageBox.show();
