@@ -350,6 +350,11 @@ void Interpreter::ExecuteActionThread::run()
       return;
     }
 
+    if (!(_tree_node->_action_client)) {
+      // disconnected
+      return;
+    }
+
     auto result = _tree_node->_action_client->getResult();
     if (result.HasMember("success") &&
         result["success"].IsBool() &&
