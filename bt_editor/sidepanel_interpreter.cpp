@@ -24,6 +24,7 @@ SidepanelInterpreter::SidepanelInterpreter(QWidget *parent) :
     _timer = new QTimer(this);
     _timer->setInterval(20);
     connect( _timer, &QTimer::timeout, this, &SidepanelInterpreter::runStep);
+    _tree = std::make_unique<BT::Tree>();
     toggleButtonAutoExecution();
     toggleButtonConnect();
 }
