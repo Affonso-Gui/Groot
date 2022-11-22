@@ -335,6 +335,7 @@ void Interpreter::ExecuteActionThread::run()
 {
     _tree_node->_exec_thread = this;
     int tree_node_id = _tree_node->_tree_node_id;
+    rapidjson::Value result;
 
     try {
       rapidjson::Document goal = getRequestFromPorts(_tree_node,
@@ -355,7 +356,15 @@ void Interpreter::ExecuteActionThread::run()
       return;
     }
 
-    auto result = _tree_node->_action_client->getResult();
+    try {
+      result = _tree_node->_action_client->getResult();
+    }
+    catch (BT::RuntimeError& err) {
+      // timed out
+      emit actionReportResult(tree_node_id, "FAILURE");
+      return;
+    }
+
     if (result.HasMember("success") &&
         result["success"].IsBool() &&
         result["success"].GetBool()) {
@@ -371,7 +380,8 @@ void Interpreter::ExecuteActionThread::run()
 
 void Interpreter::ExecuteActionThread::stop()
 {
-    _tree_node->_action_client->cancelGoal();
+    // wait for up to 0.5s before forcing disconnection
+    _tree_node->_action_client->cancelGoal(500);
 }
 
 
