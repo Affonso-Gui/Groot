@@ -536,7 +536,12 @@ QString MainWindow::saveToXML(const QString bt_name) const
             continue;
         }
 
-        QDomElement node = doc.createElement( QString::fromStdString(toStr(model.type)) );
+        QDomElement node;
+        if (model.type == BT::NodeType::SUBTREE) {
+            node = doc.createElement( QString("SubTreePlus") );
+        } else {
+            node = doc.createElement( QString::fromStdString(toStr(model.type)) );
+        }
 
         if( !node.isNull() )
         {

@@ -155,7 +155,11 @@ void RecursivelyCreateXml(const FlowScene &scene, QDomDocument &doc, QDomElement
     }
     else{
         BT::NodeType node_type = convert(bt_node->nodeType());
-        element = doc.createElement( QString::fromStdString(toStr(node_type)) );
+        if (node_type == BT::NodeType::SUBTREE) {
+            element = doc.createElement( QString("SubTreePlus") );
+        } else {
+            element = doc.createElement( QString::fromStdString(toStr(node_type)) );
+        }
         element.setAttribute("ID", registration_name.toStdString().c_str() );
     }
 
