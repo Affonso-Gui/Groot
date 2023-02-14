@@ -722,7 +722,9 @@ void SidepanelInterpreter::on_actionFinished()
 
 void SidepanelInterpreter::on_buttonResetTree_clicked()
 {
-    on_buttonDisableAutoExecution_clicked();
+    // disable auto_execution and stop running nodes
+    on_buttonHaltTree_clicked();
+    // reset the tree model
     auto main_win = dynamic_cast<MainWindow*>( _parent );
     setTree(_tree_name);
     main_win->resetTreeStyle(_abstract_tree);
