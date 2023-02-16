@@ -1,66 +1,32 @@
-[![Build Status](https://travis-ci.org/BehaviorTree/Groot.svg?branch=master)](https://travis-ci.org/BehaviorTree/Groot)
+# Groot with Interpreter Mode
 
-# Groot 
+This repository is a fork of [Groot](https://github.com/BehaviorTree/Groot), with an additional Interpreter Mode for interactive node-by-node evaluation and verification.
+The Interpreter Mode is compliant with [BehaviorTree.CPP v3.8.1](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/3.8.1), [BehaviorTree.ROS](https://github.com/BehaviorTree/BehaviorTree.ROS), and [roseus_bt](https://github.com/jsk-ros-pkg/jsk_roseus/tree/master/roseus_bt).
 
-**Groot** is a Graphical Editor, written in C++ and Qt, to create [BehaviorTrees](https://en.wikipedia.org/wiki/Behavior_tree).
+![groot_interpreter_mode](https://user-images.githubusercontent.com/20625381/219300340-bae115c2-f49d-4747-ac49-15bad7570261.png)
 
-It is compliant with the the library [BehaviorTree.CPP](https://github.com/BehaviorTree/BehaviorTree.CPP).
+# Interpreter Mode
 
-[![Groot Editor](groot-screenshot.png)](https://vimeo.com/275066768)
+The interpreter mode allows for two kinds of interaction: **disconnected evaluation** and **connected evaluation**.
+In **disconnected evaluation**, the user can freely manipulate the outcomes of individual nodes, and verify which would be the node selected by the tree structure under the given situation.
+In **connected evaluation**, the Groot communicates with an action server and executes the designates nodes in the real robot. In order to perform connected evaluation, the Groot must first connect to a rosbridge server, using the `Connect` button on the left bar.
 
+The buttons provided during disconnected evaluation are:
 
-In the following video you can see how the C++ library and
-the graphic user interface are used to design and monitor a Behavior Tree.
+- **Reset Tree**: Reloads the tree, resetting the state of all nodes.
+- **Selection to SUCCESS**: Sets the state of all selected nodes to `SUCCESS`.
+- **Selection to FAILURE**: Sets the state of all selected nodes to `FAILURE`.
+- **Selection to IDLE**: Sets the state of all selected nodes to `IDLE`.
+- **Running to SUCCESS**: Sets the state of all currently running nodes to `SUCCESS`.
+- **Running to FAILURE**: Sets the state of all currently running nodes to `FAILURE`.
+- **Display Blackboard Variables**: Display the current value of all blackboard variables in a separate dialog.
 
-[![MOOD2Be](video_MOOD2Be.png)](https://vimeo.com/304651183)
+The buttons provided during connected evaluation are:
 
-
-# Does your company use BehaviorTree.CPP and Groot?
-
-No company, institution or public/private funding is currently supporting the development of BehaviorTree.CPP and Groot. As a consequence, my time to support **BehaviorTree.CPP** is very limited and I decided that I won't spend any time at all supporting **Groot**.
-Pull Requests are welcome and will be reviewed, even if with some delay.
-
-If your company use this software, consider becoming a **sponsor** to support bug fixing and development of new features. You can find contact details in [package.xml](package.xml).
-
-# Dependencies, Installation, and Usage
-
-To compile the project you need:
-
-- [CMake 3.2](https://cmake.org/download)
-- Qt5 (tested with version 5.5.1), including the SVG module.
-
-On Ubuntu Xenial or later, you can install the dependencies with:
-
-       sudo apt install qtbase5-dev libqt5svg5-dev libzmq3-dev libdw-dev
-      
-Some functionalities of the code related to ROS will work __only__ if the
-project is compiled with _catkin_.
-
-## Compilation instructions (Linux)
-
-```
-git clone https://github.com/BehaviorTree/Groot.git
-cd Groot
-git submodule update --init --recursive
-mkdir build; cd build
-cmake ..
-make
-```
-       
- Note compiling "in-source" is not allowed.   
- 
- ## Compilation instructions (ROS/ROS2)
-
-**Discouraged**
-
-If you want to compile using `catkin build`(ROS) or `colcon_build` (ROS2)
-then you must be sure that version 3.8.x is used (branch V3.8).
-
-You may probably want to compile BehaviorTree.CPP in the same workspace.
-
-```
-git clone --branch v3.8 https://github.com/BehaviorTree/BehaviorTree.CPP.git
-```
+- **Execute Selection**: Evaluate selected nodes.
+- **Execute Running**: Evaluate nodes that are currently running (highlighted in blue).
+- **Enable Auto Execution**: Continuously evaluate running nodes and tick the tree in real-time.
+- **Halt Tree**: Sends an interruption signal to all running nodes.
 
 # Shortcuts
 | Key | Action |
@@ -81,7 +47,7 @@ git clone --branch v3.8 https://github.com/BehaviorTree/BehaviorTree.CPP.git
 | CTRL-SHIFT-E | Switch to Editor Mode |
 | CTRL-SHIFT-I | Switch to Interpreter Mode |
 
-# Licence       
+# Licence
 
 Copyright (c) 2018-2019 FUNDACIO EURECAT 
 
@@ -102,15 +68,3 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 DEALINGS IN THE SOFTWARE.
-
-  
-# Acknowledgment
-
-This project is one of the main components of [MOOD2Be](https://eurecat.org/es/portfolio-items/mood2be/),
-and it is developed at [Eurecat](https://eurecat.org) by Davide Faconti.
-
-MOOD2Be is one of the six **Integrated Technical Projects (ITPs)** selected from the [RobMoSys first open call](https://robmosys.eu/itp/). 
-
-It received funding from the European Union’s Horizon 2020 Research and Innovation Programme
-under the RobMoSys project.
-
