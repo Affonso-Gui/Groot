@@ -223,16 +223,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="buttonRunTree">
-       <property name="toolTip">
-        <string/>
-       </property>
-       <property name="text">
-        <string>Tick Tree</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="buttonHaltTree">
        <property name="text">
         <string>Halt Tree</string>

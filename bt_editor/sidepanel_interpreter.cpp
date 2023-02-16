@@ -797,17 +797,6 @@ void SidepanelInterpreter::on_buttonDisableAutoExecution_clicked()
     }
 }
 
-void SidepanelInterpreter::on_buttonRunTree_clicked()
-{
-    qDebug() << "buttonRunTree";
-    try {
-        tickRoot();
-    }
-    catch (std::exception& err) {
-        reportError("Error Running Tree", err.what() );
-    }
-}
-
 void SidepanelInterpreter::on_buttonHaltTree_clicked()
 {
     qDebug() << "buttonHaltTree";
