@@ -1,6 +1,7 @@
 # Groot with Interpreter Mode
 
 This repository is a fork of [Groot](https://github.com/BehaviorTree/Groot), with an additional Interpreter Mode for interactive node-by-node evaluation and verification.
+
 The Interpreter Mode is compliant with [BehaviorTree.CPP v3.8.1](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/3.8.1), [BehaviorTree.ROS](https://github.com/BehaviorTree/BehaviorTree.ROS), and [roseus_bt](https://github.com/jsk-ros-pkg/jsk_roseus/tree/master/roseus_bt).
 
 ![groot_interpreter_mode](https://user-images.githubusercontent.com/20625381/219300340-bae115c2-f49d-4747-ac49-15bad7570261.png)
@@ -8,7 +9,9 @@ The Interpreter Mode is compliant with [BehaviorTree.CPP v3.8.1](https://github.
 # Interpreter Mode
 
 The interpreter mode allows for two kinds of interaction: **disconnected evaluation** and **connected evaluation**.
+
 In **disconnected evaluation**, the user can freely manipulate the outcomes of individual nodes, and verify which would be the node selected by the tree structure under the given situation.
+
 In **connected evaluation**, the Groot communicates with an action server and executes the designates nodes in the real robot. In order to perform connected evaluation, the Groot must first connect to a rosbridge server, using the `Connect` button on the left bar.
 
 The buttons provided during disconnected evaluation are:
