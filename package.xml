@@ -28,6 +28,7 @@
   <build_depend>qttools5-dev-tools</build_depend>
   <build_depend>libdw-dev</build_depend>
   <build_depend>libzmq3-dev</build_depend>
+  <build_depend>libncursesw5-dev</build_depend>
 
   <exec_depend version_eq="3.8.0">behaviortree_cpp_v3</exec_depend>
   <exec_depend>roseus_bt</exec_depend>
